@@ -109,16 +109,16 @@ export function VehiclesClient({ initialVehicles }: VehiclesClientProps) {
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
             <input
-              type="text"
+              type="search"
               id="vehicles-search-input"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar por patente (ej. AD 482 KL), modelo, dueño o teléfono..."
-              className="w-full rounded-xl border border-slate-700/80 bg-slate-950/90 py-2.5 pl-10 pr-4 text-sm text-slate-100 placeholder-slate-500 outline-none transition focus:border-amber-500/70"
+              className="min-h-[44px] w-full rounded-xl border border-slate-700/80 bg-slate-950/90 py-2.5 pl-10 pr-4 text-sm text-slate-100 placeholder-slate-500 outline-none transition focus:border-amber-500/70"
             />
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="-mx-1 flex flex-nowrap gap-2 overflow-x-auto px-1 pb-1 no-scrollbar sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
             {(
               [
                 { key: "all", label: "Todos" },
@@ -133,7 +133,7 @@ export function VehiclesClient({ initialVehicles }: VehiclesClientProps) {
                   key={tab.key}
                   type="button"
                   onClick={() => setStatusFilter(tab.key)}
-                  className={`rounded-xl border px-3.5 py-2 text-xs font-medium transition cursor-pointer ${
+                  className={`min-h-[38px] shrink-0 rounded-xl border px-3.5 py-2 text-xs font-medium transition cursor-pointer ${
                     active
                       ? "border-slate-600 bg-slate-800 text-white"
                       : "border-slate-800 bg-slate-950/60 text-slate-400 hover:border-slate-700 hover:text-slate-200"

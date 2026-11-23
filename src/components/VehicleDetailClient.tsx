@@ -742,28 +742,34 @@ export function VehicleDetailClient({
       {/* Edit Vehicle Modal */}
       {editVehicleOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/75 p-0 backdrop-blur-sm sm:items-center sm:p-4"
           role="dialog"
           aria-modal="true"
           onClick={(e) => {
             if (e.target === e.currentTarget) setEditVehicleOpen(false);
           }}
         >
-          <div className="gp-card w-full max-w-xl overflow-hidden rounded-2xl border border-slate-800 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-800 px-6 py-4">
+          <div className="gp-card max-h-[94dvh] w-full max-w-xl overflow-y-auto overscroll-contain rounded-t-2xl border border-slate-800 shadow-2xl sm:rounded-2xl">
+            <div className="flex justify-center pt-2.5 pb-1 sm:hidden" aria-hidden="true">
+              <span className="h-1 w-10 rounded-full bg-slate-700" />
+            </div>
+            <div className="flex items-center justify-between border-b border-slate-800 px-5 py-4 sm:px-6">
               <h2 className="text-base font-semibold text-slate-100">
                 Editar ficha del vehículo
               </h2>
               <button
                 type="button"
                 onClick={() => setEditVehicleOpen(false)}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer"
+                className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveVehicle} className="space-y-4 p-6">
+            <form
+              onSubmit={handleSaveVehicle}
+              className="space-y-4 px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:p-6"
+            >
               <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-slate-300">
@@ -772,59 +778,52 @@ export function VehicleDetailClient({
                   <input
                     type="text"
                     required
+                    autoCapitalize="characters"
                     value={vPlate}
                     onChange={(e) => setVPlate(e.target.value.toUpperCase())}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm uppercase text-slate-100 outline-none focus:border-amber-500"
+                    className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm uppercase text-slate-100 outline-none focus:border-amber-500"
                   />
                 </div>
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-300">
-                    Marca
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={vBrand}
-                    onChange={(e) => setVBrand(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-300">
-                    Modelo
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={vModel}
-                    onChange={(e) => setVModel(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
-                  />
+                <div className="grid grid-cols-2 gap-3 sm:col-span-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-slate-300">
+                      Marca
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={vBrand}
+                      onChange={(e) => setVBrand(e.target.value)}
+                      className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-slate-300">
+                      Modelo
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={vModel}
+                      onChange={(e) => setVModel(e.target.value)}
+                      className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
+              <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-slate-300">
                     Año
                   </label>
                   <input
                     type="number"
+                    inputMode="numeric"
                     required
                     value={vYear}
                     onChange={(e) => setVYear(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-300">
-                    Motor
-                  </label>
-                  <input
-                    type="text"
-                    value={vEngine}
-                    onChange={(e) => setVEngine(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
+                    className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500"
                   />
                 </div>
                 <div>
@@ -833,11 +832,23 @@ export function VehicleDetailClient({
                   </label>
                   <input
                     type="number"
+                    inputMode="numeric"
                     min={0}
                     required
                     value={vKm}
                     onChange={(e) => setVKm(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500"
+                    className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div className="col-span-2 sm:col-span-1">
+                  <label className="mb-1 block text-xs font-medium text-slate-300">
+                    Motor
+                  </label>
+                  <input
+                    type="text"
+                    value={vEngine}
+                    onChange={(e) => setVEngine(e.target.value)}
+                    className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
                   />
                 </div>
               </div>
@@ -852,7 +863,7 @@ export function VehicleDetailClient({
                     required
                     value={vOwnerName}
                     onChange={(e) => setVOwnerName(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
+                    className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
                   />
                 </div>
                 <div>
@@ -861,10 +872,11 @@ export function VehicleDetailClient({
                   </label>
                   <input
                     type="tel"
+                    inputMode="tel"
                     required
                     value={vOwnerPhone}
                     onChange={(e) => setVOwnerPhone(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500"
+                    className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500"
                   />
                 </div>
               </div>
@@ -887,18 +899,18 @@ export function VehicleDetailClient({
                 </p>
               )}
 
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
                 <button
                   type="button"
                   onClick={() => setEditVehicleOpen(false)}
-                  className="rounded-xl border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 cursor-pointer"
+                  className="min-h-[44px] rounded-xl border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={savingVehicle}
-                  className="rounded-xl bg-amber-500 px-5 py-2 text-xs font-bold text-slate-950 hover:bg-amber-400 disabled:opacity-50 cursor-pointer"
+                  className="min-h-[46px] rounded-xl bg-amber-500 px-5 py-2 text-sm font-bold text-slate-950 hover:bg-amber-400 disabled:opacity-50 sm:min-h-[40px] sm:text-xs cursor-pointer"
                 >
                   {savingVehicle ? "Guardando..." : "Guardar cambios"}
                 </button>
@@ -911,29 +923,35 @@ export function VehicleDetailClient({
       {/* Edit Repair Modal */}
       {editingRepair && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/75 p-0 backdrop-blur-sm sm:items-center sm:p-4"
           role="dialog"
           aria-modal="true"
           onClick={(e) => {
             if (e.target === e.currentTarget) setEditingRepair(null);
           }}
         >
-          <div className="gp-card max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-slate-800 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-800 px-6 py-4">
+          <div className="gp-card max-h-[94dvh] w-full max-w-xl overflow-y-auto overscroll-contain rounded-t-2xl border border-slate-800 shadow-2xl sm:rounded-2xl">
+            <div className="flex justify-center pt-2.5 pb-1 sm:hidden" aria-hidden="true">
+              <span className="h-1 w-10 rounded-full bg-slate-700" />
+            </div>
+            <div className="flex items-center justify-between border-b border-slate-800 px-5 py-4 sm:px-6">
               <h2 className="text-base font-semibold text-slate-100">
                 Editar reparación
               </h2>
               <button
                 type="button"
                 onClick={() => setEditingRepair(null)}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer"
+                className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveRepair} className="space-y-4 p-6">
-              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+            <form
+              onSubmit={handleSaveRepair}
+              className="space-y-4 px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:p-6"
+            >
+              <div className="grid grid-cols-2 gap-3.5">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-slate-300">
                     Fecha
@@ -943,48 +961,51 @@ export function VehicleDetailClient({
                     required
                     value={rDate}
                     onChange={(e) => setRDate(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500"
+                    className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500"
                   />
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-slate-300">
-                    Km en el service
+                    Km en service
                   </label>
                   <input
                     type="number"
+                    inputMode="numeric"
                     min={0}
                     required
                     value={rKm}
                     onChange={(e) => setRKm(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500"
+                    className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500"
                   />
                 </div>
               </div>
 
               <div className="space-y-2 rounded-xl border border-slate-800 bg-slate-950/60 p-3.5">
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="mb-1 block text-xs font-medium text-slate-300">
-                      Cobrado al cliente (ARS)
+                      Cobrado (ARS)
                     </label>
                     <input
                       type="number"
+                      inputMode="numeric"
                       min={0}
                       value={rCost}
                       onChange={(e) => setRCost(e.target.value)}
-                      className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500"
+                      className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500"
                     />
                   </div>
                   <div>
                     <label className="mb-1 block text-xs font-medium text-slate-300">
-                      Costo reparación / repuestos (ARS)
+                      Costo repuestos
                     </label>
                     <input
                       type="number"
+                      inputMode="numeric"
                       min={0}
                       value={rPartsCost}
                       onChange={(e) => setRPartsCost(e.target.value)}
-                      className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500"
+                      className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500"
                     />
                   </div>
                 </div>
@@ -1014,7 +1035,7 @@ export function VehicleDetailClient({
                 <select
                   value={rType}
                   onChange={(e) => setRType(e.target.value)}
-                  className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
+                  className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
                 >
                   {SERVICE_TYPES.map((t) => (
                     <option key={t} value={t} className="bg-slate-900">
@@ -1045,12 +1066,12 @@ export function VehicleDetailClient({
                   type="text"
                   value={rNotes}
                   onChange={(e) => setRNotes(e.target.value)}
-                  className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
+                  className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
                 />
               </div>
 
               <div className="space-y-2.5 rounded-xl border border-slate-800 bg-slate-950/60 p-3.5">
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-xs font-semibold text-slate-200">
                     Recordatorio de mantenimiento
                   </span>
@@ -1066,7 +1087,7 @@ export function VehicleDetailClient({
                       key={preset.value}
                       type="button"
                       onClick={() => setRPreset(preset.value)}
-                      className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition cursor-pointer ${
+                      className={`min-h-[36px] rounded-lg border px-2.5 py-1 text-xs font-medium transition cursor-pointer ${
                         rPreset === preset.value
                           ? "border-amber-500 bg-amber-500/15 text-amber-300"
                           : "border-slate-700 bg-slate-900 text-slate-400 hover:text-slate-200"
@@ -1082,7 +1103,7 @@ export function VehicleDetailClient({
                     required
                     value={rCustomDate}
                     onChange={(e) => setRCustomDate(e.target.value)}
-                    className="w-full max-w-xs rounded-xl border border-slate-700 bg-slate-950 px-3 py-1.5 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500"
+                    className="min-h-[44px] w-full max-w-xs rounded-xl border border-slate-700 bg-slate-950 px-3 py-1.5 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500"
                   />
                 )}
               </div>
@@ -1093,18 +1114,18 @@ export function VehicleDetailClient({
                 </p>
               )}
 
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
                 <button
                   type="button"
                   onClick={() => setEditingRepair(null)}
-                  className="rounded-xl border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 cursor-pointer"
+                  className="min-h-[44px] rounded-xl border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={savingRepair}
-                  className="rounded-xl bg-amber-500 px-5 py-2 text-xs font-bold text-slate-950 hover:bg-amber-400 disabled:opacity-50 cursor-pointer"
+                  className="min-h-[46px] rounded-xl bg-amber-500 px-5 py-2 text-sm font-bold text-slate-950 hover:bg-amber-400 disabled:opacity-50 sm:min-h-[40px] sm:text-xs cursor-pointer"
                 >
                   {savingRepair ? "Guardando..." : "Guardar cambios"}
                 </button>

@@ -320,7 +320,7 @@ export function DashboardClient({ initialData }: DashboardClientProps) {
           </div>
 
           {/* Filter Tabs */}
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-4 -mx-1 flex flex-nowrap gap-2 overflow-x-auto px-1 pb-1 no-scrollbar sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
             {filterTabs.map((tab) => {
               const active = filter === tab.key;
               return (
@@ -328,7 +328,7 @@ export function DashboardClient({ initialData }: DashboardClientProps) {
                   key={tab.key}
                   type="button"
                   onClick={() => setFilter(tab.key)}
-                  className={`inline-flex items-center gap-2 rounded-xl border px-3.5 py-1.5 text-xs font-medium transition cursor-pointer ${
+                  className={`inline-flex min-h-[38px] shrink-0 items-center gap-2 rounded-xl border px-3.5 py-1.5 text-xs font-medium transition cursor-pointer ${
                     active
                       ? "border-slate-600 bg-slate-800 text-white"
                       : "border-slate-800 bg-slate-950/60 text-slate-400 hover:border-slate-700 hover:text-slate-200"
@@ -376,7 +376,7 @@ export function DashboardClient({ initialData }: DashboardClientProps) {
               return (
                 <div
                   key={alert.repairId}
-                  className="flex flex-col gap-4 px-5 py-4 transition hover:bg-slate-800/25 sm:px-6 lg:flex-row lg:items-center lg:justify-between"
+                  className="flex flex-col gap-3.5 px-4 py-4 transition hover:bg-slate-800/25 sm:px-6 lg:flex-row lg:items-center lg:justify-between"
                 >
                   {/* Left: Vehicle + Owner + Service */}
                   <div className="grid flex-1 grid-cols-1 gap-3 md:grid-cols-12 md:items-center md:gap-4">
@@ -425,8 +425,10 @@ export function DashboardClient({ initialData }: DashboardClientProps) {
                   </div>
 
                   {/* Right: Status + WhatsApp Action */}
-                  <div className="flex flex-wrap items-center justify-between gap-2.5 border-t border-slate-800/60 pt-3 lg:justify-end lg:border-t-0 lg:pt-0">
-                    <StatusPill urgency={alert.urgency} label={badgeLabel} />
+                  <div className="flex flex-col gap-2.5 border-t border-slate-800/60 pt-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between lg:justify-end lg:border-t-0 lg:pt-0">
+                    <div>
+                      <StatusPill urgency={alert.urgency} label={badgeLabel} />
+                    </div>
 
                     <div className="flex items-center gap-2">
                       {isNotified ? (
@@ -434,9 +436,9 @@ export function DashboardClient({ initialData }: DashboardClientProps) {
                           <button
                             type="button"
                             onClick={() => openWhatsApp(alert)}
-                            className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/20 cursor-pointer"
+                            className="flex-1 sm:flex-none inline-flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-2 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/20 cursor-pointer"
                           >
-                            <MessageCircle className="h-3.5 w-3.5" />
+                            <MessageCircle className="h-4 w-4" />
                             Reenviar
                           </button>
                           <button
@@ -444,28 +446,28 @@ export function DashboardClient({ initialData }: DashboardClientProps) {
                             disabled={resettingId === alert.repairId}
                             onClick={() => handleResetAlert(alert)}
                             title="Volver a pendiente"
-                            className="inline-flex items-center justify-center rounded-xl border border-slate-700 p-2 text-slate-400 transition hover:border-slate-600 hover:bg-slate-800 hover:text-slate-200 disabled:opacity-50 cursor-pointer"
+                            className="inline-flex min-h-[42px] min-w-[42px] items-center justify-center rounded-xl border border-slate-700 p-2 text-slate-400 transition hover:border-slate-600 hover:bg-slate-800 hover:text-slate-200 disabled:opacity-50 cursor-pointer"
                           >
-                            <RotateCcw className="h-3.5 w-3.5" />
+                            <RotateCcw className="h-4 w-4" />
                           </button>
                         </>
                       ) : (
                         <button
                           type="button"
                           onClick={() => openWhatsApp(alert)}
-                          className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500 px-3.5 py-2 text-xs font-bold text-slate-950 shadow-md shadow-emerald-500/15 transition hover:bg-emerald-400 active:scale-[0.98] cursor-pointer"
+                          className="flex-1 sm:flex-none inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold text-slate-950 shadow-md shadow-emerald-500/15 transition hover:bg-emerald-400 active:scale-[0.98] sm:min-h-[38px] cursor-pointer"
                         >
-                          <MessageCircle className="h-3.5 w-3.5 stroke-[2.3]" />
+                          <MessageCircle className="h-4 w-4 stroke-[2.3]" />
                           Enviar WhatsApp
                         </button>
                       )}
 
                       <Link
                         href={`/vehiculos/${alert.vehicleId}`}
-                        className="inline-flex items-center gap-1 rounded-xl border border-slate-700/90 px-3 py-2 text-xs font-medium text-slate-300 transition hover:border-slate-600 hover:bg-slate-800 hover:text-white"
+                        className="inline-flex min-h-[44px] items-center justify-center gap-1 rounded-xl border border-slate-700/90 px-3.5 py-2 text-xs font-medium text-slate-300 transition hover:border-slate-600 hover:bg-slate-800 hover:text-white sm:min-h-[38px]"
                       >
                         Ficha
-                        <ArrowRight className="h-3 w-3" />
+                        <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
                     </div>
                   </div>

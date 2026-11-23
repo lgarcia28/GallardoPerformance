@@ -134,7 +134,7 @@ export function WhatsAppModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/75 p-0 backdrop-blur-sm sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="whatsapp-modal-title"
@@ -142,9 +142,13 @@ export function WhatsAppModal({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="gp-card w-full max-w-xl overflow-hidden rounded-2xl border border-slate-800 shadow-2xl">
+      <div className="gp-card flex max-h-[92dvh] w-full max-w-xl flex-col overflow-hidden rounded-t-2xl border border-slate-800 shadow-2xl sm:rounded-2xl">
+        <div className="flex justify-center pt-2.5 pb-1 sm:hidden" aria-hidden="true">
+          <span className="h-1 w-10 rounded-full bg-slate-700" />
+        </div>
+
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 border-b border-slate-800/90 px-6 py-5">
+        <div className="flex items-start justify-between gap-4 border-b border-slate-800/90 px-4 py-4 sm:px-6 sm:py-5">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
               <MessageCircle className="h-5 w-5" />
@@ -164,7 +168,7 @@ export function WhatsAppModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-slate-200 cursor-pointer"
+            className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-800 hover:text-slate-200 cursor-pointer"
             aria-label="Cerrar modal"
           >
             <X className="h-5 w-5" />
@@ -172,7 +176,7 @@ export function WhatsAppModal({
         </div>
 
         {/* Context Summary */}
-        <div className="space-y-4 px-6 py-5">
+        <div className="flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6 sm:py-5">
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/70 p-4">
             <div className="space-y-1.5">
               <div className="flex items-center gap-2.5">
@@ -191,7 +195,7 @@ export function WhatsAppModal({
               </p>
             </div>
 
-            <div className="text-right">
+            <div className="text-left sm:text-right">
               <p className="text-sm font-medium text-slate-100">
                 {alert.ownerName}
               </p>
@@ -215,7 +219,7 @@ export function WhatsAppModal({
                 <button
                   type="button"
                   onClick={handleResetTemplate}
-                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-slate-400 transition hover:bg-slate-800 hover:text-slate-200 cursor-pointer"
+                  className="inline-flex min-h-[34px] items-center gap-1 rounded-md px-2 py-1 text-xs text-slate-400 transition hover:bg-slate-800 hover:text-slate-200 cursor-pointer"
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
                   Restaurar
@@ -223,7 +227,7 @@ export function WhatsAppModal({
                 <button
                   type="button"
                   onClick={handleCopy}
-                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-slate-300 transition hover:bg-slate-800 hover:text-white cursor-pointer"
+                  className="inline-flex min-h-[34px] items-center gap-1 rounded-md px-2 py-1 text-xs text-slate-300 transition hover:bg-slate-800 hover:text-white cursor-pointer"
                 >
                   {copied ? (
                     <>
@@ -258,12 +262,12 @@ export function WhatsAppModal({
         </div>
 
         {/* Footer actions */}
-        <div className="flex flex-col-reverse gap-2.5 border-t border-slate-800/90 bg-slate-950/40 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col-reverse gap-2 border-t border-slate-800/90 bg-slate-950/80 px-4 pt-3 pb-[max(0.9rem,env(safe-area-inset-bottom))] sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-4">
           <button
             type="button"
             disabled={saving}
             onClick={() => markNotified(false)}
-            className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-700 px-3.5 py-2.5 text-xs font-medium text-slate-300 transition hover:border-slate-600 hover:bg-slate-800/80 hover:text-white disabled:opacity-50 cursor-pointer"
+            className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-slate-700 px-3.5 py-2.5 text-xs font-medium text-slate-300 transition hover:border-slate-600 hover:bg-slate-800/80 hover:text-white disabled:opacity-50 cursor-pointer"
           >
             <Check className="h-4 w-4 text-emerald-400" />
             Solo marcar avisado
@@ -274,7 +278,7 @@ export function WhatsAppModal({
             disabled={saving || !message.trim()}
             onClick={() => markNotified(true)}
             id="whatsapp-confirm-send-btn"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/15 transition hover:bg-emerald-400 active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+            className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/15 transition hover:bg-emerald-400 active:scale-[0.99] disabled:opacity-50 sm:min-h-[42px] cursor-pointer"
           >
             <MessageCircle className="h-4 w-4" />
             <span>

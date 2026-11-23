@@ -211,9 +211,9 @@ export function FinancesClient({
 
       {/* Date Filter Bar */}
       <section className="gp-card rounded-2xl p-4 sm:p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-3.5 lg:flex-row lg:items-center lg:justify-between">
           {/* Quick Presets */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="-mx-1 flex flex-nowrap items-center gap-2 overflow-x-auto px-1 pb-1 no-scrollbar sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
             {presetButtons.map((btn) => {
               const active = preset === btn.key;
               return (
@@ -221,7 +221,7 @@ export function FinancesClient({
                   key={btn.key}
                   type="button"
                   onClick={() => handleSelectPreset(btn.key)}
-                  className={`rounded-xl border px-3.5 py-2 text-xs font-semibold transition cursor-pointer ${
+                  className={`min-h-[38px] shrink-0 rounded-xl border px-3.5 py-2 text-xs font-semibold transition cursor-pointer ${
                     active
                       ? "border-amber-500 bg-amber-500/15 text-amber-300"
                       : "border-slate-800 bg-slate-950/60 text-slate-400 hover:border-slate-700 hover:text-slate-200"
@@ -234,13 +234,13 @@ export function FinancesClient({
           </div>
 
           {/* Custom Date Range Pickers */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            <div className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-950/80 px-3 py-1.5">
-              <Calendar className="h-3.5 w-3.5 text-slate-500" />
+          <div className="grid grid-cols-2 gap-2.5 sm:flex sm:flex-wrap sm:items-center">
+            <div className="flex min-h-[44px] flex-col justify-center rounded-xl border border-slate-800 bg-slate-950/80 px-3 py-1.5 sm:min-h-[38px] sm:flex-row sm:items-center sm:gap-2">
               <label
                 htmlFor="finances-from-date"
-                className="text-[11px] font-medium text-slate-400"
+                className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-slate-400 sm:text-[11px] sm:normal-case sm:tracking-normal"
               >
+                <Calendar className="h-3 w-3 text-slate-500 sm:h-3.5 sm:w-3.5" />
                 Desde
               </label>
               <input
@@ -248,16 +248,16 @@ export function FinancesClient({
                 type="date"
                 value={fromDate}
                 onChange={(e) => handleFromChange(e.target.value)}
-                className="bg-transparent font-mono text-xs text-slate-100 tabular-nums outline-none"
+                className="w-full bg-transparent font-mono text-xs text-slate-100 tabular-nums outline-none sm:w-auto"
               />
             </div>
 
-            <div className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-950/80 px-3 py-1.5">
-              <Calendar className="h-3.5 w-3.5 text-slate-500" />
+            <div className="flex min-h-[44px] flex-col justify-center rounded-xl border border-slate-800 bg-slate-950/80 px-3 py-1.5 sm:min-h-[38px] sm:flex-row sm:items-center sm:gap-2">
               <label
                 htmlFor="finances-to-date"
-                className="text-[11px] font-medium text-slate-400"
+                className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-slate-400 sm:text-[11px] sm:normal-case sm:tracking-normal"
               >
+                <Calendar className="h-3 w-3 text-slate-500 sm:h-3.5 sm:w-3.5" />
                 Hasta
               </label>
               <input
@@ -265,7 +265,7 @@ export function FinancesClient({
                 type="date"
                 value={toDate}
                 onChange={(e) => handleToChange(e.target.value)}
-                className="bg-transparent font-mono text-xs text-slate-100 tabular-nums outline-none"
+                className="w-full bg-transparent font-mono text-xs text-slate-100 tabular-nums outline-none sm:w-auto"
               />
             </div>
           </div>
@@ -679,40 +679,42 @@ export function FinancesClient({
                     </div>
 
                     {isEditing ? (
-                      <div className="space-y-2.5 rounded-xl border border-slate-800 bg-slate-950/80 p-3">
-                        <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-3 rounded-xl border border-slate-800 bg-slate-950/80 p-3">
+                        <div className="grid grid-cols-2 gap-2.5">
                           <div>
-                            <label className="mb-1 block text-[10px] text-slate-400">
+                            <label className="mb-1 block text-[11px] font-medium text-slate-400">
                               Cobrado (ARS)
                             </label>
                             <input
                               type="number"
+                              inputMode="numeric"
                               min={0}
                               value={draftRevenue}
                               onChange={(e) => setDraftRevenue(e.target.value)}
-                              className="w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 font-mono text-xs text-white tabular-nums outline-none"
+                              className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 font-mono text-sm text-white tabular-nums outline-none focus:border-amber-500"
                             />
                           </div>
                           <div>
-                            <label className="mb-1 block text-[10px] text-slate-400">
+                            <label className="mb-1 block text-[11px] font-medium text-slate-400">
                               Costo (ARS)
                             </label>
                             <input
                               type="number"
+                              inputMode="numeric"
                               min={0}
                               value={draftPartsCost}
                               onChange={(e) =>
                                 setDraftPartsCost(e.target.value)
                               }
-                              className="w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 font-mono text-xs text-white tabular-nums outline-none"
+                              className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 font-mono text-sm text-white tabular-nums outline-none focus:border-amber-500"
                             />
                           </div>
                         </div>
-                        <div className="flex justify-end gap-2">
+                        <div className="grid grid-cols-2 gap-2">
                           <button
                             type="button"
                             onClick={() => setEditingId(null)}
-                            className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs text-slate-300 cursor-pointer"
+                            className="min-h-[44px] rounded-xl border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-300 cursor-pointer"
                           >
                             Cancelar
                           </button>
@@ -720,7 +722,7 @@ export function FinancesClient({
                             type="button"
                             disabled={savingRow}
                             onClick={() => saveInlineEdit(row.id)}
-                            className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-bold text-slate-950 cursor-pointer"
+                            className="min-h-[44px] rounded-xl bg-emerald-500 px-3 py-2 text-xs font-bold text-slate-950 cursor-pointer"
                           >
                             Guardar
                           </button>

@@ -266,15 +266,26 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 pb-24 lg:pb-10 lg:pl-68">
-          <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <main className="flex-1 pb-28 lg:pb-10 lg:pl-68">
+          <div className="mx-auto w-full max-w-6xl px-3.5 py-5 sm:px-6 lg:px-8 lg:py-8">
             {children}
           </div>
         </main>
 
+        {/* Mobile Thumb-Zone Floating Action Button */}
+        <button
+          type="button"
+          onClick={() => openQuickEntry({ mode: "existing" })}
+          aria-label="Cargar auto o reparación"
+          className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] right-4 z-30 flex h-14 items-center gap-2 rounded-full bg-amber-500 px-5 text-sm font-bold text-slate-950 shadow-xl shadow-black/50 ring-1 ring-amber-300/40 transition active:scale-95 lg:hidden cursor-pointer"
+        >
+          <Plus className="h-5 w-5 stroke-[2.6]" />
+          <span>Cargar</span>
+        </button>
+
         {/* Mobile Bottom Navigation */}
         <nav
-          className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-slate-800 bg-[#0D121F]/95 px-2 py-2 backdrop-blur-md lg:hidden"
+          className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-slate-800 bg-[#0D121F]/96 px-1.5 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:hidden"
           aria-label="Navegación móvil"
         >
           {navItems.map((item) => {
@@ -283,7 +294,7 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`relative flex flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-[11px] font-medium transition ${
+                className={`relative flex min-h-[48px] flex-col items-center justify-center gap-1 rounded-xl py-1 text-[11px] font-semibold transition active:bg-slate-800/60 ${
                   item.isActive ? "text-amber-400" : "text-slate-400"
                 }`}
               >
