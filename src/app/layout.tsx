@@ -16,9 +16,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Gallardo Performance — Gestión de Taller Mecánico",
+  title: "GallardoPerformance — Taller Mecánico · Rosario",
   description:
-    "Panel interno del taller mecánico Gallardo Performance para registrar vehículos, consultar historial de reparaciones y enviar alertas de mantenimiento por WhatsApp.",
+    "GallardoPerformance es un taller mecánico dedicado al mantenimiento, diagnóstico y mejoras para que tu auto funcione siempre al máximo. Humberto Primo 820, Rosario 2000.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

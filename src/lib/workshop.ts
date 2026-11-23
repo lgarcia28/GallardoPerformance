@@ -1,3 +1,15 @@
+export const WORKSHOP_INFO = {
+  name: "GallardoPerformance",
+  description:
+    "Taller mecánico dedicado al mantenimiento, diagnóstico y mejoras para que tu auto funcione siempre al máximo.",
+  shortTagline: "Mantenimiento, diagnóstico y mejoras",
+  address: "Humberto Primo 820, Rosario 2000",
+  shortAddress: "Humberto Primo 820, Rosario",
+  instagramHandle: "@gallardoperformance",
+  instagramUrl: "https://www.instagram.com/gallardoperformance/?hl=es",
+  defaultPhonePrefix: "+54 9 341 ",
+} as const;
+
 export type ReminderPreset =
   | "1_year"
   | "6_months"
@@ -264,10 +276,10 @@ export function buildDefaultWhatsAppMessage(params: {
   }
 
   if (daysUntilDue > 0 && daysUntilDue <= 30) {
-    return `Hola ${firstName}, te escribimos desde Gallardo Performance para recordarte que en ${daysUntilDue} ${
+    return `Hola ${firstName}, te escribimos desde ${WORKSHOP_INFO.name} (${WORKSHOP_INFO.shortAddress}) para recordarte que en ${daysUntilDue} ${
       daysUntilDue === 1 ? "día" : "días"
     } se cumple ${elapsedText === "1 año" ? "1 año" : elapsedText} desde el último ${serviceLower} de tu ${vehicleLabel} (${params.licensePlate}). ¿Querés que coordinemos un turno?`;
   }
 
-  return `Hola ${firstName}, te escribimos desde Gallardo Performance para recordarte que ya pasó ${elapsedText} desde el último ${serviceLower} de tu ${vehicleLabel} (${params.licensePlate}). ¿Querés que coordinemos un turno?`;
+  return `Hola ${firstName}, te escribimos desde ${WORKSHOP_INFO.name} (${WORKSHOP_INFO.shortAddress}) para recordarte que ya pasó ${elapsedText} desde el último ${serviceLower} de tu ${vehicleLabel} (${params.licensePlate}). ¿Querés que coordinemos un turno?`;
 }

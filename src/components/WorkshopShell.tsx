@@ -14,7 +14,8 @@ import {
   CarFront,
   CheckCircle2,
   ClipboardList,
-  Gauge,
+  ExternalLink,
+  MapPin,
   Plus,
   Wallet,
 } from "lucide-react";
@@ -26,6 +27,7 @@ import {
   WhatsAppModal,
   type WhatsAppAlertPayload,
 } from "@/components/WhatsAppModal";
+import { WORKSHOP_INFO } from "@/lib/workshop";
 
 interface WorkshopUIContextValue {
   openQuickEntry: (options?: QuickEntryOptions) => void;
@@ -155,19 +157,22 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
         {/* Desktop Sidebar */}
         <aside className="hidden lg:flex lg:w-68 lg:flex-col lg:fixed lg:inset-y-0 border-r border-slate-800/90 bg-[#0D121F]">
           {/* Brand */}
-          <div className="flex items-center gap-3 px-6 py-6 border-b border-slate-800/80">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20">
-              <Gauge className="h-5 w-5 stroke-[2.3]" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-bold tracking-tight text-slate-50 truncate">
-                Gallardo Performance
-              </p>
-              <p className="text-[11px] font-medium text-slate-400">
-                Gestión de Taller Mecánico
-              </p>
-            </div>
-          </div>
+          <Link
+            href="/"
+            className="flex flex-col gap-2 px-5 py-5 border-b border-slate-800/80 transition hover:bg-slate-900/40"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo-gallardo.png"
+              alt={WORKSHOP_INFO.name}
+              width={220}
+              height={42}
+              className="h-9 w-auto max-w-full object-contain object-left"
+            />
+            <p className="text-[11px] font-medium text-slate-400">
+              {WORKSHOP_INFO.shortTagline}
+            </p>
+          </Link>
 
           {/* Primary CTA */}
           <div className="px-4 pt-5 pb-3">
@@ -214,38 +219,46 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
 
-          {/* Footer info */}
-          <div className="border-t border-slate-800/80 px-5 py-4">
-            <div className="rounded-xl border border-slate-800 bg-slate-950/60 px-3.5 py-3">
-              <p className="text-[11px] font-semibold text-slate-300">
-                Recordatorios automáticos
+          {/* Footer workshop info */}
+          <div className="border-t border-slate-800/80 px-4 py-4">
+            <div className="space-y-2 rounded-xl border border-slate-800 bg-slate-950/65 px-3.5 py-3">
+              <p className="text-[11px] leading-relaxed text-slate-400">
+                {WORKSHOP_INFO.description}
               </p>
-              <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
-                Cada cambio de aceite programa una alerta a 1 año para avisar por
-                WhatsApp en un clic.
-              </p>
+              <div className="flex items-center gap-1.5 pt-1 text-[11px] font-medium text-slate-300">
+                <MapPin className="h-3.5 w-3.5 shrink-0 text-red-500" />
+                <span>{WORKSHOP_INFO.address}</span>
+              </div>
+              <a
+                href={WORKSHOP_INFO.instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-400 transition hover:text-amber-300"
+              >
+                <span>{WORKSHOP_INFO.instagramHandle}</span>
+                <ExternalLink className="h-3 w-3" />
+              </a>
             </div>
           </div>
         </aside>
 
         {/* Mobile Top Bar */}
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-800/90 bg-[#0D121F]/95 px-4 py-3 backdrop-blur-md lg:hidden">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500 text-slate-950">
-              <Gauge className="h-4 w-4 stroke-[2.4]" />
-            </div>
-            <div>
-              <p className="text-sm font-bold leading-tight text-slate-50">
-                Gallardo Performance
-              </p>
-              <p className="text-[10px] text-slate-400">Taller Mecánico</p>
-            </div>
+        <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-slate-800/90 bg-[#0D121F]/95 px-4 py-3 backdrop-blur-md lg:hidden">
+          <Link href="/" className="flex items-center min-w-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo-gallardo.png"
+              alt={WORKSHOP_INFO.name}
+              width={165}
+              height={31}
+              className="h-7 w-auto object-contain object-left"
+            />
           </Link>
 
           <button
             type="button"
             onClick={() => openQuickEntry({ mode: "existing" })}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-3 py-2 text-xs font-bold text-slate-950 cursor-pointer"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-amber-500 px-3 py-2 text-xs font-bold text-slate-950 cursor-pointer"
           >
             <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
             <span>Cargar</span>

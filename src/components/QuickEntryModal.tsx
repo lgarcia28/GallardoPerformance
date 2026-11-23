@@ -66,7 +66,7 @@ export function QuickEntryModal({
   const [engine, setEngine] = useState("");
   const [currentMileage, setCurrentMileage] = useState("");
   const [ownerName, setOwnerName] = useState("");
-  const [ownerPhone, setOwnerPhone] = useState("+54 9 11 ");
+  const [ownerPhone, setOwnerPhone] = useState("+54 9 341 ");
   const [vehicleNotes, setVehicleNotes] = useState("");
   const [includeInitialRepair, setIncludeInitialRepair] = useState(true);
 
@@ -578,7 +578,7 @@ export function QuickEntryModal({
                       required
                       value={ownerPhone}
                       onChange={(e) => setOwnerPhone(e.target.value)}
-                      placeholder="+54 9 11 5555-1234"
+                      placeholder="+54 9 341 555-1234"
                       className="w-full rounded-xl border border-slate-700/90 bg-slate-950/90 px-3.5 py-2.5 font-mono text-sm text-slate-100 tabular-nums placeholder-slate-600 outline-none focus:border-amber-500/70"
                     />
                   </div>

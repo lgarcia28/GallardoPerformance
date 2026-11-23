@@ -279,7 +279,7 @@ export function VehicleDetailClient({
 
   const directWaUrl = buildWhatsAppUrl(
     vehicle.ownerPhone,
-    `Hola ${vehicle.ownerName.split(" ")[0]}, te escribimos desde Gallardo Performance por tu ${vehicle.brand} ${vehicle.model} (${vehicle.licensePlate}).`
+    `Hola ${vehicle.ownerName.split(" ")[0]}, te escribimos desde GallardoPerformance (Humberto Primo 820, Rosario) por tu ${vehicle.brand} ${vehicle.model} (${vehicle.licensePlate}).`
   );
 
   const editRepairDuePreview = editingRepair
