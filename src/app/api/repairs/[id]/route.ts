@@ -58,6 +58,13 @@ export async function PATCH(request: Request, context: RouteContext) {
           : Math.max(0, Math.round(Number(body.cost)))
         : existing.cost;
 
+    const partsCost =
+      body.partsCost !== undefined
+        ? body.partsCost === null || String(body.partsCost).trim() === ""
+          ? null
+          : Math.max(0, Math.round(Number(body.partsCost)))
+        : existing.partsCost;
+
     const mechanicNotes =
       body.mechanicNotes !== undefined
         ? body.mechanicNotes
@@ -103,6 +110,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       serviceType,
       description,
       cost: Number.isFinite(cost) ? cost : null,
+      partsCost: Number.isFinite(partsCost) ? partsCost : null,
       mechanicNotes,
       reminderPreset,
       reminderDueDate,

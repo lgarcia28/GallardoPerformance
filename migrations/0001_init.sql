@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS repairs (
   service_type TEXT NOT NULL,
   description TEXT NOT NULL,
   cost INTEGER,
+  parts_cost INTEGER,
   mechanic_notes TEXT,
   reminder_preset TEXT NOT NULL DEFAULT 'none',
   reminder_due_date TEXT,

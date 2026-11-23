@@ -100,7 +100,23 @@ export function getInitialSeedPayload(): {
   ];
 
   const repairs: SeedRepairTemplate[] = [
-    // 0: VW Golf GTI — OVERDUE oil change (12 days overdue)
+    // 0: VW Golf GTI — OVERDUE oil change (12 days overdue) + recent diagnostic this month
+    {
+      vehicleIndex: 0,
+      serviceDate: addDaysToDate(today, -5),
+      mileageAtService: 74800,
+      serviceType: "Diagnóstico electrónico",
+      description:
+        "Escaneo VCDS por testigo de sensor ABS delantero derecho, reemplazo de sensor Bosch y borrado de fallas.",
+      cost: 125000,
+      partsCost: 52000,
+      mechanicNotes: "Se le recordó que le corresponde cambio de aceite anual.",
+      reminderPreset: "none",
+      reminderDueDate: null,
+      reminderStatus: "none",
+      notifiedAt: null,
+      createdAt: nowIso,
+    },
     {
       vehicleIndex: 0,
       serviceDate: addDaysToDate(today, -377),
@@ -109,6 +125,7 @@ export function getInitialSeedPayload(): {
       description:
         "Aceite sintético Motul 8100 X-cess 5W-40 (5.5L), filtro de aceite Mann, filtro de aire y filtro de habitáculo.",
       cost: 168000,
+      partsCost: 89000,
       mechanicNotes:
         "Sin pérdidas en cárter ni tapa de válvulas. Próximo service al año o 75.000 km.",
       reminderPreset: "1_year",
@@ -125,6 +142,7 @@ export function getInitialSeedPayload(): {
       description:
         "Cambio de pastillas delanteras Bosch cerámicas + rectificado de discos delanteros y purgado de líquido DOT 4.",
       cost: 215000,
+      partsCost: 98000,
       mechanicNotes: "Discos traseros todavía con 60% de vida útil.",
       reminderPreset: "none",
       reminderDueDate: null,
@@ -132,23 +150,24 @@ export function getInitialSeedPayload(): {
       notifiedAt: null,
       createdAt: nowIso,
     },
+
+    // 1: Ford Ranger XLT — OVERDUE oil change (4 days overdue) + recent cooling job this month
     {
-      vehicleIndex: 0,
-      serviceDate: addDaysToDate(today, -540),
-      mileageAtService: 56400,
-      serviceType: "Diagnóstico electrónico",
+      vehicleIndex: 1,
+      serviceDate: addDaysToDate(today, -9),
+      mileageAtService: 138400,
+      serviceType: "Refrigeración / Radiador",
       description:
-        "Escaneo VCDS completo, cambio de 4 bujías NGK Iridium y limpieza de cuerpo de mariposa.",
-      cost: 145000,
-      mechanicNotes: "Se corrigió leve fallo de encendido en cilindro 3.",
+        "Reemplazo de manguera superior de radiador, termostato original Motorcraft y carga de líquido refrigerante orgánico.",
+      cost: 195000,
+      partsCost: 84000,
+      mechanicNotes: "Circuito purgado y probado a temperatura de trabajo.",
       reminderPreset: "none",
       reminderDueDate: null,
       reminderStatus: "none",
       notifiedAt: null,
       createdAt: nowIso,
     },
-
-    // 1: Ford Ranger XLT — OVERDUE oil change (4 days overdue)
     {
       vehicleIndex: 1,
       serviceDate: addDaysToDate(today, -369),
@@ -157,6 +176,7 @@ export function getInitialSeedPayload(): {
       description:
         "Aceite Elaion F50E 5W-30 (9.5L), filtro de aceite, filtro de gasoil doble etapa y filtro de aire reforzado.",
       cost: 245000,
+      partsCost: 132000,
       mechanicNotes: "Se revisó nivel de diferencial y caja de transferencia: OK.",
       reminderPreset: "1_year",
       reminderDueDate: addDaysToDate(today, -4),
@@ -166,12 +186,13 @@ export function getInitialSeedPayload(): {
     },
     {
       vehicleIndex: 1,
-      serviceDate: addDaysToDate(today, -145),
-      mileageAtService: 134900,
+      serviceDate: addDaysToDate(today, -45),
+      mileageAtService: 136200,
       serviceType: "Tren delantero",
       description:
         "Reemplazo de ambos extremos de dirección, rótulas inferiores y bujes de barra estabilizadora. Alineación incluida.",
       cost: 310000,
+      partsCost: 145000,
       mechanicNotes:
         "Desapareció el golpe en empedrado. Cubiertas con desgaste parejo.",
       reminderPreset: "none",
@@ -181,7 +202,23 @@ export function getInitialSeedPayload(): {
       createdAt: nowIso,
     },
 
-    // 2: Toyota Corolla Cross — UPCOMING oil change (due in 8 days)
+    // 2: Toyota Corolla Cross — UPCOMING oil change (due in 8 days) + recent alignment this month
+    {
+      vehicleIndex: 2,
+      serviceDate: addDaysToDate(today, -3),
+      mileageAtService: 42300,
+      serviceType: "Alineación y balanceo",
+      description:
+        "Rotación de 4 neumáticos, balanceo computarizado y alineación 3D completa.",
+      cost: 78000,
+      partsCost: 12000,
+      mechanicNotes: "Presión calibrada en 33 PSI. Cubiertas parejas.",
+      reminderPreset: "none",
+      reminderDueDate: null,
+      reminderStatus: "none",
+      notifiedAt: null,
+      createdAt: nowIso,
+    },
     {
       vehicleIndex: 2,
       serviceDate: addDaysToDate(today, -357),
@@ -190,25 +227,11 @@ export function getInitialSeedPayload(): {
       description:
         "Aceite Toyota 0W-20 sintético, filtro de aceite original, filtro de aire y desinfección de conductos A/A.",
       cost: 159000,
+      partsCost: 82000,
       mechanicNotes: "Escobillas limpiaparabrisas nuevas instaladas.",
       reminderPreset: "1_year",
       reminderDueDate: addDaysToDate(today, 8),
       reminderStatus: "pending",
-      notifiedAt: null,
-      createdAt: nowIso,
-    },
-    {
-      vehicleIndex: 2,
-      serviceDate: addDaysToDate(today, -95),
-      mileageAtService: 39800,
-      serviceType: "Alineación y balanceo",
-      description:
-        "Rotación de 4 neumáticos, balanceo computarizado y alineación 3D.",
-      cost: 68000,
-      mechanicNotes: "Presión calibrada en 33 PSI.",
-      reminderPreset: "none",
-      reminderDueDate: null,
-      reminderStatus: "none",
       notifiedAt: null,
       createdAt: nowIso,
     },
@@ -222,6 +245,7 @@ export function getInitialSeedPayload(): {
       description:
         "Cambio de pastillas delanteras Nissin, limpieza y lubricación de guías de caliper.",
       cost: 175000,
+      partsCost: 78000,
       mechanicNotes:
         "Pastillas traseras al 30%. Agendar control a los 6 meses para no rayar discos.",
       reminderPreset: "6_months",
@@ -232,15 +256,16 @@ export function getInitialSeedPayload(): {
     },
     {
       vehicleIndex: 3,
-      serviceDate: addDaysToDate(today, -100),
-      mileageAtService: 59400,
+      serviceDate: addDaysToDate(today, -40),
+      mileageAtService: 60400,
       serviceType: "Cambio de aceite y filtros",
       description:
         "Aceite Honda 0W-20 sintético, filtro de aceite y filtro de aire.",
       cost: 152000,
+      partsCost: 79000,
       mechanicNotes: "Todo en orden, turbo sin transpiraciones.",
       reminderPreset: "1_year",
-      reminderDueDate: addDaysToDate(today, 265),
+      reminderDueDate: addDaysToDate(today, 325),
       reminderStatus: "pending",
       notifiedAt: null,
       createdAt: nowIso,
@@ -255,6 +280,7 @@ export function getInitialSeedPayload(): {
       description:
         "Aceite Castrol Edge 5W-30 LL (4.5L), filtro de aceite Bosch, filtro de aire y habitáculo con carbón activado.",
       cost: 192000,
+      partsCost: 98000,
       mechanicNotes: "Se reseteó aviso de inspección en tablero.",
       reminderPreset: "1_year",
       reminderDueDate: addDaysToDate(today, -2),
@@ -264,12 +290,13 @@ export function getInitialSeedPayload(): {
     },
     {
       vehicleIndex: 4,
-      serviceDate: addDaysToDate(today, -240),
-      mileageAtService: 90100,
+      serviceDate: addDaysToDate(today, -35),
+      mileageAtService: 95100,
       serviceType: "Distribución",
       description:
         "Kit de distribución completo INA (correa, tensores) + bomba de agua + refrigerante G13 original.",
       cost: 485000,
+      partsCost: 235000,
       mechanicNotes: "Trabajo garantizado por 60.000 km o 4 años.",
       reminderPreset: "none",
       reminderDueDate: null,
@@ -278,30 +305,32 @@ export function getInitialSeedPayload(): {
       createdAt: nowIso,
     },
 
-    // 5: Chevrolet Cruze RS — UP TO DATE
+    // 5: Chevrolet Cruze RS — UP TO DATE (recent repair this month!)
     {
       vehicleIndex: 5,
-      serviceDate: addDaysToDate(today, -14),
+      serviceDate: addDaysToDate(today, -12),
       mileageAtService: 28600,
       serviceType: "Cambio de aceite y filtros",
       description:
         "Aceite ACDelco Dexos1 Gen 3 5W-30 sintético, filtro de aceite original GM y filtro de aire.",
       cost: 148000,
+      partsCost: 74000,
       mechanicNotes: "Vehículo impecable. Próximo service al año o 38.600 km.",
       reminderPreset: "1_year",
-      reminderDueDate: addDaysToDate(today, 351),
+      reminderDueDate: addDaysToDate(today, 353),
       reminderStatus: "pending",
       notifiedAt: null,
       createdAt: nowIso,
     },
     {
       vehicleIndex: 5,
-      serviceDate: addDaysToDate(today, -210),
-      mileageAtService: 21400,
+      serviceDate: addDaysToDate(today, -75),
+      mileageAtService: 25400,
       serviceType: "Batería / Electricidad",
       description:
         "Reemplazo de batería Moura 12x65 AGM Start-Stop y control de carga de alternador.",
       cost: 220000,
+      partsCost: 148000,
       mechanicNotes: "Alternador cargando estable en 14.2V.",
       reminderPreset: "none",
       reminderDueDate: null,

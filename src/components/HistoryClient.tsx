@@ -63,10 +63,19 @@ export function HistoryClient({ initialRepairs }: HistoryClientProps) {
     });
   }, [repairs, search, serviceFilter]);
 
-  const filteredTotal = useMemo(
-    () => filtered.reduce((sum, item) => sum + (item.cost ?? 0), 0),
-    [filtered]
-  );
+  const filteredTotals = useMemo(() => {
+    let revenue = 0;
+    let partsCost = 0;
+    for (const item of filtered) {
+      revenue += item.cost ?? 0;
+      partsCost += item.partsCost ?? 0;
+    }
+    return {
+      revenue,
+      partsCost,
+      profit: revenue - partsCost,
+    };
+  }, [filtered]);
 
   return (
     <div className="space-y-6">
@@ -128,7 +137,17 @@ export function HistoryClient({ initialRepairs }: HistoryClientProps) {
             <div className="rounded-xl border border-slate-800 bg-slate-950/60 px-3.5 py-2 font-mono text-xs tabular-nums">
               <span className="text-slate-400">{filtered.length} trabajos · </span>
               <span className="font-bold text-slate-100">
-                {formatCurrency(filteredTotal)}
+                {formatCurrency(filteredTotals.revenue)}
+              </span>
+              <span className="text-slate-500"> · Gan: </span>
+              <span
+                className={`font-bold ${
+                  filteredTotals.profit >= 0
+                    ? "text-emerald-400"
+                    : "text-red-400"
+                }`}
+              >
+                {formatCurrency(filteredTotals.profit)}
               </span>
             </div>
           </div>
@@ -155,6 +174,7 @@ export function HistoryClient({ initialRepairs }: HistoryClientProps) {
               item.reminderDueDate,
               item.reminderStatus
             );
+            const profit = (item.cost ?? 0) - (item.partsCost ?? 0);
 
             return (
               <div
@@ -206,9 +226,25 @@ export function HistoryClient({ initialRepairs }: HistoryClientProps) {
                 </div>
 
                 <div className="flex items-center justify-between gap-4 border-t border-slate-800/60 pt-2.5 lg:justify-end lg:border-t-0 lg:pt-0">
-                  <span className="font-mono text-sm font-bold text-slate-100 tabular-nums">
-                    {formatCurrency(item.cost)}
-                  </span>
+                  <div className="text-left lg:text-right font-mono tabular-nums">
+                    <p className="text-sm font-bold text-slate-100">
+                      {formatCurrency(item.cost)}
+                    </p>
+                    {(item.cost != null || item.partsCost != null) && (
+                      <p className="text-[11px] text-slate-400">
+                        Costo {formatCurrency(item.partsCost ?? 0)} ·{" "}
+                        <span
+                          className={
+                            profit >= 0
+                              ? "font-semibold text-emerald-400"
+                              : "font-semibold text-red-400"
+                          }
+                        >
+                          +{formatCurrency(profit)}
+                        </span>
+                      </p>
+                    )}
+                  </div>
                   <Link
                     href={`/vehiculos/${item.vehicleId}`}
                     className="inline-flex items-center gap-1 rounded-xl border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-slate-600 hover:bg-slate-800"

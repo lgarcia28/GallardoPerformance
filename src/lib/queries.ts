@@ -370,3 +370,154 @@ export async function getAllRepairsWithVehicle(
 
   return list;
 }
+
+export interface FinanceRepairRow {
+  id: number;
+  vehicleId: number;
+  licensePlate: string;
+  brand: string;
+  model: string;
+  ownerName: string;
+  serviceDate: string;
+  serviceType: string;
+  description: string;
+  revenue: number;
+  partsCost: number;
+  profit: number;
+  marginPct: number | null;
+  hasCostEntered: boolean;
+  hasPartsCostEntered: boolean;
+}
+
+export interface ServiceFinanceBreakdown {
+  serviceType: string;
+  count: number;
+  revenue: number;
+  partsCost: number;
+  profit: number;
+}
+
+export interface FinancesData {
+  from: string | null;
+  to: string | null;
+  summary: {
+    uniqueVehiclesCount: number;
+    repairsCount: number;
+    totalRevenue: number;
+    totalPartsCost: number;
+    totalProfit: number;
+    profitMarginPct: number | null;
+    averageTicket: number;
+  };
+  byServiceType: ServiceFinanceBreakdown[];
+  repairs: FinanceRepairRow[];
+}
+
+export async function getFinancesData(
+  from?: string,
+  to?: string
+): Promise<FinancesData> {
+  const repo = await getWorkshopRepository();
+  const [allVehicles, allRepairs] = await Promise.all([
+    repo.listVehicles(),
+    repo.listRepairs(),
+  ]);
+
+  const vehicleMap = new Map<number, Vehicle>(
+    allVehicles.map((v) => [v.id, v])
+  );
+
+  const normalizedFrom =
+    from && /^\d{4}-\d{2}-\d{2}$/.test(from) ? from : null;
+  const normalizedTo = to && /^\d{4}-\d{2}-\d{2}$/.test(to) ? to : null;
+
+  const filteredRepairs = allRepairs.filter((r) => {
+    const day = r.serviceDate.slice(0, 10);
+    if (normalizedFrom && day < normalizedFrom) return false;
+    if (normalizedTo && day > normalizedTo) return false;
+    return true;
+  });
+
+  const uniqueVehicleIds = new Set<number>();
+  let totalRevenue = 0;
+  let totalPartsCost = 0;
+
+  const serviceMap = new Map<string, ServiceFinanceBreakdown>();
+  const rows: FinanceRepairRow[] = [];
+
+  for (const r of filteredRepairs) {
+    const v = vehicleMap.get(r.vehicleId);
+    if (!v) continue;
+
+    uniqueVehicleIds.add(v.id);
+
+    const revenue = r.cost ?? 0;
+    const partsCost = r.partsCost ?? 0;
+    const profit = revenue - partsCost;
+    const marginPct =
+      revenue > 0 ? Math.round((profit / revenue) * 100) : null;
+
+    totalRevenue += revenue;
+    totalPartsCost += partsCost;
+
+    rows.push({
+      id: r.id,
+      vehicleId: v.id,
+      licensePlate: v.licensePlate,
+      brand: v.brand,
+      model: v.model,
+      ownerName: v.ownerName,
+      serviceDate: r.serviceDate,
+      serviceType: r.serviceType,
+      description: r.description,
+      revenue,
+      partsCost,
+      profit,
+      marginPct,
+      hasCostEntered: r.cost !== null && r.cost !== undefined,
+      hasPartsCostEntered: r.partsCost !== null && r.partsCost !== undefined,
+    });
+
+    const existingGroup = serviceMap.get(r.serviceType);
+    if (existingGroup) {
+      existingGroup.count += 1;
+      existingGroup.revenue += revenue;
+      existingGroup.partsCost += partsCost;
+      existingGroup.profit += profit;
+    } else {
+      serviceMap.set(r.serviceType, {
+        serviceType: r.serviceType,
+        count: 1,
+        revenue,
+        partsCost,
+        profit,
+      });
+    }
+  }
+
+  const totalProfit = totalRevenue - totalPartsCost;
+  const profitMarginPct =
+    totalRevenue > 0 ? Math.round((totalProfit / totalRevenue) * 100) : null;
+  const averageTicket =
+    rows.length > 0 ? Math.round(totalRevenue / rows.length) : 0;
+
+  const byServiceType = Array.from(serviceMap.values()).sort(
+    (a, b) => b.profit - a.profit || b.revenue - a.revenue
+  );
+
+  return {
+    from: normalizedFrom,
+    to: normalizedTo,
+    summary: {
+      uniqueVehiclesCount: uniqueVehicleIds.size,
+      repairsCount: rows.length,
+      totalRevenue,
+      totalPartsCost,
+      totalProfit,
+      profitMarginPct,
+      averageTicket,
+    },
+    byServiceType,
+    repairs: rows,
+  };
+}

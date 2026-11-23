@@ -80,6 +80,7 @@ export function VehicleDetailClient({
   const [rType, setRType] = useState("");
   const [rDesc, setRDesc] = useState("");
   const [rCost, setRCost] = useState("");
+  const [rPartsCost, setRPartsCost] = useState("");
   const [rNotes, setRNotes] = useState("");
   const [rPreset, setRPreset] = useState<ReminderPreset>("none");
   const [rCustomDate, setRCustomDate] = useState("");
@@ -206,6 +207,7 @@ export function VehicleDetailClient({
     setRType(r.serviceType);
     setRDesc(r.description);
     setRCost(r.cost != null ? String(r.cost) : "");
+    setRPartsCost(r.partsCost != null ? String(r.partsCost) : "");
     setRNotes(r.mechanicNotes ?? "");
     const preset = (r.reminderPreset || "none") as ReminderPreset;
     setRPreset(preset);
@@ -234,6 +236,7 @@ export function VehicleDetailClient({
           serviceType: rType,
           description: rDesc,
           cost: rCost.trim() === "" ? null : Number(rCost),
+          partsCost: rPartsCost.trim() === "" ? null : Number(rPartsCost),
           mechanicNotes: rNotes.trim() || null,
           reminderPreset: rPreset,
           customReminderDate: rPreset === "custom" ? rCustomDate : null,
@@ -641,9 +644,28 @@ export function VehicleDetailClient({
                     </div>
 
                     <div className="flex shrink-0 items-center justify-between gap-3 sm:flex-col sm:items-end">
-                      <p className="font-mono text-base font-bold text-slate-100 tabular-nums">
-                        {formatCurrency(r.cost)}
-                      </p>
+                      <div className="text-left sm:text-right font-mono tabular-nums">
+                        <p className="text-base font-bold text-slate-100">
+                          {formatCurrency(r.cost)}
+                        </p>
+                        {(r.cost != null || r.partsCost != null) && (
+                          <p className="mt-0.5 text-[11px] text-slate-400">
+                            Costo: {formatCurrency(r.partsCost ?? 0)} ·{" "}
+                            <span
+                              className={
+                                (r.cost ?? 0) - (r.partsCost ?? 0) >= 0
+                                  ? "font-semibold text-emerald-400"
+                                  : "font-semibold text-red-400"
+                              }
+                            >
+                              Gan:{" "}
+                              {formatCurrency(
+                                (r.cost ?? 0) - (r.partsCost ?? 0)
+                              )}
+                            </span>
+                          </p>
+                        )}
+                      </div>
 
                       <div className="flex items-center gap-1.5">
                         <button
@@ -911,7 +933,7 @@ export function VehicleDetailClient({
             </div>
 
             <form onSubmit={handleSaveRepair} className="space-y-4 p-6">
-              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-slate-300">
                     Fecha
@@ -937,18 +959,52 @@ export function VehicleDetailClient({
                     className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500"
                   />
                 </div>
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-300">
-                    Costo (ARS)
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={rCost}
-                    onChange={(e) => setRCost(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500"
-                  />
+              </div>
+
+              <div className="space-y-2 rounded-xl border border-slate-800 bg-slate-950/60 p-3.5">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-slate-300">
+                      Cobrado al cliente (ARS)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={rCost}
+                      onChange={(e) => setRCost(e.target.value)}
+                      className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-slate-300">
+                      Costo reparación / repuestos (ARS)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={rPartsCost}
+                      onChange={(e) => setRPartsCost(e.target.value)}
+                      className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500"
+                    />
+                  </div>
                 </div>
+                {(rCost.trim() !== "" || rPartsCost.trim() !== "") && (() => {
+                  const rev = Number(rCost || 0);
+                  const exp = Number(rPartsCost || 0);
+                  const profit = rev - exp;
+                  return (
+                    <div className="flex items-center justify-between border-t border-slate-800/80 pt-2 text-xs">
+                      <span className="text-slate-400">Ganancia neta:</span>
+                      <span
+                        className={`font-mono font-bold tabular-nums ${
+                          profit >= 0 ? "text-emerald-400" : "text-red-400"
+                        }`}
+                      >
+                        {formatCurrency(profit)}
+                      </span>
+                    </div>
+                  );
+                })()}
               </div>
 
               <div>

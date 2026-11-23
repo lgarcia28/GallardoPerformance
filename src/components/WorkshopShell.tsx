@@ -16,6 +16,7 @@ import {
   ClipboardList,
   Gauge,
   Plus,
+  Wallet,
 } from "lucide-react";
 import {
   QuickEntryModal,
@@ -131,6 +132,13 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
       shortLabel: "Historial",
       icon: ClipboardList,
       isActive: pathname.startsWith("/historial"),
+    },
+    {
+      href: "/finanzas",
+      label: "Finanzas",
+      shortLabel: "Finanzas",
+      icon: Wallet,
+      isActive: pathname.startsWith("/finanzas"),
     },
   ];
 
@@ -253,7 +261,7 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
 
         {/* Mobile Bottom Navigation */}
         <nav
-          className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-3 border-t border-slate-800 bg-[#0D121F]/95 px-2 py-2 backdrop-blur-md lg:hidden"
+          className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-slate-800 bg-[#0D121F]/95 px-2 py-2 backdrop-blur-md lg:hidden"
           aria-label="Navegación móvil"
         >
           {navItems.map((item) => {

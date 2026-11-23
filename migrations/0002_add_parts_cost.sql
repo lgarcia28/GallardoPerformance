@@ -1,0 +1,1 @@
+ALTER TABLE repairs ADD COLUMN parts_cost INTEGER;

@@ -24,7 +24,8 @@ export const repairs = sqliteTable("repairs", {
   mileageAtService: integer("mileage_at_service").notNull(),
   serviceType: text("service_type").notNull(),
   description: text("description").notNull(),
-  cost: integer("cost"),
+  cost: integer("cost"), // Monto cobrado al cliente
+  partsCost: integer("parts_cost"), // Costo de repuestos/insumos del taller
   mechanicNotes: text("mechanic_notes"),
   reminderPreset: text("reminder_preset").notNull().default("none"), // 1_year | 6_months | 3_months | custom | none
   reminderDueDate: text("reminder_due_date"), // YYYY-MM-DD | null

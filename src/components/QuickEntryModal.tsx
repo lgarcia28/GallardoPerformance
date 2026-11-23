@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import {
   computeReminderDueDate,
+  formatCurrency,
   formatShortDate,
   getTodayISO,
   REMINDER_PRESETS,
@@ -75,6 +76,7 @@ export function QuickEntryModal({
   const [serviceType, setServiceType] = useState<string>(SERVICE_TYPES[0]);
   const [description, setDescription] = useState("");
   const [cost, setCost] = useState("");
+  const [partsCost, setPartsCost] = useState("");
   const [mechanicNotes, setMechanicNotes] = useState("");
   const [reminderPreset, setReminderPreset] =
     useState<ReminderPreset>("1_year");
@@ -200,6 +202,7 @@ export function QuickEntryModal({
             serviceType,
             description: description.trim(),
             cost: cost.trim() === "" ? null : Number(cost),
+            partsCost: partsCost.trim() === "" ? null : Number(partsCost),
             mechanicNotes: mechanicNotes.trim() || null,
             reminderPreset,
             customReminderDate:
@@ -268,6 +271,7 @@ export function QuickEntryModal({
           serviceType,
           description: description.trim(),
           cost: cost.trim() === "" ? null : Number(cost),
+          partsCost: partsCost.trim() === "" ? null : Number(partsCost),
           mechanicNotes: mechanicNotes.trim() || null,
           reminderPreset,
           customReminderDate:
@@ -614,7 +618,7 @@ export function QuickEntryModal({
                   2. Detalle de la reparación
                 </p>
 
-                <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
+                <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-slate-300">
                       Fecha del trabajo *
@@ -645,20 +649,59 @@ export function QuickEntryModal({
                       className="w-full rounded-xl border border-slate-700/90 bg-slate-950/90 px-3.5 py-2.5 font-mono text-sm text-slate-100 tabular-nums placeholder-slate-600 outline-none focus:border-amber-500/70"
                     />
                   </div>
-                  <div>
-                    <label className="mb-1.5 block text-xs font-medium text-slate-300">
-                      Costo ARS (opcional)
-                    </label>
-                    <input
-                      type="number"
-                      min={0}
-                      step={500}
-                      value={cost}
-                      onChange={(e) => setCost(e.target.value)}
-                      placeholder="Ej. 165000"
-                      className="w-full rounded-xl border border-slate-700/90 bg-slate-950/90 px-3.5 py-2.5 font-mono text-sm text-slate-100 tabular-nums placeholder-slate-600 outline-none focus:border-amber-500/70"
-                    />
+                </div>
+
+                {/* Financial inputs: Cobrado + Costo + Live Ganancia */}
+                <div className="space-y-2.5 rounded-xl border border-slate-800 bg-slate-950/50 p-3.5">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-slate-300">
+                        Cobrado al cliente (ARS)
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        step={500}
+                        value={cost}
+                        onChange={(e) => setCost(e.target.value)}
+                        placeholder="Ej. 165000"
+                        className="w-full rounded-xl border border-slate-700/90 bg-slate-950 px-3.5 py-2 font-mono text-sm text-slate-100 tabular-nums placeholder-slate-600 outline-none focus:border-amber-500/70"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-slate-300">
+                        Costo de reparación / repuestos (ARS)
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        step={500}
+                        value={partsCost}
+                        onChange={(e) => setPartsCost(e.target.value)}
+                        placeholder="Ej. 82000"
+                        className="w-full rounded-xl border border-slate-700/90 bg-slate-950 px-3.5 py-2 font-mono text-sm text-slate-100 tabular-nums placeholder-slate-600 outline-none focus:border-amber-500/70"
+                      />
+                    </div>
                   </div>
+                  {(cost.trim() !== "" || partsCost.trim() !== "") && (() => {
+                    const rev = Number(cost || 0);
+                    const exp = Number(partsCost || 0);
+                    const profit = rev - exp;
+                    const margin = rev > 0 ? Math.round((profit / rev) * 100) : null;
+                    return (
+                      <div className="flex items-center justify-between border-t border-slate-800/80 pt-2 text-xs">
+                        <span className="text-slate-400">Ganancia calculada:</span>
+                        <span
+                          className={`font-mono font-bold tabular-nums ${
+                            profit >= 0 ? "text-emerald-400" : "text-red-400"
+                          }`}
+                        >
+                          {formatCurrency(profit)}
+                          {margin !== null ? ` (${margin}%)` : ""}
+                        </span>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div>

@@ -71,6 +71,7 @@ async function ensureD1Ready(d1: D1Database) {
             service_type TEXT NOT NULL,
             description TEXT NOT NULL,
             cost INTEGER,
+            parts_cost INTEGER,
             mechanic_notes TEXT,
             reminder_preset TEXT NOT NULL DEFAULT 'none',
             reminder_due_date TEXT,
@@ -86,6 +87,17 @@ async function ensureD1Ready(d1: D1Database) {
           `CREATE INDEX IF NOT EXISTS idx_repairs_due_date ON repairs(reminder_due_date)`
         ),
       ]);
+
+      // Safe schema upgrade for existing D1 databases created before parts_cost existed
+      const tableInfo = await d1
+        .prepare(`PRAGMA table_info(repairs)`)
+        .all<{ name: string }>();
+      const hasPartsCost = (tableInfo.results ?? []).some(
+        (col) => col.name === "parts_cost"
+      );
+      if (!hasPartsCost) {
+        await d1.prepare(`ALTER TABLE repairs ADD COLUMN parts_cost INTEGER`).run();
+      }
 
       const db = drizzle(d1, { schema });
       const rows = await db.select({ total: count() }).from(vehicles);
@@ -354,6 +366,7 @@ function getMemoryState(): MemoryState {
         serviceType: r.serviceType,
         description: r.description,
         cost: r.cost ?? null,
+        partsCost: r.partsCost ?? null,
         mechanicNotes: r.mechanicNotes ?? null,
         reminderPreset: r.reminderPreset ?? "none",
         reminderDueDate: r.reminderDueDate ?? null,
@@ -417,6 +430,7 @@ function createMemoryRepository(): WorkshopRepository {
           serviceType: initialRepair.serviceType,
           description: initialRepair.description,
           cost: initialRepair.cost ?? null,
+          partsCost: initialRepair.partsCost ?? null,
           mechanicNotes: initialRepair.mechanicNotes ?? null,
           reminderPreset: initialRepair.reminderPreset ?? "none",
           reminderDueDate: initialRepair.reminderDueDate ?? null,
@@ -509,6 +523,7 @@ function createMemoryRepository(): WorkshopRepository {
         serviceType: input.serviceType,
         description: input.description,
         cost: input.cost ?? null,
+        partsCost: input.partsCost ?? null,
         mechanicNotes: input.mechanicNotes ?? null,
         reminderPreset: input.reminderPreset ?? "none",
         reminderDueDate: input.reminderDueDate ?? null,

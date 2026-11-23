@@ -80,6 +80,12 @@ export async function POST(request: Request) {
         String(r.cost).trim() !== ""
           ? Math.max(0, Math.round(Number(r.cost)))
           : null;
+      const partsCost =
+        r.partsCost !== undefined &&
+        r.partsCost !== null &&
+        String(r.partsCost).trim() !== ""
+          ? Math.max(0, Math.round(Number(r.partsCost)))
+          : null;
       const mechanicNotes = r.mechanicNotes
         ? String(r.mechanicNotes).trim()
         : null;
@@ -97,6 +103,7 @@ export async function POST(request: Request) {
         serviceType,
         description,
         cost: Number.isFinite(cost) ? cost : null,
+        partsCost: Number.isFinite(partsCost) ? partsCost : null,
         mechanicNotes,
         reminderPreset,
         reminderDueDate,
