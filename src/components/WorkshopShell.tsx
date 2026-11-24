@@ -11,6 +11,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   BellRing,
+  CalendarDays,
   CarFront,
   CheckCircle2,
   ClipboardList,
@@ -58,6 +59,8 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
     useState<WhatsAppAlertPayload | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [overdueCount, setOverdueCount] = useState<number>(0);
+  const [todayAppointmentsCount, setTodayAppointmentsCount] =
+    useState<number>(0);
 
   const showToast = useCallback((message: string) => {
     setToast(message);
@@ -75,6 +78,9 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
       .then((data) => {
         if (typeof data?.kpis?.overdueCount === "number") {
           setOverdueCount(data.kpis.overdueCount);
+        }
+        if (typeof data?.kpis?.todayAppointmentsCount === "number") {
+          setTodayAppointmentsCount(data.kpis.todayAppointmentsCount);
         }
       })
       .catch(() => {
@@ -119,7 +125,17 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
       shortLabel: "Alertas",
       icon: BellRing,
       badge: overdueCount > 0 ? overdueCount : undefined,
+      badgeTone: "danger" as const,
       isActive: pathname === "/",
+    },
+    {
+      href: "/turnos",
+      label: "Turnos",
+      shortLabel: "Turnos",
+      icon: CalendarDays,
+      badge: todayAppointmentsCount > 0 ? todayAppointmentsCount : undefined,
+      badgeTone: "amber" as const,
+      isActive: pathname.startsWith("/turnos"),
     },
     {
       href: "/vehiculos",
@@ -210,7 +226,13 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
                     <span>{item.label}</span>
                   </span>
                   {item.badge !== undefined && (
-                    <span className="inline-flex min-w-[22px] items-center justify-center rounded-full bg-red-500/18 px-1.5 py-0.5 font-mono text-[11px] font-bold text-red-400 tabular-nums border border-red-500/30">
+                    <span
+                      className={`inline-flex min-w-[22px] items-center justify-center rounded-full px-1.5 py-0.5 font-mono text-[11px] font-bold tabular-nums border ${
+                        item.badgeTone === "amber"
+                          ? "bg-amber-500/18 text-amber-300 border-amber-500/30"
+                          : "bg-red-500/18 text-red-400 border-red-500/30"
+                      }`}
+                    >
                       {item.badge}
                     </span>
                   )}
@@ -285,7 +307,7 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
 
         {/* Mobile Bottom Navigation */}
         <nav
-          className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-slate-800 bg-[#0D121F]/96 px-1.5 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:hidden"
+          className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-slate-800 bg-[#0D121F]/96 px-1 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:hidden"
           aria-label="Navegación móvil"
         >
           {navItems.map((item) => {
@@ -294,19 +316,25 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`relative flex min-h-[48px] flex-col items-center justify-center gap-1 rounded-xl py-1 text-[11px] font-semibold transition active:bg-slate-800/60 ${
+                className={`relative flex min-h-[48px] flex-col items-center justify-center gap-1 rounded-xl py-1 text-[10px] font-semibold transition active:bg-slate-800/60 ${
                   item.isActive ? "text-amber-400" : "text-slate-400"
                 }`}
               >
                 <span className="relative">
                   <Icon className="h-5 w-5" />
                   {item.badge !== undefined && (
-                    <span className="absolute -right-2.5 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 font-mono text-[10px] font-bold text-white tabular-nums">
+                    <span
+                      className={`absolute -right-2.5 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 font-mono text-[10px] font-bold tabular-nums ${
+                        item.badgeTone === "amber"
+                          ? "bg-amber-500 text-slate-950"
+                          : "bg-red-500 text-white"
+                      }`}
+                    >
                       {item.badge}
                     </span>
                   )}
                 </span>
-                <span>{item.shortLabel}</span>
+                <span className="truncate">{item.shortLabel}</span>
               </Link>
             );
           })}

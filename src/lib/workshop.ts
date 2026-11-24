@@ -283,3 +283,70 @@ export function buildDefaultWhatsAppMessage(params: {
 
   return `Hola ${firstName}, te escribimos desde ${WORKSHOP_INFO.name} (${WORKSHOP_INFO.shortAddress}) para recordarte que ya pasó ${elapsedText} desde el último ${serviceLower} de tu ${vehicleLabel} (${params.licensePlate}). ¿Querés que coordinemos un turno?`;
 }
+
+export type AppointmentStatus =
+  | "scheduled"
+  | "in_progress"
+  | "completed"
+  | "cancelled";
+
+export const APPOINTMENT_STATUS_META: Record<
+  AppointmentStatus,
+  { label: string; dotClass: string; badgeClass: string }
+> = {
+  scheduled: {
+    label: "Agendado",
+    dotClass: "bg-amber-400",
+    badgeClass: "bg-amber-500/12 text-amber-300 border-amber-500/30",
+  },
+  in_progress: {
+    label: "En taller",
+    dotClass: "bg-sky-400",
+    badgeClass: "bg-sky-500/15 text-sky-300 border-sky-500/30",
+  },
+  completed: {
+    label: "Completado",
+    dotClass: "bg-emerald-400",
+    badgeClass: "bg-emerald-500/12 text-emerald-300 border-emerald-500/30",
+  },
+  cancelled: {
+    label: "Cancelado",
+    dotClass: "bg-slate-500",
+    badgeClass: "bg-slate-500/12 text-slate-400 border-slate-700",
+  },
+};
+
+export const WORKSHOP_TIME_SLOTS = [
+  "08:00",
+  "08:30",
+  "09:00",
+  "10:00",
+  "11:00",
+  "14:00",
+  "15:00",
+  "16:00",
+  "17:00",
+] as const;
+
+export function formatLongDateSpanish(isoDate: string): string {
+  const d = parseLocalDate(isoDate);
+  const formatted = new Intl.DateTimeFormat("es-AR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(d);
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+}
+
+export function buildAppointmentWhatsAppMessage(params: {
+  ownerName: string;
+  appointmentDate: string;
+  appointmentTime: string;
+  vehicleLabel: string;
+  licensePlate: string;
+  serviceType: string;
+}): string {
+  const firstName = params.ownerName.trim().split(/\s+/)[0] || params.ownerName;
+  const dateLabel = formatLongDateSpanish(params.appointmentDate).toLowerCase();
+  return `Hola ${firstName}, te confirmamos tu turno en ${WORKSHOP_INFO.name} (${WORKSHOP_INFO.shortAddress}) para el ${dateLabel} a las ${params.appointmentTime} hs con tu ${params.vehicleLabel} (${params.licensePlate}) — ${params.serviceType}. ¡Te esperamos!`;
+}

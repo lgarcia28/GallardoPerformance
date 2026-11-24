@@ -34,7 +34,27 @@ export const repairs = sqliteTable("repairs", {
   createdAt: text("created_at").notNull(),
 });
 
+export const appointments = sqliteTable("appointments", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  vehicleId: integer("vehicle_id").references(() => vehicles.id, {
+    onDelete: "set null",
+  }),
+  appointmentDate: text("appointment_date").notNull(), // YYYY-MM-DD
+  appointmentTime: text("appointment_time").notNull(), // HH:MM
+  licensePlate: text("license_plate").notNull(),
+  vehicleLabel: text("vehicle_label").notNull(),
+  ownerName: text("owner_name").notNull(),
+  ownerPhone: text("owner_phone").notNull(),
+  serviceType: text("service_type").notNull(),
+  notes: text("notes"),
+  status: text("status").notNull().default("scheduled"), // scheduled | in_progress | completed | cancelled
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+
 export type Vehicle = typeof vehicles.$inferSelect;
 export type NewVehicle = typeof vehicles.$inferInsert;
 export type Repair = typeof repairs.$inferSelect;
 export type NewRepair = typeof repairs.$inferInsert;
+export type Appointment = typeof appointments.$inferSelect;
+export type NewAppointment = typeof appointments.$inferInsert;

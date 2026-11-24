@@ -1,13 +1,19 @@
-import type { NewRepair, NewVehicle } from "./schema";
+import type { NewAppointment, NewRepair, NewVehicle } from "./schema";
 import { addDaysToDate, getTodayISO } from "../lib/workshop";
 
 export interface SeedRepairTemplate extends Omit<NewRepair, "id" | "vehicleId"> {
   vehicleIndex: number;
 }
 
+export interface SeedAppointmentTemplate
+  extends Omit<NewAppointment, "id" | "vehicleId"> {
+  vehicleIndex: number | null;
+}
+
 export function getInitialSeedPayload(): {
   vehicles: Array<Omit<NewVehicle, "id">>;
   repairs: SeedRepairTemplate[];
+  appointments: SeedAppointmentTemplate[];
 } {
   const today = getTodayISO();
   const nowIso = new Date().toISOString();
@@ -340,5 +346,92 @@ export function getInitialSeedPayload(): {
     },
   ];
 
-  return { vehicles, repairs };
+  const appointments: SeedAppointmentTemplate[] = [
+    {
+      vehicleIndex: 0,
+      appointmentDate: today,
+      appointmentTime: "09:00",
+      licensePlate: "AD 482 KL",
+      vehicleLabel: "Volkswagen Golf GTI",
+      ownerName: "Marcos Pérez",
+      ownerPhone: "+54 9 341 543-8810",
+      serviceType: "Cambio de aceite y filtros",
+      notes: "Trae el auto a primera hora, retira a las 16 hs. Usar Motul 8100 5W-40.",
+      status: "in_progress",
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    },
+    {
+      vehicleIndex: 2,
+      appointmentDate: today,
+      appointmentTime: "14:30",
+      licensePlate: "AF 209 MN",
+      vehicleLabel: "Toyota Corolla Cross SEG",
+      ownerName: "Diego Sánchez",
+      ownerPhone: "+54 9 341 498-7123",
+      serviceType: "Cambio de aceite y filtros",
+      notes: "Service anual completo + control de fluidos.",
+      status: "scheduled",
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    },
+    {
+      vehicleIndex: 1,
+      appointmentDate: addDaysToDate(today, 1),
+      appointmentTime: "08:30",
+      licensePlate: "AC 915 RT",
+      vehicleLabel: "Ford Ranger XLT 4x4",
+      ownerName: "Laura Fernández",
+      ownerPhone: "+54 9 341 621-3349",
+      serviceType: "Cambio de aceite y filtros",
+      notes: "Revisar también filtro de gasoil doble etapa.",
+      status: "scheduled",
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    },
+    {
+      vehicleIndex: null,
+      appointmentDate: addDaysToDate(today, 1),
+      appointmentTime: "11:00",
+      licensePlate: "AF 812 PQ",
+      vehicleLabel: "Peugeot 208 Feline 2022",
+      ownerName: "Nicolás Herrera",
+      ownerPhone: "+54 9 341 609-4412",
+      serviceType: "Diagnóstico electrónico",
+      notes: "Cliente nuevo por Instagram. Testigo Check Engine prendido.",
+      status: "scheduled",
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    },
+    {
+      vehicleIndex: 3,
+      appointmentDate: addDaysToDate(today, 3),
+      appointmentTime: "10:00",
+      licensePlate: "AE 774 BP",
+      vehicleLabel: "Honda Civic Touring",
+      ownerName: "Sofía Ramírez",
+      ownerPhone: "+54 9 341 334-9055",
+      serviceType: "Frenos",
+      notes: "Control y posible cambio de pastillas traseras.",
+      status: "scheduled",
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    },
+    {
+      vehicleIndex: 4,
+      appointmentDate: addDaysToDate(today, 5),
+      appointmentTime: "15:00",
+      licensePlate: "AB 631 VX",
+      vehicleLabel: "Audi A3 Sportback",
+      ownerName: "Julián Morales",
+      ownerPhone: "+54 9 341 587-2201",
+      serviceType: "Cambio de aceite y filtros",
+      notes: "Coordinó turno luego del recordatorio por WhatsApp.",
+      status: "scheduled",
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    },
+  ];
+
+  return { vehicles, repairs, appointments };
 }

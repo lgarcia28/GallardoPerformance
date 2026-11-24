@@ -1,8 +1,10 @@
 import { getWorkshopRepository, type StorageMode } from "@/db";
-import type { Repair, Vehicle } from "@/db/schema";
+import type { Appointment, Repair, Vehicle } from "@/db/schema";
 import {
+  addDaysToDate,
   diffDaysFromToday,
   getAlertUrgency,
+  getTodayISO,
   type AlertUrgency,
 } from "@/lib/workshop";
 
@@ -36,6 +38,7 @@ export interface DashboardData {
     upcomingCount: number;
     notifiedThisMonthCount: number;
     repairsThisMonthCount: number;
+    todayAppointmentsCount: number;
   };
   alerts: AlertItem[];
   recentRepairs: Array<
@@ -104,10 +107,18 @@ function urgencyRank(urgency: AlertUrgency): number {
 
 export async function getDashboardData(): Promise<DashboardData> {
   const repo = await getWorkshopRepository();
-  const [allVehicles, allRepairs] = await Promise.all([
+  const [allVehicles, allRepairs, allAppointments] = await Promise.all([
     repo.listVehicles(),
     repo.listRepairs(),
+    repo.listAppointments(),
   ]);
+
+  const today = getTodayISO();
+  const todayAppointmentsCount = allAppointments.filter(
+    (a) =>
+      a.appointmentDate === today &&
+      (a.status === "scheduled" || a.status === "in_progress")
+  ).length;
 
   const vehicleMap = new Map<number, Vehicle>(
     allVehicles.map((v) => [v.id, v])
@@ -195,6 +206,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       upcomingCount,
       notifiedThisMonthCount,
       repairsThisMonthCount,
+      todayAppointmentsCount,
     },
     alerts,
     recentRepairs,
@@ -519,5 +531,62 @@ export async function getFinancesData(
     },
     byServiceType,
     repairs: rows,
+  };
+}
+
+export interface AppointmentsData {
+  appointments: Appointment[];
+  summary: {
+    todayCount: number;
+    inProgressCount: number;
+    next7DaysCount: number;
+    totalScheduledCount: number;
+  };
+}
+
+export async function getAppointmentsData(
+  from?: string,
+  to?: string
+): Promise<AppointmentsData> {
+  const repo = await getWorkshopRepository();
+  const all = await repo.listAppointments();
+
+  const today = getTodayISO();
+  const next7End = addDaysToDate(today, 7);
+
+  let todayCount = 0;
+  let inProgressCount = 0;
+  let next7DaysCount = 0;
+  let totalScheduledCount = 0;
+
+  for (const a of all) {
+    if (a.status === "in_progress") inProgressCount += 1;
+    if (a.status === "scheduled" || a.status === "in_progress") {
+      totalScheduledCount += 1;
+      if (a.appointmentDate === today) todayCount += 1;
+      if (a.appointmentDate >= today && a.appointmentDate <= next7End) {
+        next7DaysCount += 1;
+      }
+    }
+  }
+
+  const normalizedFrom =
+    from && /^\d{4}-\d{2}-\d{2}$/.test(from) ? from : null;
+  const normalizedTo = to && /^\d{4}-\d{2}-\d{2}$/.test(to) ? to : null;
+
+  const filtered = all.filter((a) => {
+    if (normalizedFrom && a.appointmentDate < normalizedFrom) return false;
+    if (normalizedTo && a.appointmentDate > normalizedTo) return false;
+    return true;
+  });
+
+  return {
+    appointments: filtered,
+    summary: {
+      todayCount,
+      inProgressCount,
+      next7DaysCount,
+      totalScheduledCount,
+    },
   };
 }

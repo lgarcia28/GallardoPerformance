@@ -1,11 +1,14 @@
 import type { D1Database } from "@cloudflare/workers-types";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { and, count, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import * as schema from "./schema";
 import {
+  appointments,
   repairs,
   vehicles,
+  type Appointment,
+  type NewAppointment,
   type NewRepair,
   type NewVehicle,
   type Repair,
@@ -37,6 +40,14 @@ export interface WorkshopRepository {
     updates: Partial<NewRepair>
   ): Promise<Repair | null>;
   deleteRepair(id: number): Promise<boolean>;
+  listAppointments(): Promise<Appointment[]>;
+  getAppointmentById(id: number): Promise<Appointment | null>;
+  createAppointment(input: Omit<NewAppointment, "id">): Promise<Appointment>;
+  updateAppointment(
+    id: number,
+    updates: Partial<NewAppointment>
+  ): Promise<Appointment | null>;
+  deleteAppointment(id: number): Promise<boolean>;
 }
 
 const d1InitializedMap = new WeakMap<D1Database, Promise<void>>();
@@ -80,11 +91,31 @@ async function ensureD1Ready(d1: D1Database) {
             created_at TEXT NOT NULL
           )
         `),
+        d1.prepare(`
+          CREATE TABLE IF NOT EXISTS appointments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            vehicle_id INTEGER REFERENCES vehicles(id) ON DELETE SET NULL,
+            appointment_date TEXT NOT NULL,
+            appointment_time TEXT NOT NULL,
+            license_plate TEXT NOT NULL,
+            vehicle_label TEXT NOT NULL,
+            owner_name TEXT NOT NULL,
+            owner_phone TEXT NOT NULL,
+            service_type TEXT NOT NULL,
+            notes TEXT,
+            status TEXT NOT NULL DEFAULT 'scheduled',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+          )
+        `),
         d1.prepare(
           `CREATE INDEX IF NOT EXISTS idx_repairs_vehicle_id ON repairs(vehicle_id)`
         ),
         d1.prepare(
           `CREATE INDEX IF NOT EXISTS idx_repairs_due_date ON repairs(reminder_due_date)`
+        ),
+        d1.prepare(
+          `CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(appointment_date)`
         ),
       ]);
 
@@ -125,6 +156,17 @@ async function ensureD1Ready(d1: D1Database) {
           void _ignored;
           await db.insert(repairs).values({
             ...repairData,
+            vehicleId,
+          });
+        }
+
+        for (const a of seed.appointments) {
+          const vehicleId =
+            a.vehicleIndex !== null ? insertedIds[a.vehicleIndex] ?? null : null;
+          const { vehicleIndex: _ignored, ...apptData } = a;
+          void _ignored;
+          await db.insert(appointments).values({
+            ...apptData,
             vehicleId,
           });
         }
@@ -193,8 +235,11 @@ function createD1Repository(d1: D1Database): WorkshopRepository {
     },
 
     async deleteVehicle(id) {
-      // Ensure repairs are removed cleanly even if PRAGMA foreign_keys is off in D1
       await db.delete(repairs).where(eq(repairs.vehicleId, id));
+      await db
+        .update(appointments)
+        .set({ vehicleId: null })
+        .where(eq(appointments.vehicleId, id));
       const deleted = await db
         .delete(vehicles)
         .where(eq(vehicles.id, id))
@@ -230,7 +275,6 @@ function createD1Repository(d1: D1Database): WorkshopRepository {
     },
 
     async createRepair(input) {
-      // Auto-complete prior active reminders for the same vehicle and service type
       await db
         .update(repairs)
         .set({ reminderStatus: "completed" })
@@ -313,6 +357,50 @@ function createD1Repository(d1: D1Database): WorkshopRepository {
         .get();
       return Boolean(deleted);
     },
+
+    async listAppointments() {
+      return db
+        .select()
+        .from(appointments)
+        .orderBy(
+          asc(appointments.appointmentDate),
+          asc(appointments.appointmentTime),
+          asc(appointments.id)
+        )
+        .all();
+    },
+
+    async getAppointmentById(id) {
+      const row = await db
+        .select()
+        .from(appointments)
+        .where(eq(appointments.id, id))
+        .get();
+      return row ?? null;
+    },
+
+    async createAppointment(input) {
+      return db.insert(appointments).values(input).returning().get();
+    },
+
+    async updateAppointment(id, updates) {
+      const updated = await db
+        .update(appointments)
+        .set(updates)
+        .where(eq(appointments.id, id))
+        .returning()
+        .get();
+      return updated ?? null;
+    },
+
+    async deleteAppointment(id) {
+      const deleted = await db
+        .delete(appointments)
+        .where(eq(appointments.id, id))
+        .returning({ id: appointments.id })
+        .get();
+      return Boolean(deleted);
+    },
   };
 }
 
@@ -320,8 +408,10 @@ function createD1Repository(d1: D1Database): WorkshopRepository {
 interface MemoryState {
   nextVehicleId: number;
   nextRepairId: number;
+  nextAppointmentId: number;
   vehicles: Vehicle[];
   repairs: Repair[];
+  appointments: Appointment[];
 }
 
 const globalForMemory = globalThis as unknown as {
@@ -334,8 +424,10 @@ function getMemoryState(): MemoryState {
     const state: MemoryState = {
       nextVehicleId: 1,
       nextRepairId: 1,
+      nextAppointmentId: 1,
       vehicles: [],
       repairs: [],
+      appointments: [],
     };
 
     for (const v of seed.vehicles) {
@@ -373,6 +465,26 @@ function getMemoryState(): MemoryState {
         reminderStatus: r.reminderStatus ?? "none",
         notifiedAt: r.notifiedAt ?? null,
         createdAt: r.createdAt,
+      });
+    }
+
+    for (const a of seed.appointments) {
+      const target =
+        a.vehicleIndex !== null ? state.vehicles[a.vehicleIndex] ?? null : null;
+      state.appointments.push({
+        id: state.nextAppointmentId++,
+        vehicleId: target ? target.id : null,
+        appointmentDate: a.appointmentDate,
+        appointmentTime: a.appointmentTime,
+        licensePlate: a.licensePlate,
+        vehicleLabel: a.vehicleLabel,
+        ownerName: a.ownerName,
+        ownerPhone: a.ownerPhone,
+        serviceType: a.serviceType,
+        notes: a.notes ?? null,
+        status: a.status ?? "scheduled",
+        createdAt: a.createdAt,
+        updatedAt: a.updatedAt,
       });
     }
 
@@ -479,6 +591,9 @@ function createMemoryRepository(): WorkshopRepository {
       const prevLen = state.vehicles.length;
       state.vehicles = state.vehicles.filter((v) => v.id !== id);
       state.repairs = state.repairs.filter((r) => r.vehicleId !== id);
+      for (const a of state.appointments) {
+        if (a.vehicleId === id) a.vehicleId = null;
+      }
       return state.vehicles.length < prevLen;
     },
 
@@ -570,6 +685,66 @@ function createMemoryRepository(): WorkshopRepository {
       const prevLen = state.repairs.length;
       state.repairs = state.repairs.filter((r) => r.id !== id);
       return state.repairs.length < prevLen;
+    },
+
+    async listAppointments() {
+      const state = getMemoryState();
+      return [...state.appointments].sort(
+        (a, b) =>
+          a.appointmentDate.localeCompare(b.appointmentDate) ||
+          a.appointmentTime.localeCompare(b.appointmentTime) ||
+          a.id - b.id
+      );
+    },
+
+    async getAppointmentById(id) {
+      const state = getMemoryState();
+      return state.appointments.find((a) => a.id === id) ?? null;
+    },
+
+    async createAppointment(input) {
+      const state = getMemoryState();
+      const appointment: Appointment = {
+        id: state.nextAppointmentId++,
+        vehicleId: input.vehicleId ?? null,
+        appointmentDate: input.appointmentDate,
+        appointmentTime: input.appointmentTime,
+        licensePlate: input.licensePlate,
+        vehicleLabel: input.vehicleLabel,
+        ownerName: input.ownerName,
+        ownerPhone: input.ownerPhone,
+        serviceType: input.serviceType,
+        notes: input.notes ?? null,
+        status: input.status ?? "scheduled",
+        createdAt: input.createdAt,
+        updatedAt: input.updatedAt,
+      };
+      state.appointments.push(appointment);
+      return appointment;
+    },
+
+    async updateAppointment(id, updates) {
+      const state = getMemoryState();
+      const idx = state.appointments.findIndex((a) => a.id === id);
+      if (idx === -1) return null;
+
+      const updated: Appointment = {
+        ...state.appointments[idx],
+        ...updates,
+        notes:
+          updates.notes !== undefined
+            ? updates.notes ?? null
+            : state.appointments[idx].notes,
+      };
+      state.appointments[idx] = updated;
+      return updated;
+    },
+
+    async deleteAppointment(id) {
+      const state = getMemoryState();
+      const prevLen = state.appointments.length;
+      state.appointments = state.appointments.filter((a) => a.id !== id);
+      return state.appointments.length < prevLen;
     },
   };
 }
