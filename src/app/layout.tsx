@@ -32,9 +32,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="es"
-      className={`${plusJakarta.variable} ${jetbrainsMono.variable} dark h-full antialiased`}
+      className={`${plusJakarta.variable} ${jetbrainsMono.variable} dark h-full antialiased print:h-auto print:bg-white`}
     >
-      <body className="min-h-full bg-[#0B0F19] text-slate-50">
+      <body className="min-h-full bg-[#0B0F19] text-slate-50 print:min-h-0 print:bg-white print:text-slate-900">
         <WorkshopShell>{children}</WorkshopShell>
       </body>
     </html>

@@ -24,7 +24,6 @@ import {
   buildWhatsAppUrl,
   formatCurrency,
   formatMileage,
-  formatShortDate,
   parseQuoteItems,
   QUOTE_STATUS_META,
   WORKSHOP_INFO,
@@ -255,7 +254,7 @@ export function QuotePdfClient({ initialQuote }: QuotePdfClientProps) {
               </div>
 
               {/* Quote Number & Dates Box */}
-              <div className="flex flex-col justify-between rounded-xl border border-slate-700/80 bg-slate-900/85 px-4 py-3 sm:min-w-[215px] print:min-w-[205px]">
+              <div className="flex flex-col justify-between rounded-xl border border-slate-700/80 bg-slate-900/85 px-4 py-3 sm:min-w-[230px] print:min-w-[220px]">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-red-400">
                     Presupuesto
@@ -267,17 +266,17 @@ export function QuotePdfClient({ initialQuote }: QuotePdfClientProps) {
                 <p className="mt-1 font-mono text-2xl font-extrabold tracking-tight text-white tabular-nums leading-none">
                   {quote.quoteNumber}
                 </p>
-                <div className="mt-2.5 grid grid-cols-2 gap-2 border-t border-slate-800 pt-2 font-mono text-[10px] tabular-nums">
+                <div className="mt-2.5 grid grid-cols-2 gap-4 border-t border-slate-800 pt-2 font-mono text-[10px] tabular-nums">
                   <div>
                     <p className="uppercase text-slate-500">Emisión</p>
-                    <p className="mt-0.5 font-semibold text-slate-200">
-                      {formatShortDate(issuedDateIso)}
+                    <p className="mt-0.5 font-semibold text-slate-200 whitespace-nowrap">
+                      {issuedDateIso.split("-").reverse().join("/")}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="uppercase text-slate-500">Válido hasta</p>
-                    <p className="mt-0.5 font-semibold text-amber-300">
-                      {formatShortDate(validUntilIso)}
+                    <p className="mt-0.5 font-semibold text-amber-300 whitespace-nowrap">
+                      {validUntilIso.split("-").reverse().join("/")}
                     </p>
                   </div>
                 </div>
