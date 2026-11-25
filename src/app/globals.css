@@ -118,15 +118,19 @@ a {
   display: none;
 }
 
-/* Clean A4 PDF print formatting */
+/* Clean single-page A4 PDF print formatting */
 @media print {
   @page {
     size: A4 portrait;
-    margin: 10mm;
+    margin: 7mm;
   }
 
   html,
   body {
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
     background: #ffffff !important;
     color: #0f172a !important;
     -webkit-print-color-adjust: exact !important;
@@ -136,5 +140,19 @@ a {
   main {
     padding: 0 !important;
     margin: 0 !important;
+    min-height: 0 !important;
+  }
+
+  #quote-pdf-sheet {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 281mm !important;
+    max-height: 282mm !important;
+    overflow: hidden !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border: 1px solid #e2e8f0 !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
   }
 }

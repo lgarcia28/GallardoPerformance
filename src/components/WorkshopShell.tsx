@@ -185,7 +185,7 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
         refreshOverdueCount,
       }}
     >
-      <div className="min-h-screen flex flex-col lg:flex-row">
+      <div className="min-h-screen flex flex-col lg:flex-row print:min-h-0 print:block">
         {/* Desktop Sidebar */}
         <aside className="hidden lg:flex lg:w-68 lg:flex-col lg:fixed lg:inset-y-0 border-r border-slate-800/90 bg-[#0D121F] print:hidden">
           {/* Brand */}
