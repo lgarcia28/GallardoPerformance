@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   ClipboardList,
   ExternalLink,
+  FileText,
   MapPin,
   Plus,
   Wallet,
@@ -127,6 +128,7 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
       badge: overdueCount > 0 ? overdueCount : undefined,
       badgeTone: "danger" as const,
       isActive: pathname === "/",
+      showInMobileBar: true,
     },
     {
       href: "/turnos",
@@ -136,6 +138,15 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
       badge: todayAppointmentsCount > 0 ? todayAppointmentsCount : undefined,
       badgeTone: "amber" as const,
       isActive: pathname.startsWith("/turnos"),
+      showInMobileBar: true,
+    },
+    {
+      href: "/presupuestos",
+      label: "Presupuestos",
+      shortLabel: "Presup.",
+      icon: FileText,
+      isActive: pathname.startsWith("/presupuestos"),
+      showInMobileBar: true,
     },
     {
       href: "/vehiculos",
@@ -143,6 +154,7 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
       shortLabel: "Vehículos",
       icon: CarFront,
       isActive: pathname.startsWith("/vehiculos"),
+      showInMobileBar: true,
     },
     {
       href: "/historial",
@@ -150,6 +162,7 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
       shortLabel: "Historial",
       icon: ClipboardList,
       isActive: pathname.startsWith("/historial"),
+      showInMobileBar: false,
     },
     {
       href: "/finanzas",
@@ -157,8 +170,11 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
       shortLabel: "Finanzas",
       icon: Wallet,
       isActive: pathname.startsWith("/finanzas"),
+      showInMobileBar: true,
     },
   ];
+
+  const mobileNavItems = navItems.filter((item) => item.showInMobileBar);
 
   return (
     <WorkshopUIContext.Provider
@@ -171,7 +187,7 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
     >
       <div className="min-h-screen flex flex-col lg:flex-row">
         {/* Desktop Sidebar */}
-        <aside className="hidden lg:flex lg:w-68 lg:flex-col lg:fixed lg:inset-y-0 border-r border-slate-800/90 bg-[#0D121F]">
+        <aside className="hidden lg:flex lg:w-68 lg:flex-col lg:fixed lg:inset-y-0 border-r border-slate-800/90 bg-[#0D121F] print:hidden">
           {/* Brand */}
           <Link
             href="/"
@@ -204,7 +220,10 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
           </div>
 
           {/* Nav Links */}
-          <nav className="flex-1 space-y-1 px-3 py-2" aria-label="Navegación principal">
+          <nav
+            className="flex-1 space-y-1 px-3 py-2"
+            aria-label="Navegación principal"
+          >
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -265,31 +284,44 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
         </aside>
 
         {/* Mobile Top Bar */}
-        <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-slate-800/90 bg-[#0D121F]/95 px-4 py-3 backdrop-blur-md lg:hidden">
+        <header className="sticky top-0 z-30 flex items-center justify-between gap-2 border-b border-slate-800/90 bg-[#0D121F]/95 px-3.5 py-3 backdrop-blur-md lg:hidden print:hidden">
           <Link href="/" className="flex items-center min-w-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo-gallardo.png"
               alt={WORKSHOP_INFO.name}
-              width={165}
-              height={31}
-              className="h-7 w-auto object-contain object-left"
+              width={150}
+              height={28}
+              className="h-6 w-auto object-contain object-left sm:h-7"
             />
           </Link>
 
-          <button
-            type="button"
-            onClick={() => openQuickEntry({ mode: "existing" })}
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-amber-500 px-3 py-2 text-xs font-bold text-slate-950 cursor-pointer"
-          >
-            <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
-            <span>Cargar</span>
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <Link
+              href="/historial"
+              className={`inline-flex min-h-[36px] items-center gap-1 rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold transition ${
+                pathname.startsWith("/historial")
+                  ? "border-amber-500/40 bg-amber-500/12 text-amber-300"
+                  : "border-slate-700 bg-slate-900/80 text-slate-300"
+              }`}
+            >
+              <ClipboardList className="h-3.5 w-3.5" />
+              <span>Historial</span>
+            </Link>
+            <button
+              type="button"
+              onClick={() => openQuickEntry({ mode: "existing" })}
+              className="inline-flex min-h-[36px] shrink-0 items-center gap-1 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 cursor-pointer"
+            >
+              <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
+              <span>Cargar</span>
+            </button>
+          </div>
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 pb-28 lg:pb-10 lg:pl-68">
-          <div className="mx-auto w-full max-w-6xl px-3.5 py-5 sm:px-6 lg:px-8 lg:py-8">
+        <main className="flex-1 pb-28 lg:pb-10 lg:pl-68 print:p-0">
+          <div className="mx-auto w-full max-w-6xl px-3.5 py-5 sm:px-6 lg:px-8 lg:py-8 print:max-w-none print:p-0">
             {children}
           </div>
         </main>
@@ -299,7 +331,7 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
           type="button"
           onClick={() => openQuickEntry({ mode: "existing" })}
           aria-label="Cargar auto o reparación"
-          className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] right-4 z-30 flex h-14 items-center gap-2 rounded-full bg-amber-500 px-5 text-sm font-bold text-slate-950 shadow-xl shadow-black/50 ring-1 ring-amber-300/40 transition active:scale-95 lg:hidden cursor-pointer"
+          className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] right-4 z-30 flex h-14 items-center gap-2 rounded-full bg-amber-500 px-5 text-sm font-bold text-slate-950 shadow-xl shadow-black/50 ring-1 ring-amber-300/40 transition active:scale-95 lg:hidden print:hidden cursor-pointer"
         >
           <Plus className="h-5 w-5 stroke-[2.6]" />
           <span>Cargar</span>
@@ -307,10 +339,10 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
 
         {/* Mobile Bottom Navigation */}
         <nav
-          className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-slate-800 bg-[#0D121F]/96 px-1 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:hidden"
+          className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-slate-800 bg-[#0D121F]/96 px-1 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:hidden print:hidden"
           aria-label="Navegación móvil"
         >
-          {navItems.map((item) => {
+          {mobileNavItems.map((item) => {
             const Icon = item.icon;
             return (
               <Link

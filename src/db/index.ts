@@ -5,16 +5,22 @@ import { drizzle } from "drizzle-orm/d1";
 import * as schema from "./schema";
 import {
   appointments,
+  carBrands,
+  quotes,
   repairs,
   vehicles,
   type Appointment,
+  type CarBrand,
   type NewAppointment,
+  type NewQuote,
   type NewRepair,
   type NewVehicle,
+  type Quote,
   type Repair,
   type Vehicle,
 } from "./schema";
 import { getInitialSeedPayload } from "./seed-data";
+import { DEFAULT_CAR_BRANDS, slugifyBrandName } from "@/lib/workshop";
 
 export type StorageMode = "d1" | "memory";
 
@@ -48,6 +54,31 @@ export interface WorkshopRepository {
     updates: Partial<NewAppointment>
   ): Promise<Appointment | null>;
   deleteAppointment(id: number): Promise<boolean>;
+  listBrands(): Promise<CarBrand[]>;
+  createBrand(name: string): Promise<CarBrand>;
+  listQuotes(): Promise<Quote[]>;
+  getQuoteById(id: number): Promise<Quote | null>;
+  createQuote(input: Omit<NewQuote, "id" | "quoteNumber">): Promise<Quote>;
+  updateQuote(id: number, updates: Partial<NewQuote>): Promise<Quote | null>;
+  deleteQuote(id: number): Promise<boolean>;
+}
+
+function formatQuoteNumber(seq: number): string {
+  return `GP-${String(seq).padStart(4, "0")}`;
+}
+
+function computeNextQuoteNumber(existingNumbers: string[]): string {
+  let maxNum = 0;
+  for (const num of existingNumbers) {
+    const match = /GP-(\d+)/i.exec(num);
+    if (match) {
+      const parsed = Number(match[1]);
+      if (Number.isFinite(parsed) && parsed > maxNum) {
+        maxNum = parsed;
+      }
+    }
+  }
+  return formatQuoteNumber(maxNum + 1);
 }
 
 const d1InitializedMap = new WeakMap<D1Database, Promise<void>>();
@@ -108,6 +139,35 @@ async function ensureD1Ready(d1: D1Database) {
             updated_at TEXT NOT NULL
           )
         `),
+        d1.prepare(`
+          CREATE TABLE IF NOT EXISTS car_brands (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE,
+            slug TEXT NOT NULL,
+            created_at TEXT NOT NULL
+          )
+        `),
+        d1.prepare(`
+          CREATE TABLE IF NOT EXISTS quotes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            quote_number TEXT NOT NULL UNIQUE,
+            vehicle_id INTEGER REFERENCES vehicles(id) ON DELETE SET NULL,
+            customer_name TEXT NOT NULL,
+            customer_phone TEXT NOT NULL,
+            license_plate TEXT,
+            brand_name TEXT NOT NULL,
+            brand_slug TEXT,
+            model TEXT NOT NULL,
+            mileage INTEGER NOT NULL DEFAULT 0,
+            items_json TEXT NOT NULL,
+            total_amount INTEGER NOT NULL DEFAULT 0,
+            validity_days INTEGER NOT NULL DEFAULT 15,
+            notes TEXT,
+            status TEXT NOT NULL DEFAULT 'draft',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+          )
+        `),
         d1.prepare(
           `CREATE INDEX IF NOT EXISTS idx_repairs_vehicle_id ON repairs(vehicle_id)`
         ),
@@ -116,6 +176,9 @@ async function ensureD1Ready(d1: D1Database) {
         ),
         d1.prepare(
           `CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(appointment_date)`
+        ),
+        d1.prepare(
+          `CREATE INDEX IF NOT EXISTS idx_quotes_created_at ON quotes(created_at)`
         ),
       ]);
 
@@ -127,10 +190,27 @@ async function ensureD1Ready(d1: D1Database) {
         (col) => col.name === "parts_cost"
       );
       if (!hasPartsCost) {
-        await d1.prepare(`ALTER TABLE repairs ADD COLUMN parts_cost INTEGER`).run();
+        await d1
+          .prepare(`ALTER TABLE repairs ADD COLUMN parts_cost INTEGER`)
+          .run();
       }
 
       const db = drizzle(d1, { schema });
+
+      // Always ensure preset car brands exist if car_brands is empty
+      const brandCountRows = await db
+        .select({ total: count() })
+        .from(carBrands);
+      if ((brandCountRows[0]?.total ?? 0) === 0) {
+        const nowIso = new Date().toISOString();
+        for (const b of DEFAULT_CAR_BRANDS) {
+          await db
+            .insert(carBrands)
+            .values({ name: b.name, slug: b.slug, createdAt: nowIso })
+            .onConflictDoNothing();
+        }
+      }
+
       const rows = await db.select({ total: count() }).from(vehicles);
       const total = rows[0]?.total ?? 0;
 
@@ -162,11 +242,26 @@ async function ensureD1Ready(d1: D1Database) {
 
         for (const a of seed.appointments) {
           const vehicleId =
-            a.vehicleIndex !== null ? insertedIds[a.vehicleIndex] ?? null : null;
+            a.vehicleIndex !== null
+              ? insertedIds[a.vehicleIndex] ?? null
+              : null;
           const { vehicleIndex: _ignored, ...apptData } = a;
           void _ignored;
           await db.insert(appointments).values({
             ...apptData,
+            vehicleId,
+          });
+        }
+
+        for (const q of seed.quotes) {
+          const vehicleId =
+            q.vehicleIndex !== null
+              ? insertedIds[q.vehicleIndex] ?? null
+              : null;
+          const { vehicleIndex: _ignored, ...quoteData } = q;
+          void _ignored;
+          await db.insert(quotes).values({
+            ...quoteData,
             vehicleId,
           });
         }
@@ -240,6 +335,10 @@ function createD1Repository(d1: D1Database): WorkshopRepository {
         .update(appointments)
         .set({ vehicleId: null })
         .where(eq(appointments.vehicleId, id));
+      await db
+        .update(quotes)
+        .set({ vehicleId: null })
+        .where(eq(quotes.vehicleId, id));
       const deleted = await db
         .delete(vehicles)
         .where(eq(vehicles.id, id))
@@ -401,6 +500,84 @@ function createD1Repository(d1: D1Database): WorkshopRepository {
         .get();
       return Boolean(deleted);
     },
+
+    async listBrands() {
+      return db.select().from(carBrands).orderBy(asc(carBrands.name)).all();
+    },
+
+    async createBrand(rawName) {
+      const cleanName = rawName.trim();
+      const slug = slugifyBrandName(cleanName);
+      const all = await db.select().from(carBrands).all();
+      const existing = all.find(
+        (b) => b.name.toLowerCase() === cleanName.toLowerCase() || b.slug === slug
+      );
+      if (existing) return existing;
+
+      return db
+        .insert(carBrands)
+        .values({
+          name: cleanName,
+          slug,
+          createdAt: new Date().toISOString(),
+        })
+        .returning()
+        .get();
+    },
+
+    async listQuotes() {
+      return db
+        .select()
+        .from(quotes)
+        .orderBy(desc(quotes.createdAt), desc(quotes.id))
+        .all();
+    },
+
+    async getQuoteById(id) {
+      const row = await db
+        .select()
+        .from(quotes)
+        .where(eq(quotes.id, id))
+        .get();
+      return row ?? null;
+    },
+
+    async createQuote(input) {
+      const existing = await db
+        .select({ quoteNumber: quotes.quoteNumber })
+        .from(quotes)
+        .all();
+      const quoteNumber = computeNextQuoteNumber(
+        existing.map((e) => e.quoteNumber)
+      );
+      return db
+        .insert(quotes)
+        .values({
+          ...input,
+          quoteNumber,
+        })
+        .returning()
+        .get();
+    },
+
+    async updateQuote(id, updates) {
+      const updated = await db
+        .update(quotes)
+        .set(updates)
+        .where(eq(quotes.id, id))
+        .returning()
+        .get();
+      return updated ?? null;
+    },
+
+    async deleteQuote(id) {
+      const deleted = await db
+        .delete(quotes)
+        .where(eq(quotes.id, id))
+        .returning({ id: quotes.id })
+        .get();
+      return Boolean(deleted);
+    },
   };
 }
 
@@ -409,9 +586,13 @@ interface MemoryState {
   nextVehicleId: number;
   nextRepairId: number;
   nextAppointmentId: number;
+  nextBrandId: number;
+  nextQuoteId: number;
   vehicles: Vehicle[];
   repairs: Repair[];
   appointments: Appointment[];
+  brands: CarBrand[];
+  quotes: Quote[];
 }
 
 const globalForMemory = globalThis as unknown as {
@@ -421,14 +602,28 @@ const globalForMemory = globalThis as unknown as {
 function getMemoryState(): MemoryState {
   if (!globalForMemory.__gallardoMemoryState) {
     const seed = getInitialSeedPayload();
+    const nowIso = new Date().toISOString();
     const state: MemoryState = {
       nextVehicleId: 1,
       nextRepairId: 1,
       nextAppointmentId: 1,
+      nextBrandId: 1,
+      nextQuoteId: 1,
       vehicles: [],
       repairs: [],
       appointments: [],
+      brands: [],
+      quotes: [],
     };
+
+    for (const b of DEFAULT_CAR_BRANDS) {
+      state.brands.push({
+        id: state.nextBrandId++,
+        name: b.name,
+        slug: b.slug,
+        createdAt: nowIso,
+      });
+    }
 
     for (const v of seed.vehicles) {
       state.vehicles.push({
@@ -485,6 +680,30 @@ function getMemoryState(): MemoryState {
         status: a.status ?? "scheduled",
         createdAt: a.createdAt,
         updatedAt: a.updatedAt,
+      });
+    }
+
+    for (const q of seed.quotes) {
+      const target =
+        q.vehicleIndex !== null ? state.vehicles[q.vehicleIndex] ?? null : null;
+      state.quotes.push({
+        id: state.nextQuoteId++,
+        quoteNumber: q.quoteNumber,
+        vehicleId: target ? target.id : null,
+        customerName: q.customerName,
+        customerPhone: q.customerPhone,
+        licensePlate: q.licensePlate ?? null,
+        brandName: q.brandName,
+        brandSlug: q.brandSlug ?? null,
+        model: q.model,
+        mileage: q.mileage ?? 0,
+        itemsJson: q.itemsJson,
+        totalAmount: q.totalAmount ?? 0,
+        validityDays: q.validityDays ?? 15,
+        notes: q.notes ?? null,
+        status: q.status ?? "draft",
+        createdAt: q.createdAt,
+        updatedAt: q.updatedAt,
       });
     }
 
@@ -593,6 +812,9 @@ function createMemoryRepository(): WorkshopRepository {
       state.repairs = state.repairs.filter((r) => r.vehicleId !== id);
       for (const a of state.appointments) {
         if (a.vehicleId === id) a.vehicleId = null;
+      }
+      for (const q of state.quotes) {
+        if (q.vehicleId === id) q.vehicleId = null;
       }
       return state.vehicles.length < prevLen;
     },
@@ -745,6 +967,98 @@ function createMemoryRepository(): WorkshopRepository {
       const prevLen = state.appointments.length;
       state.appointments = state.appointments.filter((a) => a.id !== id);
       return state.appointments.length < prevLen;
+    },
+
+    async listBrands() {
+      const state = getMemoryState();
+      return [...state.brands].sort((a, b) => a.name.localeCompare(b.name));
+    },
+
+    async createBrand(rawName) {
+      const state = getMemoryState();
+      const cleanName = rawName.trim();
+      const slug = slugifyBrandName(cleanName);
+      const existing = state.brands.find(
+        (b) => b.name.toLowerCase() === cleanName.toLowerCase() || b.slug === slug
+      );
+      if (existing) return existing;
+
+      const brand: CarBrand = {
+        id: state.nextBrandId++,
+        name: cleanName,
+        slug,
+        createdAt: new Date().toISOString(),
+      };
+      state.brands.push(brand);
+      return brand;
+    },
+
+    async listQuotes() {
+      const state = getMemoryState();
+      return [...state.quotes].sort(
+        (a, b) => b.createdAt.localeCompare(a.createdAt) || b.id - a.id
+      );
+    },
+
+    async getQuoteById(id) {
+      const state = getMemoryState();
+      return state.quotes.find((q) => q.id === id) ?? null;
+    },
+
+    async createQuote(input) {
+      const state = getMemoryState();
+      const quoteNumber = computeNextQuoteNumber(
+        state.quotes.map((q) => q.quoteNumber)
+      );
+      const quote: Quote = {
+        id: state.nextQuoteId++,
+        quoteNumber,
+        vehicleId: input.vehicleId ?? null,
+        customerName: input.customerName,
+        customerPhone: input.customerPhone,
+        licensePlate: input.licensePlate ?? null,
+        brandName: input.brandName,
+        brandSlug: input.brandSlug ?? null,
+        model: input.model,
+        mileage: input.mileage ?? 0,
+        itemsJson: input.itemsJson,
+        totalAmount: input.totalAmount ?? 0,
+        validityDays: input.validityDays ?? 15,
+        notes: input.notes ?? null,
+        status: input.status ?? "draft",
+        createdAt: input.createdAt,
+        updatedAt: input.updatedAt,
+      };
+      state.quotes.push(quote);
+      return quote;
+    },
+
+    async updateQuote(id, updates) {
+      const state = getMemoryState();
+      const idx = state.quotes.findIndex((q) => q.id === id);
+      if (idx === -1) return null;
+
+      const updated: Quote = {
+        ...state.quotes[idx],
+        ...updates,
+        licensePlate:
+          updates.licensePlate !== undefined
+            ? updates.licensePlate ?? null
+            : state.quotes[idx].licensePlate,
+        notes:
+          updates.notes !== undefined
+            ? updates.notes ?? null
+            : state.quotes[idx].notes,
+      };
+      state.quotes[idx] = updated;
+      return updated;
+    },
+
+    async deleteQuote(id) {
+      const state = getMemoryState();
+      const prevLen = state.quotes.length;
+      state.quotes = state.quotes.filter((q) => q.id !== id);
+      return state.quotes.length < prevLen;
     },
   };
 }

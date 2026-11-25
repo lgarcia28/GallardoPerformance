@@ -1,5 +1,11 @@
 import { getWorkshopRepository, type StorageMode } from "@/db";
-import type { Appointment, Repair, Vehicle } from "@/db/schema";
+import type {
+  Appointment,
+  CarBrand,
+  Quote,
+  Repair,
+  Vehicle,
+} from "@/db/schema";
 import {
   addDaysToDate,
   diffDaysFromToday,
@@ -589,4 +595,53 @@ export async function getAppointmentsData(
       totalScheduledCount,
     },
   };
+}
+
+export interface QuotesData {
+  quotes: Quote[];
+  brands: CarBrand[];
+  summary: {
+    monthCount: number;
+    sentPendingCount: number;
+    approvedCount: number;
+    approvedTotalAmount: number;
+  };
+}
+
+export async function getQuotesData(): Promise<QuotesData> {
+  const repo = await getWorkshopRepository();
+  const [allQuotes, allBrands] = await Promise.all([
+    repo.listQuotes(),
+    repo.listBrands(),
+  ]);
+
+  let monthCount = 0;
+  let sentPendingCount = 0;
+  let approvedCount = 0;
+  let approvedTotalAmount = 0;
+
+  for (const q of allQuotes) {
+    if (isSameCurrentMonth(q.createdAt)) monthCount += 1;
+    if (q.status === "sent") sentPendingCount += 1;
+    if (q.status === "approved") {
+      approvedCount += 1;
+      approvedTotalAmount += q.totalAmount;
+    }
+  }
+
+  return {
+    quotes: allQuotes,
+    brands: allBrands,
+    summary: {
+      monthCount,
+      sentPendingCount,
+      approvedCount,
+      approvedTotalAmount,
+    },
+  };
+}
+
+export async function getQuoteDetail(id: number): Promise<Quote | null> {
+  const repo = await getWorkshopRepository();
+  return repo.getQuoteById(id);
 }

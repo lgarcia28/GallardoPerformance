@@ -52,9 +52,42 @@ export const appointments = sqliteTable("appointments", {
   updatedAt: text("updated_at").notNull(),
 });
 
+export const carBrands = sqliteTable("car_brands", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull().unique(),
+  slug: text("slug").notNull(),
+  createdAt: text("created_at").notNull(),
+});
+
+export const quotes = sqliteTable("quotes", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  quoteNumber: text("quote_number").notNull().unique(),
+  vehicleId: integer("vehicle_id").references(() => vehicles.id, {
+    onDelete: "set null",
+  }),
+  customerName: text("customer_name").notNull(),
+  customerPhone: text("customer_phone").notNull(),
+  licensePlate: text("license_plate"),
+  brandName: text("brand_name").notNull(),
+  brandSlug: text("brand_slug"),
+  model: text("model").notNull(),
+  mileage: integer("mileage").notNull().default(0),
+  itemsJson: text("items_json").notNull(), // JSON string of QuoteItem[]
+  totalAmount: integer("total_amount").notNull().default(0),
+  validityDays: integer("validity_days").notNull().default(15),
+  notes: text("notes"),
+  status: text("status").notNull().default("draft"), // draft | sent | approved | rejected
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+
 export type Vehicle = typeof vehicles.$inferSelect;
 export type NewVehicle = typeof vehicles.$inferInsert;
 export type Repair = typeof repairs.$inferSelect;
 export type NewRepair = typeof repairs.$inferInsert;
 export type Appointment = typeof appointments.$inferSelect;
 export type NewAppointment = typeof appointments.$inferInsert;
+export type CarBrand = typeof carBrands.$inferSelect;
+export type NewCarBrand = typeof carBrands.$inferInsert;
+export type Quote = typeof quotes.$inferSelect;
+export type NewQuote = typeof quotes.$inferInsert;

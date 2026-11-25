@@ -1,4 +1,9 @@
-import type { NewAppointment, NewRepair, NewVehicle } from "./schema";
+import type {
+  NewAppointment,
+  NewQuote,
+  NewRepair,
+  NewVehicle,
+} from "./schema";
 import { addDaysToDate, getTodayISO } from "../lib/workshop";
 
 export interface SeedRepairTemplate extends Omit<NewRepair, "id" | "vehicleId"> {
@@ -10,10 +15,15 @@ export interface SeedAppointmentTemplate
   vehicleIndex: number | null;
 }
 
+export interface SeedQuoteTemplate extends Omit<NewQuote, "id" | "vehicleId"> {
+  vehicleIndex: number | null;
+}
+
 export function getInitialSeedPayload(): {
   vehicles: Array<Omit<NewVehicle, "id">>;
   repairs: SeedRepairTemplate[];
   appointments: SeedAppointmentTemplate[];
+  quotes: SeedQuoteTemplate[];
 } {
   const today = getTodayISO();
   const nowIso = new Date().toISOString();
@@ -433,5 +443,110 @@ export function getInitialSeedPayload(): {
     },
   ];
 
-  return { vehicles, repairs, appointments };
+  const quotes: SeedQuoteTemplate[] = [
+    {
+      vehicleIndex: 0,
+      quoteNumber: "GP-0001",
+      customerName: "Marcos Pérez",
+      customerPhone: "+54 9 341 543-8810",
+      licensePlate: "AD 482 KL",
+      brandName: "Volkswagen",
+      brandSlug: "volkswagen",
+      model: "Golf GTI 2.0 TSI",
+      mileage: 74800,
+      itemsJson: JSON.stringify([
+        {
+          description: "Aceite sintético Motul 8100 X-cess 5W-40 (6L)",
+          quantity: 1,
+          unitPrice: 98000,
+        },
+        {
+          description: "Kit de filtros Mann (aceite, aire y habitáculo)",
+          quantity: 1,
+          unitPrice: 54000,
+        },
+        {
+          description: "Mano de obra service + escaneo preventivo VCDS",
+          quantity: 1,
+          unitPrice: 48000,
+        },
+      ]),
+      totalAmount: 200000,
+      validityDays: 15,
+      notes: "Presupuesto sujeto a revisión al desarmar. Incluye reseteo de intervalo en tablero.",
+      status: "sent",
+      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      vehicleIndex: 4,
+      quoteNumber: "GP-0002",
+      customerName: "Julián Morales",
+      customerPhone: "+54 9 341 587-2201",
+      licensePlate: "AB 631 VX",
+      brandName: "Audi",
+      brandSlug: "audi",
+      model: "A3 Sportback 1.4 TFSI",
+      mileage: 96200,
+      itemsJson: JSON.stringify([
+        {
+          description: "Kit de distribución INA (correa + tensores) + bomba de agua",
+          quantity: 1,
+          unitPrice: 285000,
+        },
+        {
+          description: "Líquido refrigerante orgánico G13 original",
+          quantity: 1,
+          unitPrice: 38000,
+        },
+        {
+          description: "Mano de obra cambio de distribución y puesta a punto",
+          quantity: 1,
+          unitPrice: 175000,
+        },
+      ]),
+      totalAmount: 498000,
+      validityDays: 15,
+      notes: "Garantía de trabajo por 60.000 km o 4 años.",
+      status: "approved",
+      createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      updatedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      vehicleIndex: null,
+      quoteNumber: "GP-0003",
+      customerName: "Esteban Rossi",
+      customerPhone: "+54 9 341 612-7740",
+      licensePlate: null,
+      brandName: "Peugeot",
+      brandSlug: "peugeot",
+      model: "208 Feline 1.6",
+      mileage: 68500,
+      itemsJson: JSON.stringify([
+        {
+          description: "Juego de discos ventilados delanteros Fremax",
+          quantity: 2,
+          unitPrice: 46000,
+        },
+        {
+          description: "Pastillas de freno delanteras Bosch",
+          quantity: 1,
+          unitPrice: 52000,
+        },
+        {
+          description: "Mano de obra frenos delanteros + purgado líquido DOT 4",
+          quantity: 1,
+          unitPrice: 65000,
+        },
+      ]),
+      totalAmount: 209000,
+      validityDays: 7,
+      notes: "Presupuesto sujeto a revisión al desarmar.",
+      status: "draft",
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    },
+  ];
+
+  return { vehicles, repairs, appointments, quotes };
 }

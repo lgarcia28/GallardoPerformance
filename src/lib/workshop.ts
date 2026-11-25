@@ -350,3 +350,149 @@ export function buildAppointmentWhatsAppMessage(params: {
   const dateLabel = formatLongDateSpanish(params.appointmentDate).toLowerCase();
   return `Hola ${firstName}, te confirmamos tu turno en ${WORKSHOP_INFO.name} (${WORKSHOP_INFO.shortAddress}) para el ${dateLabel} a las ${params.appointmentTime} hs con tu ${params.vehicleLabel} (${params.licensePlate}) — ${params.serviceType}. ¡Te esperamos!`;
 }
+
+export const DEFAULT_CAR_BRANDS: Array<{ name: string; slug: string }> = [
+  { name: "Volkswagen", slug: "volkswagen" },
+  { name: "Ford", slug: "ford" },
+  { name: "Chevrolet", slug: "chevrolet" },
+  { name: "Toyota", slug: "toyota" },
+  { name: "Renault", slug: "renault" },
+  { name: "Peugeot", slug: "peugeot" },
+  { name: "Fiat", slug: "fiat" },
+  { name: "Honda", slug: "honda" },
+  { name: "Citroën", slug: "citroen" },
+  { name: "Audi", slug: "audi" },
+  { name: "BMW", slug: "bmw" },
+  { name: "Mercedes-Benz", slug: "mercedes-benz" },
+  { name: "Nissan", slug: "nissan" },
+  { name: "Jeep", slug: "jeep" },
+  { name: "Hyundai", slug: "hyundai" },
+  { name: "Kia", slug: "kia" },
+  { name: "Suzuki", slug: "suzuki" },
+  { name: "RAM", slug: "ram" },
+  { name: "Chery", slug: "chery" },
+];
+
+export const BRAND_LOGO_SLUGS = new Set(DEFAULT_CAR_BRANDS.map((b) => b.slug));
+
+export function slugifyBrandName(name: string): string {
+  return name
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+export function getBrandLogoUrl(
+  brandSlug?: string | null,
+  brandName?: string | null
+): string | null {
+  const candidate =
+    (brandSlug && brandSlug.trim().toLowerCase()) ||
+    (brandName ? slugifyBrandName(brandName) : "");
+  if (candidate && BRAND_LOGO_SLUGS.has(candidate)) {
+    return `/brands/${candidate}.svg`;
+  }
+  return null;
+}
+
+export interface QuoteItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+export type QuoteStatus = "draft" | "sent" | "approved" | "rejected";
+
+export const QUOTE_STATUS_META: Record<
+  QuoteStatus,
+  { label: string; dotClass: string; badgeClass: string }
+> = {
+  draft: {
+    label: "Borrador",
+    dotClass: "bg-slate-400",
+    badgeClass: "bg-slate-500/15 text-slate-300 border-slate-700",
+  },
+  sent: {
+    label: "Enviado",
+    dotClass: "bg-sky-400",
+    badgeClass: "bg-sky-500/15 text-sky-300 border-sky-500/30",
+  },
+  approved: {
+    label: "Aprobado",
+    dotClass: "bg-emerald-400",
+    badgeClass: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+  },
+  rejected: {
+    label: "Rechazado",
+    dotClass: "bg-red-400",
+    badgeClass: "bg-red-500/12 text-red-400 border-red-500/30",
+  },
+};
+
+export function parseQuoteItems(itemsJson: string): QuoteItem[] {
+  try {
+    const parsed = JSON.parse(itemsJson);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((item) => ({
+        description: String(item?.description ?? "").trim(),
+        quantity: Math.max(1, Number(item?.quantity) || 1),
+        unitPrice: Math.max(0, Math.round(Number(item?.unitPrice) || 0)),
+      }))
+      .filter((item) => item.description.length > 0);
+  } catch {
+    return [];
+  }
+}
+
+export function calculateQuoteTotal(items: QuoteItem[]): number {
+  return items.reduce(
+    (sum, item) => sum + Math.round(item.quantity * item.unitPrice),
+    0
+  );
+}
+
+export function buildQuoteWhatsAppMessage(params: {
+  quoteNumber: string;
+  customerName: string;
+  brandName: string;
+  model: string;
+  licensePlate?: string | null;
+  mileage: number;
+  items: QuoteItem[];
+  totalAmount: number;
+  validityDays: number;
+  notes?: string | null;
+}): string {
+  const firstName =
+    params.customerName.trim().split(/\s+/)[0] || params.customerName;
+  const platePart = params.licensePlate ? ` (${params.licensePlate})` : "";
+  const lines = params.items.map((item) => {
+    const sub = item.quantity * item.unitPrice;
+    const qtyPrefix = item.quantity > 1 ? `${item.quantity}x ` : "";
+    return `• ${qtyPrefix}${item.description}: ${formatCurrency(sub)}`;
+  });
+
+  const parts = [
+    `Hola ${firstName}, te pasamos el presupuesto *${params.quoteNumber}* desde *${WORKSHOP_INFO.name}* (${WORKSHOP_INFO.shortAddress}):`,
+    "",
+    `🚗 *Vehículo:* ${params.brandName} ${params.model}${platePart}`,
+    `📍 *Kilometraje:* ${formatMileage(params.mileage)}`,
+    "",
+    `*Detalle de trabajos:*`,
+    ...lines,
+    "",
+    `💰 *Total estimado:* ${formatCurrency(params.totalAmount)}`,
+    `⏳ *Validez:* ${params.validityDays} días`,
+  ];
+
+  if (params.notes && params.notes.trim()) {
+    parts.push(`📝 *Nota:* ${params.notes.trim()}`);
+  }
+
+  parts.push("", "¿Querés que coordinemos un turno para ingresarlo?");
+  return parts.join("\n");
+}
