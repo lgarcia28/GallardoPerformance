@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -93,7 +93,6 @@ export function QuotesClient({
   const [addingBrand, setAddingBrand] = useState(false);
   const [newBrandInput, setNewBrandInput] = useState("");
   const [savingBrand, setSavingBrand] = useState(false);
-  const brandDropdownRef = useRef<HTMLDivElement>(null);
   const [model, setModel] = useState("");
   const [mileage, setMileage] = useState("");
   const [validityDays, setValidityDays] = useState("15");
@@ -150,20 +149,6 @@ export function QuotesClient({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [modalOpen, waModalQuote, brandDropdownOpen]);
-
-  useEffect(() => {
-    if (!brandDropdownOpen) return;
-    const onPointerDown = (e: MouseEvent) => {
-      if (
-        brandDropdownRef.current &&
-        !brandDropdownRef.current.contains(e.target as Node)
-      ) {
-        setBrandDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", onPointerDown);
-    return () => document.removeEventListener("mousedown", onPointerDown);
-  }, [brandDropdownOpen]);
 
   const filteredQuotes = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -951,7 +936,7 @@ export function QuotesClient({
                 </div>
 
                 {/* Inline Add New Brand */}
-                {addingBrand && (
+                {addingBrand && !brandDropdownOpen && (
                   <div className="flex gap-2 rounded-xl border border-amber-500/35 bg-amber-500/8 p-3">
                     <input
                       type="text"
@@ -980,24 +965,21 @@ export function QuotesClient({
                   </div>
                 )}
 
-                {/* Collapsible Brand Selector Dropdown */}
-                <div ref={brandDropdownRef} className="relative">
+                {/* Brand Selector Trigger (opens full-height picker sheet) */}
+                <div>
                   <label className="mb-1 block text-xs font-medium text-slate-300">
                     Marca del vehículo *
                   </label>
                   <button
                     type="button"
-                    aria-haspopup="listbox"
+                    aria-haspopup="dialog"
                     aria-expanded={brandDropdownOpen}
                     onClick={() => {
-                      setBrandDropdownOpen((open) => !open);
                       setBrandSearch("");
+                      setAddingBrand(false);
+                      setBrandDropdownOpen(true);
                     }}
-                    className={`flex min-h-[48px] w-full items-center justify-between gap-3 rounded-xl border px-3 py-2 text-left transition cursor-pointer ${
-                      brandDropdownOpen
-                        ? "border-amber-500 bg-slate-950 ring-2 ring-amber-500/20"
-                        : "border-slate-700/90 bg-slate-950 hover:border-slate-600"
-                    }`}
+                    className="flex min-h-[50px] w-full items-center justify-between gap-3 rounded-xl border border-slate-700/90 bg-slate-950 px-3 py-2 text-left transition hover:border-amber-500/60 active:scale-[0.995] cursor-pointer"
                   >
                     <div className="flex min-w-0 items-center gap-2.5">
                       <BrandLogo
@@ -1009,110 +991,13 @@ export function QuotesClient({
                         {brandName}
                       </span>
                     </div>
-                    <div className="flex shrink-0 items-center gap-2 text-slate-400">
-                      <span className="hidden text-[11px] font-medium text-slate-500 sm:inline">
-                        {brandDropdownOpen ? "Cerrar" : "Elegir marca"}
+                    <div className="flex shrink-0 items-center gap-1.5 text-slate-400">
+                      <span className="text-[11px] font-medium text-amber-400/90">
+                        Cambiar
                       </span>
-                      <ChevronDown
-                        className={`h-4 w-4 transition-transform duration-150 ${
-                          brandDropdownOpen
-                            ? "rotate-180 text-amber-400"
-                            : "text-slate-400"
-                        }`}
-                      />
+                      <ChevronDown className="h-4 w-4 text-slate-400" />
                     </div>
                   </button>
-
-                  {brandDropdownOpen && (
-                    <div
-                      role="listbox"
-                      aria-label="Seleccionar marca"
-                      className="mt-2 space-y-2.5 rounded-xl border border-slate-700/90 bg-slate-900 p-2.5 shadow-2xl shadow-black/50"
-                    >
-                      <div className="relative">
-                        <Search className="pointer-events-none absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
-                        <input
-                          type="search"
-                          value={brandSearch}
-                          onChange={(e) => setBrandSearch(e.target.value)}
-                          placeholder="Buscar marca..."
-                          className="min-h-[40px] w-full rounded-lg border border-slate-700/80 bg-slate-950 py-1.5 pr-3 pl-8 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-amber-500/70"
-                        />
-                      </div>
-
-                      {filteredBrands.length > 0 ? (
-                        <div className="grid max-h-52 grid-cols-2 gap-1.5 overflow-y-auto pr-1 sm:grid-cols-3">
-                          {filteredBrands.map((b) => {
-                            const active =
-                              b.name.toLowerCase() === brandName.toLowerCase();
-                            return (
-                              <button
-                                key={b.id}
-                                type="button"
-                                role="option"
-                                aria-selected={active}
-                                onClick={() => handleSelectBrand(b)}
-                                className={`flex min-h-[44px] items-center justify-between gap-2 rounded-xl border px-2.5 py-1.5 text-left transition cursor-pointer ${
-                                  active
-                                    ? "border-amber-500 bg-amber-500/15 text-amber-200"
-                                    : "border-slate-800 bg-slate-950/70 text-slate-300 hover:border-slate-700 hover:bg-slate-800/70 hover:text-white"
-                                }`}
-                              >
-                                <span className="flex min-w-0 items-center gap-2">
-                                  <BrandLogo
-                                    brandName={b.name}
-                                    brandSlug={b.slug}
-                                    size="sm"
-                                  />
-                                  <span className="truncate text-xs font-semibold">
-                                    {b.name}
-                                  </span>
-                                </span>
-                                {active && (
-                                  <Check className="h-3.5 w-3.5 shrink-0 text-amber-400" />
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <div className="rounded-lg border border-dashed border-slate-800 bg-slate-950/50 px-3 py-4 text-center">
-                          <p className="text-xs text-slate-400">
-                            No encontramos &ldquo;{brandSearch.trim()}&rdquo;.
-                          </p>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setNewBrandInput(brandSearch.trim());
-                              setAddingBrand(true);
-                              setBrandDropdownOpen(false);
-                            }}
-                            className="mt-2 inline-flex min-h-[34px] items-center gap-1 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 hover:bg-amber-400 cursor-pointer"
-                          >
-                            <Plus className="h-3.5 w-3.5" />
-                            Agregar &ldquo;{brandSearch.trim()}&rdquo;
-                          </button>
-                        </div>
-                      )}
-
-                      <div className="border-t border-slate-800 pt-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (brandSearch.trim()) {
-                              setNewBrandInput(brandSearch.trim());
-                            }
-                            setAddingBrand(true);
-                            setBrandDropdownOpen(false);
-                          }}
-                          className="flex min-h-[38px] w-full items-center justify-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-bold text-amber-300 transition hover:bg-amber-500/20 cursor-pointer"
-                        >
-                          <Plus className="h-3.5 w-3.5" />
-                          Agregar otra marca que no está en la lista
-                        </button>
-                      </div>
-                    </div>
-                  )}
                 </div>
 
                 {/* Manual Model + Mileage */}
@@ -1300,12 +1185,12 @@ export function QuotesClient({
               )}
             </div>
 
-            {/* Footer */}
-            <div className="flex flex-col-reverse gap-2 border-t border-slate-800 bg-slate-950/90 px-4 pt-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] sm:flex-row sm:items-center sm:justify-end sm:px-6 sm:py-4">
+            {/* Footer (compact single-row on mobile so form has maximum vertical room) */}
+            <div className="flex items-center gap-2 border-t border-slate-800 bg-slate-950/95 px-4 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:justify-end sm:px-6 sm:py-3.5">
               <button
                 type="button"
                 onClick={() => setModalOpen(false)}
-                className="min-h-[44px] rounded-xl border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 cursor-pointer"
+                className="hidden min-h-[42px] rounded-xl border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 sm:inline-flex sm:items-center cursor-pointer"
               >
                 Cancelar
               </button>
@@ -1313,7 +1198,7 @@ export function QuotesClient({
                 type="button"
                 disabled={submitting}
                 onClick={() => handleSaveQuote(false)}
-                className="min-h-[44px] rounded-xl border border-amber-500/40 bg-amber-500/12 px-4 py-2 text-xs font-bold text-amber-300 hover:bg-amber-500/20 disabled:opacity-50 cursor-pointer"
+                className="min-h-[46px] shrink-0 rounded-xl border border-amber-500/40 bg-amber-500/12 px-4 py-2 text-xs font-bold text-amber-300 hover:bg-amber-500/20 disabled:opacity-50 sm:min-h-[42px] cursor-pointer"
               >
                 {submitting ? "Guardando..." : "Guardar"}
               </button>
@@ -1322,11 +1207,192 @@ export function QuotesClient({
                 disabled={submitting}
                 id="quote-save-and-pdf-btn"
                 onClick={() => handleSaveQuote(true)}
-                className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-bold text-slate-950 shadow-lg shadow-amber-500/15 hover:bg-amber-400 disabled:opacity-50 sm:min-h-[42px] sm:text-xs cursor-pointer"
+                className="inline-flex min-h-[46px] flex-1 items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-slate-950 shadow-lg shadow-amber-500/15 hover:bg-amber-400 disabled:opacity-50 sm:min-h-[42px] sm:flex-none sm:px-5 sm:text-xs cursor-pointer"
               >
                 <Printer className="h-4 w-4" />
                 {submitting ? "Generando..." : "Guardar y ver PDF"}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Full-Height Brand Picker Sheet (zero nested scroll, shows 15-19 brands at once) */}
+      {modalOpen && brandDropdownOpen && (
+        <div
+          className="fixed inset-0 z-[60] flex items-end justify-center bg-black/80 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Elegir marca del vehículo"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setBrandDropdownOpen(false);
+          }}
+        >
+          <div className="gp-card flex h-[88dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border border-slate-700/90 shadow-2xl sm:h-auto sm:max-h-[82vh] sm:rounded-2xl">
+            <div
+              className="flex justify-center pt-2.5 pb-1 sm:hidden"
+              aria-hidden="true"
+            >
+              <span className="h-1 w-10 rounded-full bg-slate-700" />
+            </div>
+
+            {/* Picker Header */}
+            <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3 sm:px-5">
+              <div className="flex items-center gap-2.5">
+                <h3 className="text-base font-bold text-slate-100">
+                  Elegir marca
+                </h3>
+                <span className="rounded-full border border-slate-700 bg-slate-900 px-2 py-0.5 font-mono text-[11px] font-semibold text-slate-400">
+                  {filteredBrands.length}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBrandDropdownOpen(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer"
+                aria-label="Cerrar selector de marcas"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Sticky Search Bar */}
+            <div className="border-b border-slate-800/80 bg-slate-950/50 px-4 py-2.5 sm:px-5">
+              <div className="relative">
+                <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                <input
+                  type="search"
+                  value={brandSearch}
+                  onChange={(e) => setBrandSearch(e.target.value)}
+                  placeholder="Buscar marca (ej. Volkswagen, Ford, Fiat...)"
+                  className="min-h-[42px] w-full rounded-xl border border-slate-700/80 bg-slate-950 py-2 pr-9 pl-10 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-amber-500/70"
+                />
+                {brandSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setBrandSearch("")}
+                    aria-label="Limpiar búsqueda"
+                    className="absolute top-1/2 right-2.5 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Spacious 3-col (mobile) / 4-col (PC) Visual Logo Grid */}
+            <div className="flex-1 overflow-y-auto overscroll-contain px-3.5 py-3 sm:px-5 sm:py-4">
+              {filteredBrands.length > 0 ? (
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-2.5">
+                  {filteredBrands.map((b) => {
+                    const active =
+                      b.name.toLowerCase() === brandName.toLowerCase();
+                    return (
+                      <button
+                        key={b.id}
+                        type="button"
+                        role="option"
+                        aria-selected={active}
+                        onClick={() => handleSelectBrand(b)}
+                        className={`relative flex flex-col items-center justify-center gap-1.5 rounded-xl border px-2 py-2.5 text-center transition active:scale-[0.97] cursor-pointer ${
+                          active
+                            ? "border-amber-500 bg-amber-500/15 text-amber-200 ring-1 ring-amber-500/40"
+                            : "border-slate-800 bg-slate-900/75 text-slate-200 hover:border-slate-600 hover:bg-slate-800/80 hover:text-white"
+                        }`}
+                      >
+                        {active && (
+                          <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-slate-950">
+                            <Check className="h-2.5 w-2.5 stroke-[3]" />
+                          </span>
+                        )}
+                        <BrandLogo
+                          brandName={b.name}
+                          brandSlug={b.slug}
+                          size="md"
+                        />
+                        <span className="w-full truncate text-[11.5px] font-semibold leading-tight">
+                          {b.name}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-800 bg-slate-950/50 px-4 py-10 text-center">
+                  <p className="text-sm font-medium text-slate-300">
+                    No encontramos &ldquo;{brandSearch.trim()}&rdquo;
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Podés agregarla ahora y queda guardada para próximos
+                    presupuestos.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewBrandInput(brandSearch.trim());
+                      setAddingBrand(true);
+                    }}
+                    className="mt-4 inline-flex min-h-[42px] items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-amber-400 cursor-pointer"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Agregar &ldquo;{brandSearch.trim()}&rdquo;
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Picker Footer: Inline Add New Brand */}
+            <div className="border-t border-slate-800 bg-slate-950/95 px-4 pt-2.5 pb-[max(0.85rem,env(safe-area-inset-bottom))] sm:px-5 sm:py-3">
+              {addingBrand ? (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    autoFocus
+                    value={newBrandInput}
+                    onChange={(e) => setNewBrandInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        if (!savingBrand && newBrandInput.trim().length >= 2) {
+                          handleCreateNewBrand();
+                        }
+                      }
+                    }}
+                    placeholder="Nueva marca (ej. Subaru, Volvo...)"
+                    className="min-h-[44px] flex-1 rounded-xl border border-amber-500/60 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
+                  />
+                  <button
+                    type="button"
+                    disabled={savingBrand || newBrandInput.trim().length < 2}
+                    onClick={handleCreateNewBrand}
+                    className="min-h-[44px] shrink-0 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-amber-400 disabled:opacity-50 cursor-pointer"
+                  >
+                    {savingBrand ? "..." : "Guardar"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAddingBrand(false)}
+                    aria-label="Cancelar"
+                    className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-xl border border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (brandSearch.trim()) {
+                      setNewBrandInput(brandSearch.trim());
+                    }
+                    setAddingBrand(true);
+                  }}
+                  className="flex min-h-[42px] w-full items-center justify-center gap-1.5 rounded-xl border border-amber-500/35 bg-amber-500/12 px-4 py-2 text-xs font-bold text-amber-300 transition hover:bg-amber-500/20 cursor-pointer"
+                >
+                  <Plus className="h-4 w-4" />
+                  Agregar nueva marca
+                </button>
+              )}
             </div>
           </div>
         </div>
