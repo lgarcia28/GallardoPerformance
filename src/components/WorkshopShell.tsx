@@ -17,9 +17,13 @@ import {
   ClipboardList,
   ExternalLink,
   FileText,
+  Globe,
+  KeyRound,
+  LogOut,
   MapPin,
   Plus,
   Wallet,
+  X,
 } from "lucide-react";
 import {
   QuickEntryModal,
@@ -29,6 +33,7 @@ import {
   WhatsAppModal,
   type WhatsAppAlertPayload,
 } from "@/components/WhatsAppModal";
+import type { AdminSession } from "@/lib/auth-edge";
 import { WORKSHOP_INFO } from "@/lib/workshop";
 
 interface WorkshopUIContextValue {
@@ -48,7 +53,13 @@ export function useWorkshopUI() {
   return ctx;
 }
 
-export function WorkshopShell({ children }: { children: React.ReactNode }) {
+export function WorkshopShell({
+  children,
+  session,
+}: {
+  children: React.ReactNode;
+  session?: AdminSession | null;
+}) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -63,6 +74,18 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
   const [todayAppointmentsCount, setTodayAppointmentsCount] =
     useState<number>(0);
 
+  // Admin account / password modal
+  const [accountOpen, setAccountOpen] = useState(false);
+  const [acctUsername, setAcctUsername] = useState(session?.username ?? "admin");
+  const [acctEmail, setAcctEmail] = useState(
+    session?.email ?? "admin@gallardoperformance.com"
+  );
+  const [acctCurrentPassword, setAcctCurrentPassword] = useState("");
+  const [acctNewPassword, setAcctNewPassword] = useState("");
+  const [acctSaving, setAcctSaving] = useState(false);
+  const [acctError, setAcctError] = useState<string | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
+
   const showToast = useCallback((message: string) => {
     setToast(message);
   }, []);
@@ -75,7 +98,7 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
 
   const refreshOverdueCount = useCallback(() => {
     fetch("/api/dashboard")
-      .then((res) => res.json())
+      .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (typeof data?.kpis?.overdueCount === "number") {
           setOverdueCount(data.kpis.overdueCount);
@@ -119,15 +142,76 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
     window.dispatchEvent(new CustomEvent("gallardo:data-changed"));
   }, [refreshOverdueCount, router, showToast]);
 
+  const handleLogout = useCallback(async () => {
+    setLoggingOut(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.push("/admin");
+      router.refresh();
+    } finally {
+      setLoggingOut(false);
+    }
+  }, [router]);
+
+  const handleOpenAccountModal = useCallback(() => {
+    setAcctUsername(session?.username ?? "admin");
+    setAcctEmail(session?.email ?? "admin@gallardoperformance.com");
+    setAcctCurrentPassword("");
+    setAcctNewPassword("");
+    setAcctError(null);
+    setAccountOpen(true);
+  }, [session]);
+
+  const handleSaveAccount = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      setAcctSaving(true);
+      setAcctError(null);
+      try {
+        const res = await fetch("/api/auth/account", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: acctUsername.trim(),
+            email: acctEmail.trim(),
+            currentPassword: acctCurrentPassword || undefined,
+            newPassword: acctNewPassword || undefined,
+          }),
+        });
+        const json = await res.json();
+        if (!res.ok) {
+          throw new Error(json.error || "No se pudo guardar.");
+        }
+        setAccountOpen(false);
+        showToast("Datos de acceso actualizados.");
+        router.refresh();
+      } catch (err) {
+        setAcctError(
+          err instanceof Error ? err.message : "Error al actualizar la cuenta."
+        );
+      } finally {
+        setAcctSaving(false);
+      }
+    },
+    [
+      acctCurrentPassword,
+      acctEmail,
+      acctNewPassword,
+      acctUsername,
+      router,
+      showToast,
+    ]
+  );
+
   const navItems = [
     {
-      href: "/",
+      href: "/admin",
       label: "Alertas y Resumen",
       shortLabel: "Alertas",
       icon: BellRing,
       badge: overdueCount > 0 ? overdueCount : undefined,
       badgeTone: "danger" as const,
-      isActive: pathname === "/",
+      isActive: pathname === "/admin",
       showInMobileBar: true,
     },
     {
@@ -190,7 +274,7 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
         <aside className="hidden lg:flex lg:w-68 lg:flex-col lg:fixed lg:inset-y-0 border-r border-slate-800/90 bg-[#0D121F] print:hidden">
           {/* Brand */}
           <Link
-            href="/"
+            href="/admin"
             className="flex flex-col gap-2 px-5 py-5 border-b border-slate-800/80 transition hover:bg-slate-900/40"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -221,7 +305,7 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
 
           {/* Nav Links */}
           <nav
-            className="flex-1 space-y-1 px-3 py-2"
+            className="flex-1 space-y-1 overflow-y-auto px-3 py-2"
             aria-label="Navegación principal"
           >
             {navItems.map((item) => {
@@ -260,32 +344,66 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
 
-          {/* Footer workshop info */}
-          <div className="border-t border-slate-800/80 px-4 py-4">
-            <div className="space-y-2 rounded-xl border border-slate-800 bg-slate-950/65 px-3.5 py-3">
-              <p className="text-[11px] leading-relaxed text-slate-400">
-                {WORKSHOP_INFO.description}
-              </p>
-              <div className="flex items-center gap-1.5 pt-1 text-[11px] font-medium text-slate-300">
-                <MapPin className="h-3.5 w-3.5 shrink-0 text-red-500" />
-                <span>{WORKSHOP_INFO.address}</span>
+          {/* Footer: Public site, Account & Logout */}
+          <div className="space-y-2.5 border-t border-slate-800/80 px-4 py-4">
+            <div className="space-y-1.5 rounded-xl border border-slate-800 bg-slate-950/65 px-3 py-2.5">
+              {session && (
+                <p className="truncate text-[11px] font-semibold text-slate-200">
+                  {session.username}{" "}
+                  <span className="font-normal text-slate-500">
+                    · {session.email}
+                  </span>
+                </p>
+              )}
+              <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
+                <MapPin className="h-3 w-3 shrink-0 text-red-500" />
+                <span className="truncate">{WORKSHOP_INFO.address}</span>
               </div>
-              <a
-                href={WORKSHOP_INFO.instagramUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-400 transition hover:text-amber-300"
+              <div className="flex items-center gap-3 pt-0.5">
+                <Link
+                  href="/"
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-400 transition hover:text-amber-300"
+                >
+                  <Globe className="h-3 w-3" />
+                  <span>Web pública</span>
+                </Link>
+                <a
+                  href={WORKSHOP_INFO.instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-400 transition hover:text-slate-200"
+                >
+                  <span>Instagram</span>
+                  <ExternalLink className="h-2.5 w-2.5" />
+                </a>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-1.5">
+              <button
+                type="button"
+                onClick={handleOpenAccountModal}
+                className="inline-flex min-h-[36px] items-center justify-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900/80 px-2.5 py-1.5 text-[11px] font-semibold text-slate-300 transition hover:border-slate-700 hover:text-white cursor-pointer"
               >
-                <span>{WORKSHOP_INFO.instagramHandle}</span>
-                <ExternalLink className="h-3 w-3" />
-              </a>
+                <KeyRound className="h-3.5 w-3.5 text-amber-400" />
+                <span>Mi clave</span>
+              </button>
+              <button
+                type="button"
+                disabled={loggingOut}
+                onClick={handleLogout}
+                className="inline-flex min-h-[36px] items-center justify-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900/80 px-2.5 py-1.5 text-[11px] font-semibold text-slate-300 transition hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-300 disabled:opacity-50 cursor-pointer"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                <span>{loggingOut ? "..." : "Salir"}</span>
+              </button>
             </div>
           </div>
         </aside>
 
         {/* Mobile Top Bar */}
         <header className="sticky top-0 z-30 flex items-center justify-between gap-2 border-b border-slate-800/90 bg-[#0D121F]/95 px-3.5 py-3 backdrop-blur-md lg:hidden print:hidden">
-          <Link href="/" className="flex items-center min-w-0">
+          <Link href="/admin" className="flex items-center min-w-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo-gallardo.png"
@@ -296,7 +414,7 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
             />
           </Link>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0">
             <Link
               href="/historial"
               className={`inline-flex min-h-[36px] items-center gap-1 rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold transition ${
@@ -306,15 +424,24 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
               }`}
             >
               <ClipboardList className="h-3.5 w-3.5" />
-              <span>Historial</span>
+              <span className="hidden xs:inline sm:inline">Historial</span>
             </Link>
             <button
               type="button"
-              onClick={() => openQuickEntry({ mode: "existing" })}
-              className="inline-flex min-h-[36px] shrink-0 items-center gap-1 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 cursor-pointer"
+              onClick={handleOpenAccountModal}
+              aria-label="Cambiar usuario o contraseña"
+              className="inline-flex h-[36px] w-[36px] items-center justify-center rounded-lg border border-slate-700 bg-slate-900/80 text-slate-300 hover:text-amber-300 cursor-pointer"
             >
-              <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
-              <span>Cargar</span>
+              <KeyRound className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              disabled={loggingOut}
+              onClick={handleLogout}
+              aria-label="Cerrar sesión"
+              className="inline-flex h-[36px] w-[36px] items-center justify-center rounded-lg border border-slate-700 bg-slate-900/80 text-slate-300 hover:border-red-500/40 hover:text-red-300 cursor-pointer"
+            >
+              <LogOut className="h-3.5 w-3.5" />
             </button>
           </div>
         </header>
@@ -390,6 +517,124 @@ export function WorkshopShell({ children }: { children: React.ReactNode }) {
             onClose={() => setWhatsAppAlert(null)}
             onMarkedNotified={handleWhatsAppMarked}
           />
+        )}
+
+        {/* Admin Account & Password Modal */}
+        {accountOpen && (
+          <div
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/75 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Configurar acceso administrador"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setAccountOpen(false);
+            }}
+          >
+            <div className="gp-card w-full max-w-md overflow-hidden rounded-t-2xl border border-slate-800 shadow-2xl sm:rounded-2xl">
+              <div className="flex items-center justify-between border-b border-slate-800 px-5 py-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-amber-500/25 bg-amber-500/12 text-amber-400">
+                    <KeyRound className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-bold text-slate-100">
+                      Acceso al Panel (/admin)
+                    </h2>
+                    <p className="text-[11px] text-slate-400">
+                      Editá tu usuario, email o contraseña
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAccountOpen(false)}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveAccount} className="space-y-3.5 p-5">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-300">
+                    Usuario
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={acctUsername}
+                    onChange={(e) => setAcctUsername(e.target.value)}
+                    className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-300">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={acctEmail}
+                    onChange={(e) => setAcctEmail(e.target.value)}
+                    className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div className="space-y-3 border-t border-slate-800 pt-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                    Cambiar contraseña (opcional)
+                  </p>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-slate-300">
+                      Contraseña actual
+                    </label>
+                    <input
+                      type="password"
+                      value={acctCurrentPassword}
+                      onChange={(e) => setAcctCurrentPassword(e.target.value)}
+                      placeholder="Solo si querés cambiarla"
+                      className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-amber-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-slate-300">
+                      Nueva contraseña
+                    </label>
+                    <input
+                      type="password"
+                      value={acctNewPassword}
+                      onChange={(e) => setAcctNewPassword(e.target.value)}
+                      placeholder="Mínimo 6 caracteres"
+                      className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-amber-500"
+                    />
+                  </div>
+                </div>
+
+                {acctError && (
+                  <p className="rounded-xl border border-red-500/35 bg-red-500/10 px-3 py-2 text-xs text-red-300">
+                    {acctError}
+                  </p>
+                )}
+
+                <div className="flex items-center justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setAccountOpen(false)}
+                    className="min-h-[42px] rounded-xl border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={acctSaving}
+                    className="min-h-[42px] rounded-xl bg-amber-500 px-5 py-2 text-xs font-bold text-slate-950 hover:bg-amber-400 disabled:opacity-50 cursor-pointer"
+                  >
+                    {acctSaving ? "Guardando..." : "Guardar cambios"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         )}
 
         {/* Toast Feedback */}

@@ -1,9 +1,5 @@
-import { DashboardClient } from "@/components/DashboardClient";
-import { getDashboardData } from "@/lib/queries";
+import { LandingClient } from "@/components/LandingClient";
 
-export const dynamic = "force-dynamic";
-
-export default async function HomePage() {
-  const initialData = await getDashboardData();
-  return <DashboardClient initialData={initialData} />;
+export default function HomePage() {
+  return <LandingClient />;
 }

@@ -4,11 +4,13 @@ import { and, asc, count, desc, eq, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import * as schema from "./schema";
 import {
+  adminUsers,
   appointments,
   carBrands,
   quotes,
   repairs,
   vehicles,
+  type AdminUser,
   type Appointment,
   type CarBrand,
   type NewAppointment,
@@ -20,6 +22,8 @@ import {
   type Vehicle,
 } from "./schema";
 import { getInitialSeedPayload } from "./seed-data";
+import { getAuthEnv } from "@/lib/auth";
+import { hashPassword, normalizePlateForSearch } from "@/lib/auth-edge";
 import { DEFAULT_CAR_BRANDS, slugifyBrandName } from "@/lib/workshop";
 
 export type StorageMode = "d1" | "memory";
@@ -28,6 +32,7 @@ export interface WorkshopRepository {
   storageMode: StorageMode;
   listVehicles(): Promise<Vehicle[]>;
   getVehicleById(id: number): Promise<Vehicle | null>;
+  findVehicleByPlateNormalized(plate: string): Promise<Vehicle | null>;
   createVehicle(
     input: Omit<NewVehicle, "id">,
     initialRepair?: Omit<NewRepair, "id" | "vehicleId"> | null
@@ -61,6 +66,17 @@ export interface WorkshopRepository {
   createQuote(input: Omit<NewQuote, "id" | "quoteNumber">): Promise<Quote>;
   updateQuote(id: number, updates: Partial<NewQuote>): Promise<Quote | null>;
   deleteQuote(id: number): Promise<boolean>;
+  findAdminByIdentifier(identifier: string): Promise<AdminUser | null>;
+  getAdminById(id: number): Promise<AdminUser | null>;
+  updateAdminAccount(
+    id: number,
+    updates: {
+      username?: string;
+      email?: string;
+      displayName?: string;
+      passwordHash?: string;
+    }
+  ): Promise<AdminUser | null>;
 }
 
 function formatQuoteNumber(seq: number): string {
@@ -168,6 +184,17 @@ async function ensureD1Ready(d1: D1Database) {
             updated_at TEXT NOT NULL
           )
         `),
+        d1.prepare(`
+          CREATE TABLE IF NOT EXISTS admin_users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL UNIQUE,
+            email TEXT NOT NULL UNIQUE,
+            password_hash TEXT NOT NULL,
+            display_name TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+          )
+        `),
         d1.prepare(
           `CREATE INDEX IF NOT EXISTS idx_repairs_vehicle_id ON repairs(vehicle_id)`
         ),
@@ -196,6 +223,27 @@ async function ensureD1Ready(d1: D1Database) {
       }
 
       const db = drizzle(d1, { schema });
+
+      // Always ensure at least one admin account exists
+      const adminCountRows = await db
+        .select({ total: count() })
+        .from(adminUsers);
+      if ((adminCountRows[0]?.total ?? 0) === 0) {
+        const authEnv = await getAuthEnv();
+        const nowIso = new Date().toISOString();
+        const passwordHash = await hashPassword(authEnv.defaultPassword);
+        await db
+          .insert(adminUsers)
+          .values({
+            username: authEnv.defaultUsername,
+            email: authEnv.defaultEmail,
+            passwordHash,
+            displayName: "Gallardo Performance",
+            createdAt: nowIso,
+            updatedAt: nowIso,
+          })
+          .onConflictDoNothing();
+      }
 
       // Always ensure preset car brands exist if car_brands is empty
       const brandCountRows = await db
@@ -294,6 +342,16 @@ function createD1Repository(d1: D1Database): WorkshopRepository {
         .where(eq(vehicles.id, id))
         .get();
       return row ?? null;
+    },
+
+    async findVehicleByPlateNormalized(plate) {
+      const target = normalizePlateForSearch(plate);
+      if (target.length < 3) return null;
+      const all = await db.select().from(vehicles).all();
+      return (
+        all.find((v) => normalizePlateForSearch(v.licensePlate) === target) ??
+        null
+      );
     },
 
     async createVehicle(input, initialRepair) {
@@ -578,6 +636,53 @@ function createD1Repository(d1: D1Database): WorkshopRepository {
         .get();
       return Boolean(deleted);
     },
+
+    async findAdminByIdentifier(identifier) {
+      const clean = identifier.trim().toLowerCase();
+      if (!clean) return null;
+      const all = await db.select().from(adminUsers).all();
+      return (
+        all.find(
+          (u) =>
+            u.username.toLowerCase() === clean ||
+            u.email.toLowerCase() === clean
+        ) ?? null
+      );
+    },
+
+    async getAdminById(id) {
+      const row = await db
+        .select()
+        .from(adminUsers)
+        .where(eq(adminUsers.id, id))
+        .get();
+      return row ?? null;
+    },
+
+    async updateAdminAccount(id, updates) {
+      const patch: Partial<typeof adminUsers.$inferInsert> = {
+        updatedAt: new Date().toISOString(),
+      };
+      if (updates.username !== undefined) {
+        patch.username = updates.username.trim().toLowerCase();
+      }
+      if (updates.email !== undefined) {
+        patch.email = updates.email.trim().toLowerCase();
+      }
+      if (updates.displayName !== undefined) {
+        patch.displayName = updates.displayName.trim();
+      }
+      if (updates.passwordHash !== undefined) {
+        patch.passwordHash = updates.passwordHash;
+      }
+      const updated = await db
+        .update(adminUsers)
+        .set(patch)
+        .where(eq(adminUsers.id, id))
+        .returning()
+        .get();
+      return updated ?? null;
+    },
   };
 }
 
@@ -588,11 +693,13 @@ interface MemoryState {
   nextAppointmentId: number;
   nextBrandId: number;
   nextQuoteId: number;
+  nextAdminId: number;
   vehicles: Vehicle[];
   repairs: Repair[];
   appointments: Appointment[];
   brands: CarBrand[];
   quotes: Quote[];
+  admins: AdminUser[];
 }
 
 const globalForMemory = globalThis as unknown as {
@@ -609,11 +716,13 @@ function getMemoryState(): MemoryState {
       nextAppointmentId: 1,
       nextBrandId: 1,
       nextQuoteId: 1,
+      nextAdminId: 1,
       vehicles: [],
       repairs: [],
       appointments: [],
       brands: [],
       quotes: [],
+      admins: [],
     };
 
     for (const b of DEFAULT_CAR_BRANDS) {
@@ -713,6 +822,22 @@ function getMemoryState(): MemoryState {
   return globalForMemory.__gallardoMemoryState;
 }
 
+async function ensureMemoryAdminSeeded(state: MemoryState): Promise<void> {
+  if (state.admins.length > 0) return;
+  const authEnv = await getAuthEnv();
+  const nowIso = new Date().toISOString();
+  const passwordHash = await hashPassword(authEnv.defaultPassword);
+  state.admins.push({
+    id: state.nextAdminId++,
+    username: authEnv.defaultUsername,
+    email: authEnv.defaultEmail,
+    passwordHash,
+    displayName: "Gallardo Performance",
+    createdAt: nowIso,
+    updatedAt: nowIso,
+  });
+}
+
 function createMemoryRepository(): WorkshopRepository {
   return {
     storageMode: "memory",
@@ -727,6 +852,17 @@ function createMemoryRepository(): WorkshopRepository {
     async getVehicleById(id) {
       const state = getMemoryState();
       return state.vehicles.find((v) => v.id === id) ?? null;
+    },
+
+    async findVehicleByPlateNormalized(plate) {
+      const state = getMemoryState();
+      const target = normalizePlateForSearch(plate);
+      if (target.length < 3) return null;
+      return (
+        state.vehicles.find(
+          (v) => normalizePlateForSearch(v.licensePlate) === target
+        ) ?? null
+      );
     },
 
     async createVehicle(input, initialRepair) {
@@ -1059,6 +1195,56 @@ function createMemoryRepository(): WorkshopRepository {
       const prevLen = state.quotes.length;
       state.quotes = state.quotes.filter((q) => q.id !== id);
       return state.quotes.length < prevLen;
+    },
+
+    async findAdminByIdentifier(identifier) {
+      const state = getMemoryState();
+      await ensureMemoryAdminSeeded(state);
+      const clean = identifier.trim().toLowerCase();
+      if (!clean) return null;
+      return (
+        state.admins.find(
+          (u) =>
+            u.username.toLowerCase() === clean ||
+            u.email.toLowerCase() === clean
+        ) ?? null
+      );
+    },
+
+    async getAdminById(id) {
+      const state = getMemoryState();
+      await ensureMemoryAdminSeeded(state);
+      return state.admins.find((u) => u.id === id) ?? null;
+    },
+
+    async updateAdminAccount(id, updates) {
+      const state = getMemoryState();
+      await ensureMemoryAdminSeeded(state);
+      const idx = state.admins.findIndex((u) => u.id === id);
+      if (idx === -1) return null;
+
+      const updated: AdminUser = {
+        ...state.admins[idx],
+        username:
+          updates.username !== undefined
+            ? updates.username.trim().toLowerCase()
+            : state.admins[idx].username,
+        email:
+          updates.email !== undefined
+            ? updates.email.trim().toLowerCase()
+            : state.admins[idx].email,
+        displayName:
+          updates.displayName !== undefined
+            ? updates.displayName.trim()
+            : state.admins[idx].displayName,
+        passwordHash:
+          updates.passwordHash !== undefined
+            ? updates.passwordHash
+            : state.admins[idx].passwordHash,
+        updatedAt: new Date().toISOString(),
+      };
+      state.admins[idx] = updated;
+      return updated;
     },
   };
 }
