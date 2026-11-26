@@ -22,6 +22,7 @@ import {
   LogOut,
   MapPin,
   Plus,
+  UserCircle2,
   Wallet,
   X,
 } from "lucide-react";
@@ -96,6 +97,15 @@ export function WorkshopShell({
     return () => clearTimeout(timer);
   }, [toast]);
 
+  useEffect(() => {
+    if (!accountOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setAccountOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [accountOpen]);
+
   const refreshOverdueCount = useCallback(() => {
     fetch("/api/dashboard")
       .then((res) => (res.ok ? res.json() : null))
@@ -146,6 +156,7 @@ export function WorkshopShell({
     setLoggingOut(true);
     try {
       await fetch("/api/auth/logout", { method: "POST" });
+      setAccountOpen(false);
       router.push("/admin");
       router.refresh();
     } finally {
@@ -260,6 +271,10 @@ export function WorkshopShell({
 
   const mobileNavItems = navItems.filter((item) => item.showInMobileBar);
 
+  // Show contextual quick-repair FAB only on screens where adding a repair/vehicle is the primary action
+  const showMobileRepairFab =
+    !pathname.startsWith("/presupuestos") && !pathname.startsWith("/turnos");
+
   return (
     <WorkshopUIContext.Provider
       value={{
@@ -269,13 +284,13 @@ export function WorkshopShell({
         refreshOverdueCount,
       }}
     >
-      <div className="min-h-screen flex flex-col lg:flex-row print:min-h-0 print:block">
+      <div className="min-h-screen flex flex-col lg:flex-row bg-[#09090B] text-zinc-100 print:min-h-0 print:block print:bg-white">
         {/* Desktop Sidebar */}
-        <aside className="hidden lg:flex lg:w-68 lg:flex-col lg:fixed lg:inset-y-0 border-r border-slate-800/90 bg-[#0D121F] print:hidden">
+        <aside className="hidden lg:flex lg:w-68 lg:flex-col lg:fixed lg:inset-y-0 border-r border-white/[0.08] bg-[#0D0D10] print:hidden">
           {/* Brand */}
           <Link
             href="/admin"
-            className="flex flex-col gap-2 px-5 py-5 border-b border-slate-800/80 transition hover:bg-slate-900/40"
+            className="flex flex-col gap-2 px-5 py-5 border-b border-white/[0.07] transition hover:bg-white/[0.02]"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -283,9 +298,9 @@ export function WorkshopShell({
               alt={WORKSHOP_INFO.name}
               width={220}
               height={42}
-              className="h-9 w-auto max-w-full object-contain object-left"
+              className="h-8 w-auto max-w-full object-contain object-left"
             />
-            <p className="text-[11px] font-medium text-slate-400">
+            <p className="text-[11px] font-medium text-zinc-400">
               {WORKSHOP_INFO.shortTagline}
             </p>
           </Link>
@@ -296,7 +311,7 @@ export function WorkshopShell({
               type="button"
               id="sidebar-quick-entry-btn"
               onClick={() => openQuickEntry({ mode: "existing" })}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-3 text-xs font-bold text-slate-950 shadow-lg shadow-amber-500/15 transition hover:bg-amber-400 active:scale-[0.99] cursor-pointer"
+              className="flex min-h-[42px] w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-zinc-950 shadow-sm transition hover:bg-zinc-200 active:scale-[0.99] cursor-pointer"
             >
               <Plus className="h-4 w-4 stroke-[2.5]" />
               <span>Cargar Auto / Reparación</span>
@@ -316,14 +331,14 @@ export function WorkshopShell({
                   href={item.href}
                   className={`flex items-center justify-between gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition ${
                     item.isActive
-                      ? "bg-slate-800/90 text-white shadow-inner shadow-white/[0.03] border border-slate-700/70"
-                      : "text-slate-400 hover:bg-slate-800/45 hover:text-slate-200 border border-transparent"
+                      ? "bg-white/[0.08] text-white border border-white/[0.1]"
+                      : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-100 border border-transparent"
                   }`}
                 >
                   <span className="flex items-center gap-3">
                     <Icon
                       className={`h-4 w-4 ${
-                        item.isActive ? "text-amber-400" : "text-slate-500"
+                        item.isActive ? "text-red-500" : "text-zinc-500"
                       }`}
                     />
                     <span>{item.label}</span>
@@ -332,8 +347,8 @@ export function WorkshopShell({
                     <span
                       className={`inline-flex min-w-[22px] items-center justify-center rounded-full px-1.5 py-0.5 font-mono text-[11px] font-bold tabular-nums border ${
                         item.badgeTone === "amber"
-                          ? "bg-amber-500/18 text-amber-300 border-amber-500/30"
-                          : "bg-red-500/18 text-red-400 border-red-500/30"
+                          ? "bg-amber-500/15 text-amber-300 border-amber-500/30"
+                          : "bg-red-500/15 text-red-400 border-red-500/30"
                       }`}
                     >
                       {item.badge}
@@ -345,33 +360,33 @@ export function WorkshopShell({
           </nav>
 
           {/* Footer: Public site, Account & Logout */}
-          <div className="space-y-2.5 border-t border-slate-800/80 px-4 py-4">
-            <div className="space-y-1.5 rounded-xl border border-slate-800 bg-slate-950/65 px-3 py-2.5">
+          <div className="space-y-2.5 border-t border-white/[0.07] px-4 py-4">
+            <div className="space-y-1.5 rounded-xl border border-white/[0.07] bg-zinc-950/70 px-3 py-2.5">
               {session && (
-                <p className="truncate text-[11px] font-semibold text-slate-200">
+                <p className="truncate text-[11px] font-semibold text-zinc-200">
                   {session.username}{" "}
-                  <span className="font-normal text-slate-500">
+                  <span className="font-normal text-zinc-400">
                     · {session.email}
                   </span>
                 </p>
               )}
-              <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
+              <div className="flex items-center gap-1.5 text-[11px] text-zinc-400">
                 <MapPin className="h-3 w-3 shrink-0 text-red-500" />
                 <span className="truncate">{WORKSHOP_INFO.address}</span>
               </div>
               <div className="flex items-center gap-3 pt-0.5">
                 <Link
                   href="/"
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-400 transition hover:text-amber-300"
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-zinc-200 transition hover:text-white"
                 >
-                  <Globe className="h-3 w-3" />
+                  <Globe className="h-3 w-3 text-red-500" />
                   <span>Web pública</span>
                 </Link>
                 <a
                   href={WORKSHOP_INFO.instagramUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-400 transition hover:text-slate-200"
+                  className="inline-flex items-center gap-1 text-[11px] font-medium text-zinc-400 transition hover:text-zinc-200"
                 >
                   <span>Instagram</span>
                   <ExternalLink className="h-2.5 w-2.5" />
@@ -383,16 +398,16 @@ export function WorkshopShell({
               <button
                 type="button"
                 onClick={handleOpenAccountModal}
-                className="inline-flex min-h-[36px] items-center justify-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900/80 px-2.5 py-1.5 text-[11px] font-semibold text-slate-300 transition hover:border-slate-700 hover:text-white cursor-pointer"
+                className="inline-flex min-h-[36px] items-center justify-center gap-1.5 rounded-xl border border-white/[0.08] bg-zinc-900/90 px-2.5 py-1.5 text-[11px] font-semibold text-zinc-300 transition hover:border-white/20 hover:text-white cursor-pointer"
               >
-                <KeyRound className="h-3.5 w-3.5 text-amber-400" />
+                <KeyRound className="h-3.5 w-3.5 text-zinc-400" />
                 <span>Mi clave</span>
               </button>
               <button
                 type="button"
                 disabled={loggingOut}
                 onClick={handleLogout}
-                className="inline-flex min-h-[36px] items-center justify-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900/80 px-2.5 py-1.5 text-[11px] font-semibold text-slate-300 transition hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-300 disabled:opacity-50 cursor-pointer"
+                className="inline-flex min-h-[36px] items-center justify-center gap-1.5 rounded-xl border border-white/[0.08] bg-zinc-900/90 px-2.5 py-1.5 text-[11px] font-semibold text-zinc-300 transition hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-300 disabled:opacity-50 cursor-pointer"
               >
                 <LogOut className="h-3.5 w-3.5" />
                 <span>{loggingOut ? "..." : "Salir"}</span>
@@ -401,8 +416,8 @@ export function WorkshopShell({
           </div>
         </aside>
 
-        {/* Mobile Top Bar */}
-        <header className="sticky top-0 z-30 flex items-center justify-between gap-2 border-b border-slate-800/90 bg-[#0D121F]/95 px-3.5 py-3 backdrop-blur-md lg:hidden print:hidden">
+        {/* Mobile Top Bar (clear labels, no unlabeled mystery icons) */}
+        <header className="sticky top-0 z-30 flex items-center justify-between gap-2 border-b border-white/[0.08] bg-[#0D0D10]/95 px-3.5 py-3 backdrop-blur-md lg:hidden print:hidden">
           <Link href="/admin" className="flex items-center min-w-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -417,31 +432,23 @@ export function WorkshopShell({
           <div className="flex items-center gap-1.5 shrink-0">
             <Link
               href="/historial"
-              className={`inline-flex min-h-[36px] items-center gap-1 rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold transition ${
+              className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold transition ${
                 pathname.startsWith("/historial")
-                  ? "border-amber-500/40 bg-amber-500/12 text-amber-300"
-                  : "border-slate-700 bg-slate-900/80 text-slate-300"
+                  ? "border-white/25 bg-white/10 text-white"
+                  : "border-white/10 bg-zinc-900/90 text-zinc-300"
               }`}
             >
-              <ClipboardList className="h-3.5 w-3.5" />
-              <span className="hidden xs:inline sm:inline">Historial</span>
+              <ClipboardList className="h-3.5 w-3.5 text-red-500" />
+              <span>Historial</span>
             </Link>
             <button
               type="button"
               onClick={handleOpenAccountModal}
-              aria-label="Cambiar usuario o contraseña"
-              className="inline-flex h-[36px] w-[36px] items-center justify-center rounded-lg border border-slate-700 bg-slate-900/80 text-slate-300 hover:text-amber-300 cursor-pointer"
+              aria-label="Abrir cuenta, web pública y cerrar sesión"
+              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-900/90 px-2.5 py-1.5 text-[11px] font-semibold text-zinc-200 transition hover:border-white/25 cursor-pointer"
             >
-              <KeyRound className="h-3.5 w-3.5" />
-            </button>
-            <button
-              type="button"
-              disabled={loggingOut}
-              onClick={handleLogout}
-              aria-label="Cerrar sesión"
-              className="inline-flex h-[36px] w-[36px] items-center justify-center rounded-lg border border-slate-700 bg-slate-900/80 text-slate-300 hover:border-red-500/40 hover:text-red-300 cursor-pointer"
-            >
-              <LogOut className="h-3.5 w-3.5" />
+              <UserCircle2 className="h-3.5 w-3.5 text-zinc-400" />
+              <span>Cuenta</span>
             </button>
           </div>
         </header>
@@ -453,20 +460,22 @@ export function WorkshopShell({
           </div>
         </main>
 
-        {/* Mobile Thumb-Zone Floating Action Button */}
-        <button
-          type="button"
-          onClick={() => openQuickEntry({ mode: "existing" })}
-          aria-label="Cargar auto o reparación"
-          className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] right-4 z-30 flex h-14 items-center gap-2 rounded-full bg-amber-500 px-5 text-sm font-bold text-slate-950 shadow-xl shadow-black/50 ring-1 ring-amber-300/40 transition active:scale-95 lg:hidden print:hidden cursor-pointer"
-        >
-          <Plus className="h-5 w-5 stroke-[2.6]" />
-          <span>Cargar</span>
-        </button>
+        {/* Contextual Mobile Thumb-Zone FAB (hidden on Presupuestos & Turnos where screen has its own CTA) */}
+        {showMobileRepairFab && (
+          <button
+            type="button"
+            onClick={() => openQuickEntry({ mode: "existing" })}
+            aria-label="Cargar auto o reparación"
+            className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] right-4 z-30 flex h-13 items-center gap-2 rounded-full bg-white px-4.5 text-xs font-bold text-zinc-950 shadow-xl shadow-black/60 ring-1 ring-white/30 transition active:scale-95 lg:hidden print:hidden cursor-pointer"
+          >
+            <Plus className="h-4 w-4 stroke-[2.6]" />
+            <span>Cargar trabajo</span>
+          </button>
+        )}
 
         {/* Mobile Bottom Navigation */}
         <nav
-          className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-slate-800 bg-[#0D121F]/96 px-1 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:hidden print:hidden"
+          className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-white/[0.08] bg-[#0D0D10]/96 px-1 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:hidden print:hidden"
           aria-label="Navegación móvil"
         >
           {mobileNavItems.map((item) => {
@@ -475,18 +484,22 @@ export function WorkshopShell({
               <Link
                 key={item.href}
                 href={item.href}
-                className={`relative flex min-h-[48px] flex-col items-center justify-center gap-1 rounded-xl py-1 text-[10px] font-semibold transition active:bg-slate-800/60 ${
-                  item.isActive ? "text-amber-400" : "text-slate-400"
+                className={`relative flex min-h-[48px] flex-col items-center justify-center gap-1 rounded-xl py-1 text-[10px] font-semibold transition active:bg-white/5 ${
+                  item.isActive ? "text-white" : "text-zinc-400"
                 }`}
               >
                 <span className="relative">
-                  <Icon className="h-5 w-5" />
+                  <Icon
+                    className={`h-5 w-5 ${
+                      item.isActive ? "text-red-500" : "text-zinc-400"
+                    }`}
+                  />
                   {item.badge !== undefined && (
                     <span
                       className={`absolute -right-2.5 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 font-mono text-[10px] font-bold tabular-nums ${
                         item.badgeTone === "amber"
-                          ? "bg-amber-500 text-slate-950"
-                          : "bg-red-500 text-white"
+                          ? "bg-amber-500 text-zinc-950"
+                          : "bg-red-600 text-white"
                       }`}
                     >
                       {item.badge}
@@ -519,115 +532,149 @@ export function WorkshopShell({
           />
         )}
 
-        {/* Admin Account & Password Modal */}
+        {/* Admin Account, Public Link & Logout Modal */}
         {accountOpen && (
           <div
-            className="fixed inset-0 z-50 flex items-end justify-center bg-black/75 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 p-0 backdrop-blur-sm sm:items-center sm:p-4"
             role="dialog"
             aria-modal="true"
-            aria-label="Configurar acceso administrador"
+            aria-label="Cuenta y acceso al panel"
             onClick={(e) => {
               if (e.target === e.currentTarget) setAccountOpen(false);
             }}
           >
-            <div className="gp-card w-full max-w-md overflow-hidden rounded-t-2xl border border-slate-800 shadow-2xl sm:rounded-2xl">
-              <div className="flex items-center justify-between border-b border-slate-800 px-5 py-4">
+            <div className="gp-card flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-t-2xl shadow-2xl sm:rounded-2xl">
+              <div
+                className="flex justify-center pt-2.5 pb-1 sm:hidden"
+                aria-hidden="true"
+              >
+                <span className="h-1 w-10 rounded-full bg-zinc-700" />
+              </div>
+
+              <div className="flex items-center justify-between border-b border-white/[0.08] px-5 py-4">
                 <div className="flex items-center gap-2.5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-amber-500/25 bg-amber-500/12 text-amber-400">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-zinc-900 text-red-500">
                     <KeyRound className="h-4 w-4" />
                   </div>
                   <div>
-                    <h2 className="text-sm font-bold text-slate-100">
-                      Acceso al Panel (/admin)
+                    <h2 className="text-sm font-bold text-white">
+                      Cuenta y acceso (/admin)
                     </h2>
-                    <p className="text-[11px] text-slate-400">
-                      Editá tu usuario, email o contraseña
+                    <p className="text-[11px] text-zinc-400">
+                      Editá usuario, email o contraseña
                     </p>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setAccountOpen(false)}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer"
+                  aria-label="Cerrar"
+                  className="flex h-9 w-9 items-center justify-center rounded-xl text-zinc-400 hover:bg-white/5 hover:text-white cursor-pointer"
                 >
                   <X className="h-4 w-4" />
                 </button>
               </div>
 
-              <form onSubmit={handleSaveAccount} className="space-y-3.5 p-5">
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-300">
-                    Usuario
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={acctUsername}
-                    onChange={(e) => setAcctUsername(e.target.value)}
-                    className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-300">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={acctEmail}
-                    onChange={(e) => setAcctEmail(e.target.value)}
-                    className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
-                  />
-                </div>
+              <form
+                onSubmit={handleSaveAccount}
+                className="flex flex-1 flex-col overflow-hidden"
+              >
+                <div className="flex-1 space-y-3.5 overflow-y-auto overscroll-contain p-5">
+                  {/* Quick links inside account sheet (great on mobile) */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <Link
+                      href="/"
+                      onClick={() => setAccountOpen(false)}
+                      className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-zinc-950 px-3 py-2 text-xs font-semibold text-zinc-200 transition hover:border-white/25 hover:text-white"
+                    >
+                      <Globe className="h-3.5 w-3.5 text-red-500" />
+                      Ver web pública
+                    </Link>
+                    <button
+                      type="button"
+                      disabled={loggingOut}
+                      onClick={handleLogout}
+                      className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl border border-red-500/25 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-300 transition hover:bg-red-500/20 disabled:opacity-50 cursor-pointer"
+                    >
+                      <LogOut className="h-3.5 w-3.5" />
+                      {loggingOut ? "Saliendo..." : "Cerrar sesión"}
+                    </button>
+                  </div>
 
-                <div className="space-y-3 border-t border-slate-800 pt-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                    Cambiar contraseña (opcional)
-                  </p>
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-300">
-                      Contraseña actual
+                  <div className="border-t border-white/[0.08] pt-3.5">
+                    <label className="mb-1 block text-xs font-medium text-zinc-300">
+                      Usuario
                     </label>
                     <input
-                      type="password"
-                      value={acctCurrentPassword}
-                      onChange={(e) => setAcctCurrentPassword(e.target.value)}
-                      placeholder="Solo si querés cambiarla"
-                      className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-amber-500"
+                      type="text"
+                      required
+                      value={acctUsername}
+                      onChange={(e) => setAcctUsername(e.target.value)}
+                      className="min-h-[44px] w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white outline-none focus:border-zinc-500"
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-300">
-                      Nueva contraseña
+                    <label className="mb-1 block text-xs font-medium text-zinc-300">
+                      Email
                     </label>
                     <input
-                      type="password"
-                      value={acctNewPassword}
-                      onChange={(e) => setAcctNewPassword(e.target.value)}
-                      placeholder="Mínimo 6 caracteres"
-                      className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-amber-500"
+                      type="email"
+                      required
+                      value={acctEmail}
+                      onChange={(e) => setAcctEmail(e.target.value)}
+                      className="min-h-[44px] w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white outline-none focus:border-zinc-500"
                     />
                   </div>
+
+                  <div className="space-y-3 border-t border-white/[0.08] pt-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+                      Cambiar contraseña (opcional)
+                    </p>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-zinc-300">
+                        Contraseña actual
+                      </label>
+                      <input
+                        type="password"
+                        value={acctCurrentPassword}
+                        onChange={(e) => setAcctCurrentPassword(e.target.value)}
+                        placeholder="Solo si querés cambiarla"
+                        className="min-h-[44px] w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white placeholder-zinc-600 outline-none focus:border-zinc-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-zinc-300">
+                        Nueva contraseña
+                      </label>
+                      <input
+                        type="password"
+                        value={acctNewPassword}
+                        onChange={(e) => setAcctNewPassword(e.target.value)}
+                        placeholder="Mínimo 6 caracteres"
+                        className="min-h-[44px] w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white placeholder-zinc-600 outline-none focus:border-zinc-500"
+                      />
+                    </div>
+                  </div>
+
+                  {acctError && (
+                    <p className="rounded-xl border border-red-500/35 bg-red-500/10 px-3 py-2 text-xs text-red-300">
+                      {acctError}
+                    </p>
+                  )}
                 </div>
 
-                {acctError && (
-                  <p className="rounded-xl border border-red-500/35 bg-red-500/10 px-3 py-2 text-xs text-red-300">
-                    {acctError}
-                  </p>
-                )}
-
-                <div className="flex items-center justify-end gap-2 pt-2">
+                <div className="flex items-center justify-end gap-2 border-t border-white/[0.08] bg-zinc-950/90 px-5 pt-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] sm:py-3.5">
                   <button
                     type="button"
                     onClick={() => setAccountOpen(false)}
-                    className="min-h-[42px] rounded-xl border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 cursor-pointer"
+                    className="hidden min-h-[42px] rounded-xl border border-zinc-800 px-4 py-2 text-xs font-semibold text-zinc-300 hover:bg-zinc-900 sm:inline-flex sm:items-center cursor-pointer"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={acctSaving}
-                    className="min-h-[42px] rounded-xl bg-amber-500 px-5 py-2 text-xs font-bold text-slate-950 hover:bg-amber-400 disabled:opacity-50 cursor-pointer"
+                    className="min-h-[44px] w-full rounded-xl bg-white px-5 py-2 text-xs font-bold text-zinc-950 hover:bg-zinc-200 disabled:opacity-50 sm:min-h-[42px] sm:w-auto cursor-pointer"
                   >
                     {acctSaving ? "Guardando..." : "Guardar cambios"}
                   </button>
@@ -641,7 +688,7 @@ export function WorkshopShell({
         {toast && (
           <div
             role="status"
-            className="fixed bottom-20 right-4 z-50 flex items-center gap-2.5 rounded-xl border border-emerald-500/30 bg-slate-900/95 px-4 py-3 text-xs font-medium text-slate-100 shadow-2xl backdrop-blur-md lg:bottom-6 lg:right-6"
+            className="fixed bottom-20 right-4 z-50 flex items-center gap-2.5 rounded-xl border border-emerald-500/30 bg-zinc-900/95 px-4 py-3 text-xs font-medium text-zinc-100 shadow-2xl backdrop-blur-md lg:bottom-6 lg:right-6"
           >
             <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
             <span>{toast}</span>

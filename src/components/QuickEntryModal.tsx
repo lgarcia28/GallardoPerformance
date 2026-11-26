@@ -6,17 +6,23 @@ import {
   Calendar,
   CarFront,
   Check,
+  ChevronDown,
+  Plus,
   Search,
   Wrench,
   X,
 } from "lucide-react";
+import { BrandLogo } from "@/components/BrandLogo";
+import type { CarBrand } from "@/db/schema";
 import {
   computeReminderDueDate,
   formatCurrency,
   formatShortDate,
   getTodayISO,
+  matchesWorkshopQuery,
   REMINDER_PRESETS,
   SERVICE_TYPES,
+  slugifyBrandName,
   type ReminderPreset,
 } from "@/lib/workshop";
 
@@ -52,6 +58,12 @@ export function QuickEntryModal({
     options.vehicleId ? "existing" : options.mode ?? "existing"
   );
   const [vehicles, setVehicles] = useState<SimpleVehicleOption[]>([]);
+  const [brands, setBrands] = useState<CarBrand[]>([]);
+  const [brandPickerOpen, setBrandPickerOpen] = useState(false);
+  const [brandSearch, setBrandSearch] = useState("");
+  const [addingBrand, setAddingBrand] = useState(false);
+  const [newBrandInput, setNewBrandInput] = useState("");
+  const [savingBrand, setSavingBrand] = useState(false);
   const [loadingVehicles, setLoadingVehicles] = useState(true);
   const [vehicleSearch, setVehicleSearch] = useState("");
   const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(
@@ -60,7 +72,7 @@ export function QuickEntryModal({
 
   // New vehicle fields
   const [licensePlate, setLicensePlate] = useState("");
-  const [brand, setBrand] = useState("");
+  const [brand, setBrand] = useState("Volkswagen");
   const [model, setModel] = useState("");
   const [year, setYear] = useState(() => String(new Date().getFullYear()));
   const [engine, setEngine] = useState("");
@@ -89,11 +101,13 @@ export function QuickEntryModal({
     if (!open) return;
 
     let cancelled = false;
-    fetch("/api/vehicles")
-      .then((res) => res.json())
-      .then((data) => {
+    Promise.all([
+      fetch("/api/vehicles").then((r) => (r.ok ? r.json() : { vehicles: [] })),
+      fetch("/api/brands").then((r) => (r.ok ? r.json() : { brands: [] })),
+    ])
+      .then(([vData, bData]) => {
         if (cancelled) return;
-        const list: SimpleVehicleOption[] = (data.vehicles ?? []).map(
+        const list: SimpleVehicleOption[] = (vData.vehicles ?? []).map(
           (v: SimpleVehicleOption) => ({
             id: v.id,
             licensePlate: v.licensePlate,
@@ -105,6 +119,7 @@ export function QuickEntryModal({
           })
         );
         setVehicles(list);
+        setBrands(bData.brands ?? []);
         if (options.vehicleId) {
           const matched = list.find((v) => v.id === options.vehicleId);
           if (matched) {
@@ -130,19 +145,61 @@ export function QuickEntryModal({
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        if (brandPickerOpen) {
+          setBrandPickerOpen(false);
+          return;
+        }
+        onClose();
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open, onClose]);
+  }, [open, onClose, brandPickerOpen]);
+
+  const filteredBrands = useMemo(() => {
+    const q = brandSearch.trim().toLowerCase();
+    if (!q) return brands;
+    return brands.filter((b) => b.name.toLowerCase().includes(q));
+  }, [brands, brandSearch]);
+
+  async function handleCreateBrand() {
+    const clean = newBrandInput.trim();
+    if (clean.length < 2) return;
+    setSavingBrand(true);
+    try {
+      const res = await fetch("/api/brands", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: clean }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "No se pudo agregar la marca.");
+      const created: CarBrand = json.brand;
+      setBrands((prev) =>
+        prev.some((b) => b.id === created.id)
+          ? prev
+          : [...prev, created].sort((a, b) => a.name.localeCompare(b.name))
+      );
+      setBrand(created.name);
+      setNewBrandInput("");
+      setBrandSearch("");
+      setAddingBrand(false);
+      setBrandPickerOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al agregar marca.");
+    } finally {
+      setSavingBrand(false);
+    }
+  }
 
   const filteredVehicles = useMemo(() => {
-    const q = vehicleSearch.trim().toLowerCase();
-    if (!q) return vehicles;
     return vehicles.filter((v) =>
-      `${v.licensePlate} ${v.brand} ${v.model} ${v.ownerName}`
-        .toLowerCase()
-        .includes(q)
+      matchesWorkshopQuery(
+        vehicleSearch,
+        [v.licensePlate, v.brand, v.model, v.ownerName],
+        { plate: v.licensePlate }
+      )
     );
   }, [vehicles, vehicleSearch]);
 
@@ -317,14 +374,14 @@ export function QuickEntryModal({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="gp-card flex max-h-[95dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border border-slate-800 shadow-2xl sm:max-h-[92vh] sm:rounded-2xl">
+      <div className="gp-card flex max-h-[95dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border border-zinc-800 shadow-2xl sm:max-h-[92vh] sm:rounded-2xl">
         {/* Mobile grab handle */}
         <div className="flex justify-center pt-2.5 pb-1 sm:hidden" aria-hidden="true">
-          <span className="h-1 w-10 rounded-full bg-slate-700" />
+          <span className="h-1 w-10 rounded-full bg-zinc-700" />
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3.5 sm:px-6 sm:py-4">
+        <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3.5 sm:px-6 sm:py-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-500/25 bg-amber-500/12 text-amber-400">
               <Wrench className="h-5 w-5" />
@@ -332,11 +389,11 @@ export function QuickEntryModal({
             <div>
               <h2
                 id="quick-entry-modal-title"
-                className="text-base font-semibold text-slate-100"
+                className="text-base font-semibold text-zinc-100"
               >
                 Cargar auto o reparación
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-zinc-400">
                 Registrá el trabajo y programá su alerta en segundos
               </p>
             </div>
@@ -345,7 +402,7 @@ export function QuickEntryModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-800 hover:text-slate-100 cursor-pointer"
+            className="flex h-10 w-10 items-center justify-center rounded-xl text-zinc-400 transition hover:bg-zinc-800 hover:text-zinc-100 cursor-pointer"
             aria-label="Cerrar"
           >
             <X className="h-5 w-5" />
@@ -353,15 +410,15 @@ export function QuickEntryModal({
         </div>
 
         {/* Mode switcher */}
-        <div className="border-b border-slate-800/80 bg-slate-950/50 px-4 py-2.5 sm:px-6 sm:py-3">
-          <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-slate-900/90 p-1 border border-slate-800">
+        <div className="border-b border-zinc-800/80 bg-zinc-950/50 px-4 py-2.5 sm:px-6 sm:py-3">
+          <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-zinc-900/90 p-1 border border-zinc-800">
             <button
               type="button"
               onClick={() => setMode("existing")}
               className={`inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-semibold transition cursor-pointer ${
                 mode === "existing"
-                  ? "bg-amber-500 text-slate-950 shadow-sm"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-amber-500 text-zinc-950 shadow-sm"
+                  : "text-zinc-400 hover:text-zinc-200"
               }`}
             >
               <Wrench className="h-3.5 w-3.5 shrink-0" />
@@ -372,8 +429,8 @@ export function QuickEntryModal({
               onClick={() => setMode("new")}
               className={`inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-semibold transition cursor-pointer ${
                 mode === "new"
-                  ? "bg-amber-500 text-slate-950 shadow-sm"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-amber-500 text-zinc-950 shadow-sm"
+                  : "text-zinc-400 hover:text-zinc-200"
               }`}
             >
               <CarFront className="h-3.5 w-3.5 shrink-0" />
@@ -390,28 +447,28 @@ export function QuickEntryModal({
           <div className="flex-1 space-y-5 overflow-y-auto overscroll-contain px-4 py-4 sm:space-y-6 sm:px-6 sm:py-5">
             {mode === "existing" ? (
               <div className="space-y-3">
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
                   1. Seleccionar vehículo
                 </label>
 
                 <div className="relative">
-                  <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                  <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
                   <input
                     type="search"
                     value={vehicleSearch}
                     onChange={(e) => setVehicleSearch(e.target.value)}
                     placeholder="Buscar por patente, modelo o dueño..."
-                    className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950/80 py-2.5 pl-10 pr-4 text-sm text-slate-100 placeholder-slate-500 outline-none transition focus:border-amber-500/70"
+                    className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950/80 py-2.5 pl-10 pr-4 text-sm text-zinc-100 placeholder-zinc-500 outline-none transition focus:border-amber-500/70"
                   />
                 </div>
 
                 {loadingVehicles ? (
-                  <p className="py-4 text-center text-xs text-slate-400">
+                  <p className="py-4 text-center text-xs text-zinc-400">
                     Cargando vehículos registrados...
                   </p>
                 ) : filteredVehicles.length === 0 ? (
-                  <div className="rounded-xl border border-dashed border-slate-700 p-4 text-center">
-                    <p className="text-xs text-slate-400">
+                  <div className="rounded-xl border border-dashed border-zinc-700 p-4 text-center">
+                    <p className="text-xs text-zinc-400">
                       No encontramos ese vehículo.
                     </p>
                     <button
@@ -434,19 +491,19 @@ export function QuickEntryModal({
                           className={`flex min-h-[52px] items-center justify-between gap-2 rounded-xl border px-3.5 py-2.5 text-left transition cursor-pointer ${
                             active
                               ? "border-amber-500/70 bg-amber-500/10"
-                              : "border-slate-800 bg-slate-950/60 hover:border-slate-700"
+                              : "border-zinc-800 bg-zinc-950/60 hover:border-zinc-700"
                           }`}
                         >
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className="font-mono text-xs font-bold tracking-wider text-slate-100 tabular-nums">
+                              <span className="font-mono text-xs font-bold tracking-wider text-zinc-100 tabular-nums">
                                 {v.licensePlate}
                               </span>
-                              <span className="truncate text-xs text-slate-300">
+                              <span className="truncate text-xs text-zinc-300">
                                 {v.brand} {v.model}
                               </span>
                             </div>
-                            <p className="mt-0.5 truncate text-[11px] text-slate-400">
+                            <p className="mt-0.5 truncate text-[11px] text-zinc-400">
                               {v.ownerName} ·{" "}
                               <span className="tabular-nums">
                                 {v.currentMileage.toLocaleString("es-AR")} km
@@ -454,7 +511,7 @@ export function QuickEntryModal({
                             </p>
                           </div>
                           {active && (
-                            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500 text-slate-950">
+                            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500 text-zinc-950">
                               <Check className="h-3.5 w-3.5" />
                             </span>
                           )}
@@ -466,13 +523,13 @@ export function QuickEntryModal({
               </div>
             ) : (
               <div className="space-y-4">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
                   1. Datos del vehículo y del dueño
                 </p>
 
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-3.5">
                   <div>
-                    <label className="mb-1.5 block text-xs font-medium text-slate-300">
+                    <label className="mb-1.5 block text-xs font-medium text-zinc-300">
                       Patente *
                     </label>
                     <input
@@ -485,25 +542,38 @@ export function QuickEntryModal({
                         setLicensePlate(e.target.value.toUpperCase())
                       }
                       placeholder="AB 123 CD"
-                      className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950/90 px-3.5 py-2.5 font-mono text-sm font-semibold uppercase tracking-wider text-slate-100 placeholder-slate-600 outline-none focus:border-amber-500/70"
+                      className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950/90 px-3.5 py-2.5 font-mono text-sm font-semibold uppercase tracking-wider text-zinc-100 placeholder-zinc-600 outline-none focus:border-amber-500/70"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3 sm:col-span-2">
                     <div>
-                      <label className="mb-1.5 block text-xs font-medium text-slate-300">
+                      <label className="mb-1.5 block text-xs font-medium text-zinc-300">
                         Marca *
                       </label>
-                      <input
-                        type="text"
-                        required
-                        value={brand}
-                        onChange={(e) => setBrand(e.target.value)}
-                        placeholder="Ej. Volkswagen"
-                        className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950/90 px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-amber-500/70"
-                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setBrandSearch("");
+                          setAddingBrand(false);
+                          setBrandPickerOpen(true);
+                        }}
+                        className="flex min-h-[44px] w-full items-center justify-between gap-2 rounded-xl border border-white/10 bg-zinc-950 px-3 py-2 text-left transition hover:border-white/25 cursor-pointer"
+                      >
+                        <span className="flex min-w-0 items-center gap-2">
+                          <BrandLogo
+                            brandName={brand || "Auto"}
+                            brandSlug={slugifyBrandName(brand || "")}
+                            size="sm"
+                          />
+                          <span className="truncate text-sm font-semibold text-white">
+                            {brand || "Elegir marca"}
+                          </span>
+                        </span>
+                        <ChevronDown className="h-4 w-4 shrink-0 text-zinc-400" />
+                      </button>
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-xs font-medium text-slate-300">
+                      <label className="mb-1.5 block text-xs font-medium text-zinc-300">
                         Modelo *
                       </label>
                       <input
@@ -512,7 +582,7 @@ export function QuickEntryModal({
                         value={model}
                         onChange={(e) => setModel(e.target.value)}
                         placeholder="Ej. Golf GTI"
-                        className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950/90 px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-amber-500/70"
+                        className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950/90 px-3.5 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-amber-500/70"
                       />
                     </div>
                   </div>
@@ -520,7 +590,7 @@ export function QuickEntryModal({
 
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-3.5">
                   <div>
-                    <label className="mb-1.5 block text-xs font-medium text-slate-300">
+                    <label className="mb-1.5 block text-xs font-medium text-zinc-300">
                       Año *
                     </label>
                     <input
@@ -531,11 +601,11 @@ export function QuickEntryModal({
                       max={new Date().getFullYear() + 2}
                       value={year}
                       onChange={(e) => setYear(e.target.value)}
-                      className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950/90 px-3.5 py-2.5 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500/70"
+                      className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950/90 px-3.5 py-2.5 font-mono text-sm text-zinc-100 tabular-nums outline-none focus:border-amber-500/70"
                     />
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-xs font-medium text-slate-300">
+                    <label className="mb-1.5 block text-xs font-medium text-zinc-300">
                       Km actual *
                     </label>
                     <input
@@ -549,11 +619,11 @@ export function QuickEntryModal({
                         if (!mileageAtService) setMileageAtService(e.target.value);
                       }}
                       placeholder="Ej. 85000"
-                      className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950/90 px-3.5 py-2.5 font-mono text-sm text-slate-100 tabular-nums placeholder-slate-600 outline-none focus:border-amber-500/70"
+                      className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950/90 px-3.5 py-2.5 font-mono text-sm text-zinc-100 tabular-nums placeholder-zinc-600 outline-none focus:border-amber-500/70"
                     />
                   </div>
                   <div className="col-span-2 sm:col-span-1">
-                    <label className="mb-1.5 block text-xs font-medium text-slate-300">
+                    <label className="mb-1.5 block text-xs font-medium text-zinc-300">
                       Motor (opcional)
                     </label>
                     <input
@@ -561,14 +631,14 @@ export function QuickEntryModal({
                       value={engine}
                       onChange={(e) => setEngine(e.target.value)}
                       placeholder="Ej. 2.0 TSI / 1.6"
-                      className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950/90 px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-amber-500/70"
+                      className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950/90 px-3.5 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-amber-500/70"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-3.5">
                   <div>
-                    <label className="mb-1.5 block text-xs font-medium text-slate-300">
+                    <label className="mb-1.5 block text-xs font-medium text-zinc-300">
                       Nombre del dueño *
                     </label>
                     <input
@@ -577,11 +647,11 @@ export function QuickEntryModal({
                       value={ownerName}
                       onChange={(e) => setOwnerName(e.target.value)}
                       placeholder="Ej. Martín López"
-                      className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950/90 px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-amber-500/70"
+                      className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950/90 px-3.5 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-amber-500/70"
                     />
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-xs font-medium text-slate-300">
+                    <label className="mb-1.5 block text-xs font-medium text-zinc-300">
                       WhatsApp del dueño *
                     </label>
                     <input
@@ -591,13 +661,13 @@ export function QuickEntryModal({
                       value={ownerPhone}
                       onChange={(e) => setOwnerPhone(e.target.value)}
                       placeholder="+54 9 341 555-1234"
-                      className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950/90 px-3.5 py-2.5 font-mono text-sm text-slate-100 tabular-nums placeholder-slate-600 outline-none focus:border-amber-500/70"
+                      className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950/90 px-3.5 py-2.5 font-mono text-sm text-zinc-100 tabular-nums placeholder-zinc-600 outline-none focus:border-amber-500/70"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium text-slate-300">
+                  <label className="mb-1.5 block text-xs font-medium text-zinc-300">
                     Observaciones del vehículo (opcional)
                   </label>
                   <input
@@ -605,18 +675,18 @@ export function QuickEntryModal({
                     value={vehicleNotes}
                     onChange={(e) => setVehicleNotes(e.target.value)}
                     placeholder="Aceite preferido, detalles particulares del cliente..."
-                    className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950/90 px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-amber-500/70"
+                    className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950/90 px-3.5 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-amber-500/70"
                   />
                 </div>
 
-                <label className="flex min-h-[44px] items-center gap-3 rounded-xl border border-slate-800 bg-slate-950/50 px-4 py-3 cursor-pointer">
+                <label className="flex min-h-[44px] items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950/50 px-4 py-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={includeInitialRepair}
                     onChange={(e) => setIncludeInitialRepair(e.target.checked)}
-                    className="h-5 w-5 rounded border-slate-600 accent-amber-500"
+                    className="h-5 w-5 rounded border-zinc-600 accent-amber-500"
                   />
-                  <span className="text-xs font-medium text-slate-200">
+                  <span className="text-xs font-medium text-zinc-200">
                     Cargar también la primera reparación ahora
                   </span>
                 </label>
@@ -625,14 +695,14 @@ export function QuickEntryModal({
 
             {/* Repair section */}
             {showRepairSection && (
-              <div className="space-y-4 border-t border-slate-800/80 pt-5">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <div className="space-y-4 border-t border-zinc-800/80 pt-5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
                   2. Detalle de la reparación
                 </p>
 
                 {/* 1-tap Service Type Quick Chips */}
                 <div className="space-y-2">
-                  <label className="block text-xs font-medium text-slate-300">
+                  <label className="block text-xs font-medium text-zinc-300">
                     Tipo de trabajo *
                   </label>
                   <div className="flex flex-wrap gap-1.5">
@@ -646,7 +716,7 @@ export function QuickEntryModal({
                           className={`min-h-[36px] rounded-lg border px-3 py-1.5 text-xs font-medium transition cursor-pointer ${
                             active
                               ? "border-amber-500 bg-amber-500/18 text-amber-300"
-                              : "border-slate-800 bg-slate-950/70 text-slate-400 hover:border-slate-700 hover:text-slate-200"
+                              : "border-zinc-800 bg-zinc-950/70 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
                           }`}
                         >
                           {type}
@@ -658,7 +728,7 @@ export function QuickEntryModal({
 
                 <div className="grid grid-cols-2 gap-3 sm:gap-3.5">
                   <div>
-                    <label className="mb-1.5 block text-xs font-medium text-slate-300">
+                    <label className="mb-1.5 block text-xs font-medium text-zinc-300">
                       Fecha *
                     </label>
                     <input
@@ -666,11 +736,11 @@ export function QuickEntryModal({
                       required
                       value={serviceDate}
                       onChange={(e) => setServiceDate(e.target.value)}
-                      className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950/90 px-3 py-2.5 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500/70"
+                      className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950/90 px-3 py-2.5 font-mono text-sm text-zinc-100 tabular-nums outline-none focus:border-amber-500/70"
                     />
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-xs font-medium text-slate-300">
+                    <label className="mb-1.5 block text-xs font-medium text-zinc-300">
                       Km en service *
                     </label>
                     <input
@@ -685,16 +755,16 @@ export function QuickEntryModal({
                           ? String(selectedVehicle.currentMileage)
                           : currentMileage || "Ej. 85000"
                       }
-                      className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950/90 px-3 py-2.5 font-mono text-sm text-slate-100 tabular-nums placeholder-slate-600 outline-none focus:border-amber-500/70"
+                      className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950/90 px-3 py-2.5 font-mono text-sm text-zinc-100 tabular-nums placeholder-zinc-600 outline-none focus:border-amber-500/70"
                     />
                   </div>
                 </div>
 
                 {/* Financial inputs: Cobrado + Costo + Live Ganancia */}
-                <div className="space-y-2.5 rounded-xl border border-slate-800 bg-slate-950/50 p-3.5">
+                <div className="space-y-2.5 rounded-xl border border-zinc-800 bg-zinc-950/50 p-3.5">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="mb-1.5 block text-xs font-medium text-slate-300">
+                      <label className="mb-1.5 block text-xs font-medium text-zinc-300">
                         Cobrado (ARS)
                       </label>
                       <input
@@ -705,11 +775,11 @@ export function QuickEntryModal({
                         value={cost}
                         onChange={(e) => setCost(e.target.value)}
                         placeholder="Ej. 165000"
-                        className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums placeholder-slate-600 outline-none focus:border-amber-500/70"
+                        className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950 px-3 py-2 font-mono text-sm text-zinc-100 tabular-nums placeholder-zinc-600 outline-none focus:border-amber-500/70"
                       />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-xs font-medium text-slate-300">
+                      <label className="mb-1.5 block text-xs font-medium text-zinc-300">
                         Costo repuestos
                       </label>
                       <input
@@ -720,7 +790,7 @@ export function QuickEntryModal({
                         value={partsCost}
                         onChange={(e) => setPartsCost(e.target.value)}
                         placeholder="Ej. 82000"
-                        className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums placeholder-slate-600 outline-none focus:border-amber-500/70"
+                        className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950 px-3 py-2 font-mono text-sm text-zinc-100 tabular-nums placeholder-zinc-600 outline-none focus:border-amber-500/70"
                       />
                     </div>
                   </div>
@@ -730,8 +800,8 @@ export function QuickEntryModal({
                     const profit = rev - exp;
                     const margin = rev > 0 ? Math.round((profit / rev) * 100) : null;
                     return (
-                      <div className="flex items-center justify-between border-t border-slate-800/80 pt-2 text-xs">
-                        <span className="text-slate-400">Ganancia calculada:</span>
+                      <div className="flex items-center justify-between border-t border-zinc-800/80 pt-2 text-xs">
+                        <span className="text-zinc-400">Ganancia calculada:</span>
                         <span
                           className={`font-mono font-bold tabular-nums ${
                             profit >= 0 ? "text-emerald-400" : "text-red-400"
@@ -746,7 +816,7 @@ export function QuickEntryModal({
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium text-slate-300">
+                  <label className="mb-1.5 block text-xs font-medium text-zinc-300">
                     Descripción y repuestos usados *
                   </label>
                   <textarea
@@ -755,12 +825,12 @@ export function QuickEntryModal({
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Ej. Aceite sintético 5W-40 Motul, filtro de aceite Mann, filtro de aire..."
-                    className="w-full rounded-xl border border-slate-700/90 bg-slate-950/90 px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-amber-500/70"
+                    className="w-full rounded-xl border border-zinc-700/90 bg-zinc-950/90 px-3.5 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-amber-500/70"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium text-slate-300">
+                  <label className="mb-1.5 block text-xs font-medium text-zinc-300">
                     Notas del mecánico (opcional)
                   </label>
                   <input
@@ -768,16 +838,16 @@ export function QuickEntryModal({
                     value={mechanicNotes}
                     onChange={(e) => setMechanicNotes(e.target.value)}
                     placeholder="Ej. Revisar pastillas traseras en la próxima visita..."
-                    className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950/90 px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-amber-500/70"
+                    className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950/90 px-3.5 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-amber-500/70"
                   />
                 </div>
 
                 {/* Reminder selector */}
-                <div className="space-y-3 rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+                <div className="space-y-3 rounded-xl border border-zinc-800 bg-zinc-950/60 p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <BellRing className="h-4 w-4 text-amber-400" />
-                      <span className="text-xs font-semibold text-slate-200">
+                      <span className="text-xs font-semibold text-zinc-200">
                         Recordatorio de mantenimiento
                       </span>
                     </div>
@@ -800,7 +870,7 @@ export function QuickEntryModal({
                           className={`min-h-[38px] rounded-lg border px-3 py-1.5 text-xs font-medium transition cursor-pointer ${
                             active
                               ? "border-amber-500 bg-amber-500/15 text-amber-300"
-                              : "border-slate-700/80 bg-slate-900/70 text-slate-400 hover:border-slate-600 hover:text-slate-200"
+                              : "border-zinc-700/80 bg-zinc-900/70 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200"
                           }`}
                         >
                           {preset.label}
@@ -811,7 +881,7 @@ export function QuickEntryModal({
 
                   {reminderPreset === "custom" && (
                     <div className="pt-1">
-                      <label className="mb-1 block text-[11px] font-medium text-slate-400">
+                      <label className="mb-1 block text-[11px] font-medium text-zinc-400">
                         Fecha de alerta personalizada
                       </label>
                       <input
@@ -819,7 +889,7 @@ export function QuickEntryModal({
                         required
                         value={customReminderDate}
                         onChange={(e) => setCustomReminderDate(e.target.value)}
-                        className="min-h-[44px] w-full max-w-xs rounded-xl border border-slate-700/90 bg-slate-950 px-3.5 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500/70"
+                        className="min-h-[44px] w-full max-w-xs rounded-xl border border-zinc-700/90 bg-zinc-950 px-3.5 py-2 font-mono text-sm text-zinc-100 tabular-nums outline-none focus:border-amber-500/70"
                       />
                     </div>
                   )}
@@ -834,12 +904,12 @@ export function QuickEntryModal({
             )}
           </div>
 
-          {/* Sticky Thumb-Friendly Footer */}
-          <div className="flex flex-col-reverse gap-2 border-t border-slate-800 bg-slate-950/90 px-4 pt-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] sm:flex-row sm:items-center sm:justify-end sm:px-6 sm:py-4">
+          {/* Sticky Compact Footer */}
+          <div className="flex items-center justify-end gap-2 border-t border-white/[0.08] bg-zinc-950/95 px-4 pt-2.5 pb-[max(0.85rem,env(safe-area-inset-bottom))] sm:px-6 sm:py-3.5">
             <button
               type="button"
               onClick={onClose}
-              className="min-h-[44px] rounded-xl border border-slate-700 px-4 py-2.5 text-xs font-semibold text-slate-300 transition hover:bg-slate-800 hover:text-white cursor-pointer"
+              className="hidden min-h-[42px] rounded-xl border border-white/12 px-4 py-2 text-xs font-semibold text-zinc-300 transition hover:bg-zinc-900 hover:text-white sm:inline-flex sm:items-center cursor-pointer"
             >
               Cancelar
             </button>
@@ -847,7 +917,7 @@ export function QuickEntryModal({
               type="submit"
               disabled={submitting}
               id="quick-entry-submit-btn"
-              className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-bold text-slate-950 shadow-lg shadow-amber-500/15 transition hover:bg-amber-400 active:scale-[0.99] disabled:opacity-50 sm:min-h-[42px] sm:text-xs cursor-pointer"
+              className="inline-flex min-h-[46px] w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-zinc-950 transition hover:bg-zinc-200 active:scale-[0.99] disabled:opacity-50 sm:min-h-[42px] sm:w-auto sm:text-xs cursor-pointer"
             >
               {submitting
                 ? "Guardando..."
@@ -860,6 +930,175 @@ export function QuickEntryModal({
           </div>
         </form>
       </div>
+
+      {/* Full-Height Brand Picker Sheet */}
+      {brandPickerOpen && (
+        <div
+          className="fixed inset-0 z-[60] flex items-end justify-center bg-black/80 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Elegir marca del vehículo"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setBrandPickerOpen(false);
+          }}
+        >
+          <div className="gp-card flex h-[86dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl shadow-2xl sm:h-auto sm:max-h-[80vh] sm:rounded-2xl">
+            <div
+              className="flex justify-center pt-2.5 pb-1 sm:hidden"
+              aria-hidden="true"
+            >
+              <span className="h-1 w-10 rounded-full bg-zinc-700" />
+            </div>
+
+            <div className="flex items-center justify-between border-b border-white/[0.08] px-4 py-3 sm:px-5">
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-bold text-white">Elegir marca</h3>
+                <span className="rounded-full border border-white/10 bg-zinc-900 px-2 py-0.5 font-mono text-[11px] font-semibold text-zinc-400">
+                  {filteredBrands.length}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBrandPickerOpen(false)}
+                aria-label="Cerrar selector de marcas"
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-zinc-400 hover:bg-white/5 hover:text-white cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="border-b border-white/[0.08] bg-zinc-950/60 px-4 py-2.5 sm:px-5">
+              <div className="relative">
+                <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+                <input
+                  type="search"
+                  value={brandSearch}
+                  onChange={(e) => setBrandSearch(e.target.value)}
+                  placeholder="Buscar marca..."
+                  className="min-h-[42px] w-full rounded-xl border border-white/10 bg-zinc-950 py-2 pr-9 pl-10 text-sm text-white placeholder-zinc-500 outline-none focus:border-zinc-500"
+                />
+                {brandSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setBrandSearch("")}
+                    aria-label="Limpiar búsqueda"
+                    className="absolute top-1/2 right-2.5 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-800 hover:text-white cursor-pointer"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto overscroll-contain px-3.5 py-3 sm:px-5 sm:py-4">
+              {filteredBrands.length > 0 ? (
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-2.5">
+                  {filteredBrands.map((b) => {
+                    const active = b.name.toLowerCase() === brand.toLowerCase();
+                    return (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onClick={() => {
+                          setBrand(b.name);
+                          setBrandPickerOpen(false);
+                        }}
+                        className={`relative flex flex-col items-center justify-center gap-1.5 rounded-xl border px-2 py-2.5 text-center transition active:scale-[0.97] cursor-pointer ${
+                          active
+                            ? "border-white/40 bg-white/10 text-white"
+                            : "border-white/[0.08] bg-zinc-900/75 text-zinc-200 hover:border-white/20 hover:bg-zinc-800/80 hover:text-white"
+                        }`}
+                      >
+                        {active && (
+                          <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-white">
+                            <Check className="h-2.5 w-2.5 stroke-[3]" />
+                          </span>
+                        )}
+                        <BrandLogo
+                          brandName={b.name}
+                          brandSlug={b.slug}
+                          size="md"
+                        />
+                        <span className="w-full truncate text-[11.5px] font-semibold leading-tight">
+                          {b.name}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-white/10 bg-zinc-950/60 px-4 py-10 text-center">
+                  <p className="text-sm font-medium text-zinc-300">
+                    No encontramos &ldquo;{brandSearch.trim()}&rdquo;
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewBrandInput(brandSearch.trim());
+                      setAddingBrand(true);
+                    }}
+                    className="mt-3 inline-flex min-h-[40px] items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-xs font-bold text-zinc-950 hover:bg-zinc-200 cursor-pointer"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Agregar &ldquo;{brandSearch.trim()}&rdquo;
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="border-t border-white/[0.08] bg-zinc-950/95 px-4 pt-2.5 pb-[max(0.85rem,env(safe-area-inset-bottom))] sm:px-5 sm:py-3">
+              {addingBrand ? (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    autoFocus
+                    value={newBrandInput}
+                    onChange={(e) => setNewBrandInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        if (!savingBrand && newBrandInput.trim().length >= 2) {
+                          handleCreateBrand();
+                        }
+                      }
+                    }}
+                    placeholder="Nueva marca (ej. Subaru, Volvo...)"
+                    className="min-h-[44px] flex-1 rounded-xl border border-white/25 bg-zinc-950 px-3 py-2 text-sm text-white outline-none focus:border-white/50"
+                  />
+                  <button
+                    type="button"
+                    disabled={savingBrand || newBrandInput.trim().length < 2}
+                    onClick={handleCreateBrand}
+                    className="min-h-[44px] shrink-0 rounded-xl bg-white px-4 py-2 text-xs font-bold text-zinc-950 hover:bg-zinc-200 disabled:opacity-50 cursor-pointer"
+                  >
+                    {savingBrand ? "..." : "Guardar"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAddingBrand(false)}
+                    aria-label="Cancelar"
+                    className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-xl border border-white/12 text-zinc-400 hover:bg-zinc-800 hover:text-white cursor-pointer"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (brandSearch.trim()) setNewBrandInput(brandSearch.trim());
+                    setAddingBrand(true);
+                  }}
+                  className="flex min-h-[42px] w-full items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/[0.06] px-4 py-2 text-xs font-bold text-white transition hover:bg-white/10 cursor-pointer"
+                >
+                  <Plus className="h-4 w-4" />
+                  Agregar nueva marca
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

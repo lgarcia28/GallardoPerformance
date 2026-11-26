@@ -35,6 +35,7 @@ import {
   formatLongDateSpanish,
   formatShortDate,
   getTodayISO,
+  matchesWorkshopQuery,
   parseLocalDate,
   SERVICE_TYPES,
   WORKSHOP_INFO,
@@ -81,14 +82,24 @@ function formatMonthTitle(year: number, monthIndex: number): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
+export interface AppointmentPrefillDraft {
+  ownerName: string;
+  ownerPhone: string;
+  licensePlate: string;
+  vehicleLabel: string;
+  vehicleId: number | null;
+}
+
 interface AppointmentsClientProps {
   initialData: AppointmentsData;
   initialVehicles: VehicleSummary[];
+  initialDraft?: AppointmentPrefillDraft | null;
 }
 
 export function AppointmentsClient({
   initialData,
   initialVehicles,
+  initialDraft,
 }: AppointmentsClientProps) {
   const { openQuickEntry, showToast, refreshOverdueCount } = useWorkshopUI();
 
@@ -98,6 +109,7 @@ export function AppointmentsClient({
   const [data, setData] = useState<AppointmentsData>(initialData);
   const [vehicles, setVehicles] = useState<VehicleSummary[]>(initialVehicles);
   const [viewMode, setViewMode] = useState<"calendar" | "upcoming">("calendar");
+  const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<
     "active" | "in_progress" | "completed" | "all"
   >("active");
@@ -107,24 +119,34 @@ export function AppointmentsClient({
   const [selectedDate, setSelectedDate] = useState(() => todayIso);
 
   // Modal state (create or edit appointment)
-  const [modalOpen, setModalOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(() => Boolean(initialDraft));
   const [editingAppointment, setEditingAppointment] =
     useState<Appointment | null>(null);
-  const [clientMode, setClientMode] = useState<"registered" | "walkin">(
-    "registered"
+  const [clientMode, setClientMode] = useState<"registered" | "walkin">(() =>
+    initialDraft
+      ? initialDraft.vehicleId
+        ? "registered"
+        : "walkin"
+      : "registered"
   );
   const [vehicleQuery, setVehicleQuery] = useState("");
   const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(
-    null
+    () => initialDraft?.vehicleId ?? null
   );
 
   const [apptDate, setApptDate] = useState(todayIso);
   const [apptTime, setApptTime] = useState("09:00");
-  const [licensePlate, setLicensePlate] = useState("");
-  const [vehicleLabel, setVehicleLabel] = useState("");
-  const [ownerName, setOwnerName] = useState("");
+  const [licensePlate, setLicensePlate] = useState(
+    () => initialDraft?.licensePlate ?? ""
+  );
+  const [vehicleLabel, setVehicleLabel] = useState(
+    () => initialDraft?.vehicleLabel ?? ""
+  );
+  const [ownerName, setOwnerName] = useState(
+    () => initialDraft?.ownerName ?? ""
+  );
   const [ownerPhone, setOwnerPhone] = useState<string>(
-    WORKSHOP_INFO.defaultPhonePrefix
+    () => initialDraft?.ownerPhone || WORKSHOP_INFO.defaultPhonePrefix
   );
   const [serviceType, setServiceType] = useState<string>(SERVICE_TYPES[0]);
   const [notes, setNotes] = useState("");
@@ -172,15 +194,32 @@ export function AppointmentsClient({
     [viewYear, viewMonth]
   );
 
+  const searchedAppointments = useMemo(() => {
+    return data.appointments.filter((a) =>
+      matchesWorkshopQuery(
+        search,
+        [
+          a.licensePlate,
+          a.vehicleLabel,
+          a.ownerName,
+          a.ownerPhone,
+          a.serviceType,
+          a.notes,
+        ],
+        { plate: a.licensePlate, phone: a.ownerPhone }
+      )
+    );
+  }, [data.appointments, search]);
+
   const appointmentsByDate = useMemo(() => {
     const map = new Map<string, Appointment[]>();
-    for (const a of data.appointments) {
+    for (const a of searchedAppointments) {
       const list = map.get(a.appointmentDate) ?? [];
       list.push(a);
       map.set(a.appointmentDate, list);
     }
     return map;
-  }, [data.appointments]);
+  }, [searchedAppointments]);
 
   const selectedDayAppointments = useMemo(
     () => appointmentsByDate.get(selectedDate) ?? [],
@@ -188,7 +227,8 @@ export function AppointmentsClient({
   );
 
   const upcomingList = useMemo(() => {
-    return data.appointments.filter((a) => {
+    return searchedAppointments.filter((a) => {
+      if (search.trim()) return true;
       if (statusFilter === "in_progress") return a.status === "in_progress";
       if (statusFilter === "completed") return a.status === "completed";
       if (statusFilter === "active") {
@@ -199,15 +239,15 @@ export function AppointmentsClient({
       }
       return true;
     });
-  }, [data.appointments, statusFilter, todayIso]);
+  }, [searchedAppointments, search, statusFilter, todayIso]);
 
   const filteredVehicles = useMemo(() => {
-    const q = vehicleQuery.trim().toLowerCase();
-    if (!q) return vehicles;
     return vehicles.filter((v) =>
-      `${v.licensePlate} ${v.brand} ${v.model} ${v.ownerName} ${v.ownerPhone}`
-        .toLowerCase()
-        .includes(q)
+      matchesWorkshopQuery(
+        vehicleQuery,
+        [v.licensePlate, v.brand, v.model, v.ownerName, v.ownerPhone],
+        { plate: v.licensePlate, phone: v.ownerPhone }
+      )
     );
   }, [vehicles, vehicleQuery]);
 
@@ -426,19 +466,19 @@ export function AppointmentsClient({
           statusKey === "in_progress"
             ? "border-sky-500/35 bg-sky-500/[0.06]"
             : statusKey === "cancelled"
-            ? "border-slate-800/70 bg-slate-950/40 opacity-65"
-            : "border-slate-800 bg-slate-950/65 hover:border-slate-700"
+            ? "border-zinc-800/70 bg-zinc-950/40 opacity-65"
+            : "border-zinc-800 bg-zinc-950/65 hover:border-zinc-700"
         }`}
       >
         {/* Top Row: Time + Plate + Status */}
         <div className="flex flex-wrap items-start justify-between gap-2.5">
           <div className="flex flex-wrap items-center gap-2.5">
-            <span className="inline-flex items-center gap-1 rounded-lg border border-slate-700/80 bg-slate-900 px-2.5 py-1 font-mono text-xs font-bold text-amber-300 tabular-nums">
+            <span className="inline-flex items-center gap-1 rounded-lg border border-zinc-700/80 bg-zinc-900 px-2.5 py-1 font-mono text-xs font-bold text-amber-300 tabular-nums">
               <Clock className="h-3.5 w-3.5" />
               {appt.appointmentTime}
             </span>
             {showDate && (
-              <span className="font-mono text-xs font-semibold text-slate-300 tabular-nums">
+              <span className="font-mono text-xs font-semibold text-zinc-300 tabular-nums">
                 {formatShortDate(appt.appointmentDate)}
               </span>
             )}
@@ -456,7 +496,7 @@ export function AppointmentsClient({
         {/* Middle: Vehicle + Client + Service */}
         <div className="mt-3 space-y-1.5">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <p className="text-sm font-bold text-slate-100">
+            <p className="text-sm font-bold text-zinc-100">
               {appt.vehicleLabel}
             </p>
             <span className="rounded-md border border-amber-500/25 bg-amber-500/10 px-2 py-0.5 text-[11px] font-semibold text-amber-300">
@@ -464,23 +504,23 @@ export function AppointmentsClient({
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
-            <span className="font-medium text-slate-300">{appt.ownerName}</span>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-400">
+            <span className="font-medium text-zinc-300">{appt.ownerName}</span>
             <span className="inline-flex items-center gap-1 font-mono tabular-nums">
-              <Phone className="h-3 w-3 text-slate-500" />
+              <Phone className="h-3 w-3 text-zinc-500" />
               {appt.ownerPhone}
             </span>
           </div>
 
           {appt.notes && (
-            <p className="rounded-lg border border-slate-800/80 bg-slate-900/60 px-3 py-2 text-xs leading-relaxed text-slate-300">
+            <p className="rounded-lg border border-zinc-800/80 bg-zinc-900/60 px-3 py-2 text-xs leading-relaxed text-zinc-300">
               {appt.notes}
             </p>
           )}
         </div>
 
         {/* Bottom Actions */}
-        <div className="mt-3.5 flex flex-wrap items-center gap-2 border-t border-slate-800/70 pt-3">
+        <div className="mt-3.5 flex flex-wrap items-center gap-2 border-t border-zinc-800/70 pt-3">
           {statusKey === "scheduled" && (
             <button
               type="button"
@@ -498,7 +538,7 @@ export function AppointmentsClient({
               type="button"
               disabled={updatingId === appt.id}
               onClick={() => handleStatusChange(appt, "completed", true)}
-              className="flex-1 sm:flex-none inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl bg-amber-500 px-3.5 py-1.5 text-xs font-bold text-slate-950 transition hover:bg-amber-400 disabled:opacity-50 cursor-pointer"
+              className="flex-1 sm:flex-none inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl bg-amber-500 px-3.5 py-1.5 text-xs font-bold text-zinc-950 transition hover:bg-amber-400 disabled:opacity-50 cursor-pointer"
             >
               <CheckCircle2 className="h-4 w-4" />
               Finalizar y cargar trabajo
@@ -520,7 +560,7 @@ export function AppointmentsClient({
             {appt.vehicleId && (
               <Link
                 href={`/vehiculos/${appt.vehicleId}`}
-                className="inline-flex min-h-[38px] items-center gap-1 rounded-xl border border-slate-700/90 px-2.5 py-1.5 text-[11px] font-medium text-slate-300 transition hover:border-slate-600 hover:bg-slate-800 hover:text-white"
+                className="inline-flex min-h-[38px] items-center gap-1 rounded-xl border border-zinc-700/90 px-2.5 py-1.5 text-[11px] font-medium text-zinc-300 transition hover:border-zinc-600 hover:bg-zinc-800 hover:text-white"
               >
                 Ficha
                 <ArrowRight className="h-3 w-3" />
@@ -530,7 +570,7 @@ export function AppointmentsClient({
               type="button"
               onClick={() => openEditModal(appt)}
               title="Editar turno"
-              className="inline-flex min-h-[38px] min-w-[38px] items-center justify-center rounded-xl border border-slate-800 text-slate-400 transition hover:border-slate-600 hover:bg-slate-800 hover:text-white cursor-pointer"
+              className="inline-flex min-h-[38px] min-w-[38px] items-center justify-center rounded-xl border border-zinc-800 text-zinc-400 transition hover:border-zinc-600 hover:bg-zinc-800 hover:text-white cursor-pointer"
             >
               <Pencil className="h-3.5 w-3.5" />
             </button>
@@ -539,7 +579,7 @@ export function AppointmentsClient({
               disabled={updatingId === appt.id}
               onClick={() => handleDeleteAppointment(appt)}
               title="Eliminar turno"
-              className="inline-flex min-h-[38px] min-w-[38px] items-center justify-center rounded-xl border border-slate-800 text-slate-500 transition hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400 cursor-pointer"
+              className="inline-flex min-h-[38px] min-w-[38px] items-center justify-center rounded-xl border border-zinc-800 text-zinc-500 transition hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400 cursor-pointer"
             >
               <Trash2 className="h-3.5 w-3.5" />
             </button>
@@ -551,29 +591,31 @@ export function AppointmentsClient({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Unified Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-400/90">
+          <p className="flex items-center gap-2 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-red-600" />
             Agenda del Taller
           </p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-50 sm:text-3xl">
+          <h1 className="mt-1.5 text-2xl font-bold tracking-tight text-white sm:text-3xl">
             Calendario de Turnos
           </h1>
-          <p className="mt-1 text-sm text-slate-400">
-            Anotá los autos que ingresan por día y horario, y confirmá el turno por WhatsApp.
+          <p className="mt-1 text-sm text-zinc-400">
+            Anotá los autos que ingresan por día y horario, y confirmá el turno
+            por WhatsApp.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="grid grid-cols-2 gap-1 rounded-xl border border-slate-800 bg-slate-950/80 p-1">
+          <div className="grid grid-cols-2 gap-1 rounded-xl border border-white/[0.08] bg-zinc-950 p-1">
             <button
               type="button"
               onClick={() => setViewMode("calendar")}
               className={`inline-flex min-h-[38px] items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition cursor-pointer ${
                 viewMode === "calendar"
-                  ? "bg-slate-800 text-white"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-white/10 text-white"
+                  : "text-zinc-400 hover:text-zinc-200"
               }`}
             >
               <CalendarDays className="h-3.5 w-3.5" />
@@ -584,8 +626,8 @@ export function AppointmentsClient({
               onClick={() => setViewMode("upcoming")}
               className={`inline-flex min-h-[38px] items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition cursor-pointer ${
                 viewMode === "upcoming"
-                  ? "bg-slate-800 text-white"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-white/10 text-white"
+                  : "text-zinc-400 hover:text-zinc-200"
               }`}
             >
               <ListChecks className="h-3.5 w-3.5" />
@@ -597,11 +639,41 @@ export function AppointmentsClient({
             type="button"
             id="appointments-new-btn"
             onClick={() => openCreateModal(selectedDate)}
-            className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950 shadow-lg shadow-amber-500/15 transition hover:bg-amber-400 cursor-pointer"
+            className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl bg-white px-4 py-2 text-xs font-bold text-zinc-950 shadow-sm transition hover:bg-zinc-200 cursor-pointer"
           >
             <Plus className="h-4 w-4 stroke-[2.5]" />
             Nuevo turno
           </button>
+        </div>
+      </div>
+
+      {/* Fast Search by Plate or Client */}
+      <div className="gp-card rounded-2xl p-3.5 sm:p-4">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => {
+              const val = e.target.value;
+              setSearch(val);
+              if (val.trim() && viewMode === "calendar") {
+                setViewMode("upcoming");
+              }
+            }}
+            placeholder="Buscar turno por patente o cliente (ej. AD 482 KL, Martín)..."
+            className="min-h-[42px] w-full rounded-xl border border-white/10 bg-zinc-950 py-2 pl-10 pr-10 text-sm text-white placeholder-zinc-500 outline-none transition focus:border-zinc-500"
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              aria-label="Limpiar búsqueda"
+              className="absolute right-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-white cursor-pointer"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -612,13 +684,13 @@ export function AppointmentsClient({
           onClick={goToToday}
           className="gp-card gp-card-interactive rounded-2xl p-3.5 text-left sm:p-5 cursor-pointer"
         >
-          <p className="text-[11px] font-medium text-slate-400 sm:text-xs">
+          <p className="text-[11px] font-medium text-zinc-400 sm:text-xs">
             Turnos hoy
           </p>
           <p className="mt-2 font-mono text-2xl font-bold text-amber-400 tabular-nums sm:text-3xl">
             {data.summary.todayCount}
           </p>
-          <p className="mt-0.5 hidden text-[11px] text-slate-500 sm:block">
+          <p className="mt-0.5 hidden text-[11px] text-zinc-500 sm:block">
             Agendados o en curso hoy
           </p>
         </button>
@@ -631,13 +703,13 @@ export function AppointmentsClient({
           }}
           className="gp-card gp-card-interactive rounded-2xl p-3.5 text-left sm:p-5 cursor-pointer"
         >
-          <p className="text-[11px] font-medium text-slate-400 sm:text-xs">
+          <p className="text-[11px] font-medium text-zinc-400 sm:text-xs">
             En taller ahora
           </p>
           <p className="mt-2 font-mono text-2xl font-bold text-sky-400 tabular-nums sm:text-3xl">
             {data.summary.inProgressCount}
           </p>
-          <p className="mt-0.5 hidden text-[11px] text-slate-500 sm:block">
+          <p className="mt-0.5 hidden text-[11px] text-zinc-500 sm:block">
             Vehículos ingresados hoy
           </p>
         </button>
@@ -650,13 +722,13 @@ export function AppointmentsClient({
           }}
           className="gp-card gp-card-interactive rounded-2xl p-3.5 text-left sm:p-5 cursor-pointer"
         >
-          <p className="text-[11px] font-medium text-slate-400 sm:text-xs">
+          <p className="text-[11px] font-medium text-zinc-400 sm:text-xs">
             Próximos 7 días
           </p>
-          <p className="mt-2 font-mono text-2xl font-bold text-slate-50 tabular-nums sm:text-3xl">
+          <p className="mt-2 font-mono text-2xl font-bold text-zinc-50 tabular-nums sm:text-3xl">
             {data.summary.next7DaysCount}
           </p>
-          <p className="mt-0.5 hidden text-[11px] text-slate-500 sm:block">
+          <p className="mt-0.5 hidden text-[11px] text-zinc-500 sm:block">
             Ingresos confirmados
           </p>
         </button>
@@ -667,8 +739,8 @@ export function AppointmentsClient({
           {/* Interactive Monthly Calendar */}
           <section className="gp-card rounded-2xl p-4 sm:p-5 lg:col-span-7">
             {/* Month Controls */}
-            <div className="flex items-center justify-between gap-2 pb-4 border-b border-slate-800/80">
-              <h2 className="text-base font-bold text-slate-100 sm:text-lg">
+            <div className="flex items-center justify-between gap-2 pb-4 border-b border-zinc-800/80">
+              <h2 className="text-base font-bold text-zinc-100 sm:text-lg">
                 {formatMonthTitle(viewYear, viewMonth)}
               </h2>
 
@@ -676,7 +748,7 @@ export function AppointmentsClient({
                 <button
                   type="button"
                   onClick={goToToday}
-                  className="min-h-[36px] rounded-lg border border-slate-700/90 px-2.5 py-1 text-xs font-semibold text-slate-300 transition hover:bg-slate-800 hover:text-white cursor-pointer"
+                  className="min-h-[36px] rounded-lg border border-zinc-700/90 px-2.5 py-1 text-xs font-semibold text-zinc-300 transition hover:bg-zinc-800 hover:text-white cursor-pointer"
                 >
                   Hoy
                 </button>
@@ -684,7 +756,7 @@ export function AppointmentsClient({
                   type="button"
                   onClick={goPrevMonth}
                   aria-label="Mes anterior"
-                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-800 bg-slate-950/70 text-slate-300 transition hover:border-slate-700 hover:bg-slate-800 cursor-pointer"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950/70 text-zinc-300 transition hover:border-zinc-700 hover:bg-zinc-800 cursor-pointer"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
@@ -692,7 +764,7 @@ export function AppointmentsClient({
                   type="button"
                   onClick={goNextMonth}
                   aria-label="Mes siguiente"
-                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-800 bg-slate-950/70 text-slate-300 transition hover:border-slate-700 hover:bg-slate-800 cursor-pointer"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950/70 text-zinc-300 transition hover:border-zinc-700 hover:bg-zinc-800 cursor-pointer"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </button>
@@ -704,7 +776,7 @@ export function AppointmentsClient({
               {WEEKDAY_HEADERS.map((day) => (
                 <div
                   key={day}
-                  className="py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500"
+                  className="py-1.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-500"
                 >
                   {day}
                 </div>
@@ -731,8 +803,8 @@ export function AppointmentsClient({
                         : isToday
                         ? "border-sky-500/45 bg-sky-500/8 hover:border-sky-400/60"
                         : cell.inCurrentMonth
-                        ? "border-slate-800/80 bg-slate-950/50 hover:border-slate-700 hover:bg-slate-900/70"
-                        : "border-transparent bg-slate-950/20 opacity-40 hover:opacity-70"
+                        ? "border-zinc-800/80 bg-zinc-950/50 hover:border-zinc-700 hover:bg-zinc-900/70"
+                        : "border-transparent bg-zinc-950/20 opacity-40 hover:opacity-70"
                     }`}
                   >
                     <div className="flex w-full items-center justify-between">
@@ -742,13 +814,13 @@ export function AppointmentsClient({
                             ? "text-amber-300"
                             : isToday
                             ? "text-sky-300"
-                            : "text-slate-200"
+                            : "text-zinc-200"
                         }`}
                       >
                         {cell.dayNumber}
                       </span>
                       {dayAppts.length > 0 && (
-                        <span className="hidden sm:inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-slate-800 px-1 font-mono text-[10px] font-bold text-slate-200 tabular-nums">
+                        <span className="hidden sm:inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-zinc-800 px-1 font-mono text-[10px] font-bold text-zinc-200 tabular-nums">
                           {dayAppts.length}
                         </span>
                       )}
@@ -770,7 +842,7 @@ export function AppointmentsClient({
                         );
                       })}
                       {dayAppts.length > 4 && (
-                        <span className="text-[9px] font-bold text-slate-400">
+                        <span className="text-[9px] font-bold text-zinc-400">
                           +
                         </span>
                       )}
@@ -781,7 +853,7 @@ export function AppointmentsClient({
             </div>
 
             {/* Legend */}
-            <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-slate-800/80 pt-3 text-[11px] text-slate-400">
+            <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-zinc-800/80 pt-3 text-[11px] text-zinc-400">
               <span className="inline-flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-amber-400" />
                 Agendado
@@ -799,15 +871,15 @@ export function AppointmentsClient({
 
           {/* Selected Day Agenda */}
           <section className="gp-card rounded-2xl p-4 sm:p-5 lg:col-span-5">
-            <div className="flex items-start justify-between gap-3 border-b border-slate-800/80 pb-4">
+            <div className="flex items-start justify-between gap-3 border-b border-zinc-800/80 pb-4">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-400">
                   {selectedDate === todayIso ? "Agenda de hoy" : "Día seleccionado"}
                 </p>
-                <h2 className="mt-0.5 text-base font-bold text-slate-50">
+                <h2 className="mt-0.5 text-base font-bold text-zinc-50">
                   {formatLongDateSpanish(selectedDate)}
                 </h2>
-                <p className="mt-0.5 font-mono text-xs text-slate-400 tabular-nums">
+                <p className="mt-0.5 font-mono text-xs text-zinc-400 tabular-nums">
                   {selectedDayAppointments.length}{" "}
                   {selectedDayAppointments.length === 1
                     ? "auto agendado"
@@ -827,19 +899,19 @@ export function AppointmentsClient({
 
             {selectedDayAppointments.length === 0 ? (
               <div className="py-12 text-center">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-800/70 text-slate-500">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-800/70 text-zinc-500">
                   <CalendarDays className="h-6 w-6" />
                 </div>
-                <p className="mt-3 text-sm font-semibold text-slate-200">
+                <p className="mt-3 text-sm font-semibold text-zinc-200">
                   Sin turnos para este día
                 </p>
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="mt-1 text-xs text-zinc-400">
                   Tocá el botón para anotar un ingreso en esta fecha.
                 </p>
                 <button
                   type="button"
                   onClick={() => openCreateModal(selectedDate)}
-                  className="mt-4 inline-flex min-h-[42px] items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-amber-400 cursor-pointer"
+                  className="mt-4 inline-flex min-h-[42px] items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-zinc-950 hover:bg-amber-400 cursor-pointer"
                 >
                   <Plus className="h-4 w-4" />
                   Agendar turno este día
@@ -857,8 +929,8 @@ export function AppointmentsClient({
       ) : (
         /* Upcoming / All List View */
         <section className="gp-card rounded-2xl p-4 sm:p-6">
-          <div className="flex flex-col gap-3 border-b border-slate-800/80 pb-4 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="text-base font-bold text-slate-100">
+          <div className="flex flex-col gap-3 border-b border-zinc-800/80 pb-4 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-base font-bold text-zinc-100">
               Listado de turnos
             </h2>
             <div className="-mx-1 flex flex-nowrap gap-2 overflow-x-auto px-1 pb-1 no-scrollbar sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
@@ -876,8 +948,8 @@ export function AppointmentsClient({
                   onClick={() => setStatusFilter(tab.key)}
                   className={`min-h-[36px] shrink-0 rounded-xl border px-3 py-1.5 text-xs font-semibold transition cursor-pointer ${
                     statusFilter === tab.key
-                      ? "border-slate-600 bg-slate-800 text-white"
-                      : "border-slate-800 bg-slate-950/60 text-slate-400 hover:border-slate-700 hover:text-slate-200"
+                      ? "border-zinc-600 bg-zinc-800 text-white"
+                      : "border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
                   }`}
                 >
                   {tab.label}
@@ -888,10 +960,10 @@ export function AppointmentsClient({
 
           {upcomingList.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-sm font-semibold text-slate-200">
+              <p className="text-sm font-semibold text-zinc-200">
                 No hay turnos en esta vista
               </p>
-              <p className="mt-1 text-xs text-slate-400">
+              <p className="mt-1 text-xs text-zinc-400">
                 Agendá un turno nuevo para empezar a organizar la semana.
               </p>
             </div>
@@ -914,12 +986,12 @@ export function AppointmentsClient({
             if (e.target === e.currentTarget) setModalOpen(false);
           }}
         >
-          <div className="gp-card flex max-h-[95dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border border-slate-800 shadow-2xl sm:max-h-[92vh] sm:rounded-2xl">
+          <div className="gp-card flex max-h-[95dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border border-zinc-800 shadow-2xl sm:max-h-[92vh] sm:rounded-2xl">
             <div className="flex justify-center pt-2.5 pb-1 sm:hidden" aria-hidden="true">
-              <span className="h-1 w-10 rounded-full bg-slate-700" />
+              <span className="h-1 w-10 rounded-full bg-zinc-700" />
             </div>
 
-            <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3.5 sm:px-6 sm:py-4">
+            <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3.5 sm:px-6 sm:py-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-500/25 bg-amber-500/12 text-amber-400">
                   <CalendarDays className="h-5 w-5" />
@@ -927,11 +999,11 @@ export function AppointmentsClient({
                 <div>
                   <h2
                     id="appointment-modal-title"
-                    className="text-base font-semibold text-slate-100"
+                    className="text-base font-semibold text-zinc-100"
                   >
                     {editingAppointment ? "Editar turno" : "Agendar nuevo turno"}
                   </h2>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-zinc-400">
                     Reservá día y horario de ingreso al taller
                   </p>
                 </div>
@@ -939,7 +1011,7 @@ export function AppointmentsClient({
               <button
                 type="button"
                 onClick={() => setModalOpen(false)}
-                className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer"
+                className="flex h-10 w-10 items-center justify-center rounded-xl text-zinc-400 hover:bg-zinc-800 hover:text-white cursor-pointer"
                 aria-label="Cerrar"
               >
                 <X className="h-5 w-5" />
@@ -955,7 +1027,7 @@ export function AppointmentsClient({
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="mb-1.5 block text-xs font-medium text-slate-300">
+                      <label className="mb-1.5 block text-xs font-medium text-zinc-300">
                         Fecha de ingreso *
                       </label>
                       <input
@@ -963,11 +1035,11 @@ export function AppointmentsClient({
                         required
                         value={apptDate}
                         onChange={(e) => setApptDate(e.target.value)}
-                        className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500/70"
+                        className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950 px-3 py-2 font-mono text-sm text-zinc-100 tabular-nums outline-none focus:border-amber-500/70"
                       />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-xs font-medium text-slate-300">
+                      <label className="mb-1.5 block text-xs font-medium text-zinc-300">
                         Horario *
                       </label>
                       <input
@@ -975,7 +1047,7 @@ export function AppointmentsClient({
                         required
                         value={apptTime}
                         onChange={(e) => setApptTime(e.target.value)}
-                        className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500/70"
+                        className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950 px-3 py-2 font-mono text-sm text-zinc-100 tabular-nums outline-none focus:border-amber-500/70"
                       />
                     </div>
                   </div>
@@ -990,7 +1062,7 @@ export function AppointmentsClient({
                         className={`min-h-[34px] rounded-lg border px-2.5 py-1 font-mono text-xs font-semibold tabular-nums transition cursor-pointer ${
                           apptTime === slot
                             ? "border-amber-500 bg-amber-500/18 text-amber-300"
-                            : "border-slate-800 bg-slate-950/70 text-slate-400 hover:border-slate-700 hover:text-slate-200"
+                            : "border-zinc-800 bg-zinc-950/70 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
                         }`}
                       >
                         {slot}
@@ -1000,15 +1072,15 @@ export function AppointmentsClient({
                 </div>
 
                 {/* Client Mode Switcher */}
-                <div className="space-y-3 border-t border-slate-800/80 pt-4">
-                  <div className="grid grid-cols-2 gap-1.5 rounded-xl border border-slate-800 bg-slate-900/80 p-1">
+                <div className="space-y-3 border-t border-zinc-800/80 pt-4">
+                  <div className="grid grid-cols-2 gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/80 p-1">
                     <button
                       type="button"
                       onClick={() => setClientMode("registered")}
                       className={`inline-flex min-h-[38px] items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-semibold transition cursor-pointer ${
                         clientMode === "registered"
-                          ? "bg-amber-500 text-slate-950"
-                          : "text-slate-400 hover:text-slate-200"
+                          ? "bg-amber-500 text-zinc-950"
+                          : "text-zinc-400 hover:text-zinc-200"
                       }`}
                     >
                       <CarFront className="h-3.5 w-3.5" />
@@ -1022,8 +1094,8 @@ export function AppointmentsClient({
                       }}
                       className={`inline-flex min-h-[38px] items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-semibold transition cursor-pointer ${
                         clientMode === "walkin"
-                          ? "bg-amber-500 text-slate-950"
-                          : "text-slate-400 hover:text-slate-200"
+                          ? "bg-amber-500 text-zinc-950"
+                          : "text-zinc-400 hover:text-zinc-200"
                       }`}
                     >
                       <Wrench className="h-3.5 w-3.5" />
@@ -1034,13 +1106,13 @@ export function AppointmentsClient({
                   {clientMode === "registered" && (
                     <div className="space-y-2.5">
                       <div className="relative">
-                        <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                        <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
                         <input
                           type="search"
                           value={vehicleQuery}
                           onChange={(e) => setVehicleQuery(e.target.value)}
                           placeholder="Buscar patente, modelo o cliente..."
-                          className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950/90 py-2 pl-10 pr-4 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-amber-500/70"
+                          className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950/90 py-2 pl-10 pr-4 text-sm text-zinc-100 placeholder-zinc-500 outline-none focus:border-amber-500/70"
                         />
                       </div>
 
@@ -1055,17 +1127,17 @@ export function AppointmentsClient({
                               className={`flex min-h-[48px] items-center justify-between gap-2 rounded-xl border px-3 py-2 text-left transition cursor-pointer ${
                                 active
                                   ? "border-amber-500/70 bg-amber-500/12"
-                                  : "border-slate-800 bg-slate-950/60 hover:border-slate-700"
+                                  : "border-zinc-800 bg-zinc-950/60 hover:border-zinc-700"
                               }`}
                             >
                               <div className="min-w-0">
-                                <p className="truncate text-xs font-semibold text-slate-100">
+                                <p className="truncate text-xs font-semibold text-zinc-100">
                                   <span className="font-mono font-bold">
                                     {v.licensePlate}
                                   </span>{" "}
                                   · {v.brand} {v.model}
                                 </p>
-                                <p className="truncate text-[11px] text-slate-400">
+                                <p className="truncate text-[11px] text-zinc-400">
                                   {v.ownerName}
                                 </p>
                               </div>
@@ -1082,7 +1154,7 @@ export function AppointmentsClient({
                   {/* Vehicle & Owner Inputs (auto-filled when registered vehicle picked, or typed directly) */}
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-slate-300">
+                      <label className="mb-1 block text-xs font-medium text-zinc-300">
                         Patente *
                       </label>
                       <input
@@ -1094,11 +1166,11 @@ export function AppointmentsClient({
                           setLicensePlate(e.target.value.toUpperCase())
                         }
                         placeholder="AB 123 CD"
-                        className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950 px-3 py-2 font-mono text-sm font-semibold uppercase tracking-wider text-slate-100 placeholder-slate-600 outline-none focus:border-amber-500/70"
+                        className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950 px-3 py-2 font-mono text-sm font-semibold uppercase tracking-wider text-zinc-100 placeholder-zinc-600 outline-none focus:border-amber-500/70"
                       />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-slate-300">
+                      <label className="mb-1 block text-xs font-medium text-zinc-300">
                         Auto (Marca y Modelo) *
                       </label>
                       <input
@@ -1107,14 +1179,14 @@ export function AppointmentsClient({
                         value={vehicleLabel}
                         onChange={(e) => setVehicleLabel(e.target.value)}
                         placeholder="Ej. Peugeot 208 2022"
-                        className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-amber-500/70"
+                        className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-amber-500/70"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-slate-300">
+                      <label className="mb-1 block text-xs font-medium text-zinc-300">
                         Nombre del dueño *
                       </label>
                       <input
@@ -1123,11 +1195,11 @@ export function AppointmentsClient({
                         value={ownerName}
                         onChange={(e) => setOwnerName(e.target.value)}
                         placeholder="Ej. Juan Pérez"
-                        className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-amber-500/70"
+                        className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-amber-500/70"
                       />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-slate-300">
+                      <label className="mb-1 block text-xs font-medium text-zinc-300">
                         WhatsApp *
                       </label>
                       <input
@@ -1137,15 +1209,15 @@ export function AppointmentsClient({
                         value={ownerPhone}
                         onChange={(e) => setOwnerPhone(e.target.value)}
                         placeholder="+54 9 341 555-1234"
-                        className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums placeholder-slate-600 outline-none focus:border-amber-500/70"
+                        className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950 px-3 py-2 font-mono text-sm text-zinc-100 tabular-nums placeholder-zinc-600 outline-none focus:border-amber-500/70"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Service Type Chips */}
-                <div className="space-y-2 border-t border-slate-800/80 pt-4">
-                  <label className="block text-xs font-medium text-slate-300">
+                <div className="space-y-2 border-t border-zinc-800/80 pt-4">
+                  <label className="block text-xs font-medium text-zinc-300">
                     Trabajo a realizar *
                   </label>
                   <div className="flex flex-wrap gap-1.5">
@@ -1157,7 +1229,7 @@ export function AppointmentsClient({
                         className={`min-h-[36px] rounded-lg border px-3 py-1.5 text-xs font-medium transition cursor-pointer ${
                           serviceType === type
                             ? "border-amber-500 bg-amber-500/18 text-amber-300"
-                            : "border-slate-800 bg-slate-950/70 text-slate-400 hover:border-slate-700 hover:text-slate-200"
+                            : "border-zinc-800 bg-zinc-950/70 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
                         }`}
                       >
                         {type}
@@ -1169,7 +1241,7 @@ export function AppointmentsClient({
                 {/* Status (when editing) */}
                 {editingAppointment && (
                   <div className="space-y-2">
-                    <label className="block text-xs font-medium text-slate-300">
+                    <label className="block text-xs font-medium text-zinc-300">
                       Estado del turno
                     </label>
                     <div className="flex flex-wrap gap-2">
@@ -1188,7 +1260,7 @@ export function AppointmentsClient({
                           className={`min-h-[36px] rounded-lg border px-3 py-1.5 text-xs font-semibold transition cursor-pointer ${
                             status === st
                               ? APPOINTMENT_STATUS_META[st].badgeClass
-                              : "border-slate-800 bg-slate-950/60 text-slate-400"
+                              : "border-zinc-800 bg-zinc-950/60 text-zinc-400"
                           }`}
                         >
                           {APPOINTMENT_STATUS_META[st].label}
@@ -1200,7 +1272,7 @@ export function AppointmentsClient({
 
                 {/* Notes */}
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium text-slate-300">
+                  <label className="mb-1.5 block text-xs font-medium text-zinc-300">
                     Observaciones del turno (opcional)
                   </label>
                   <textarea
@@ -1208,7 +1280,7 @@ export function AppointmentsClient({
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Ej. Deja el auto a las 9 y retira a la tarde, revisar ruido en tren delantero..."
-                    className="w-full rounded-xl border border-slate-700/90 bg-slate-950 px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-amber-500/70"
+                    className="w-full rounded-xl border border-zinc-700/90 bg-zinc-950 px-3.5 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-amber-500/70"
                   />
                 </div>
 
@@ -1219,11 +1291,11 @@ export function AppointmentsClient({
                 )}
               </div>
 
-              <div className="flex flex-col-reverse gap-2 border-t border-slate-800 bg-slate-950/90 px-4 pt-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] sm:flex-row sm:items-center sm:justify-end sm:px-6 sm:py-4">
+              <div className="flex items-center justify-end gap-2 border-t border-white/[0.08] bg-zinc-950/95 px-4 pt-2.5 pb-[max(0.85rem,env(safe-area-inset-bottom))] sm:px-6 sm:py-3.5">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="min-h-[44px] rounded-xl border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 cursor-pointer"
+                  className="hidden min-h-[42px] rounded-xl border border-white/12 px-4 py-2 text-xs font-semibold text-zinc-300 hover:bg-zinc-900 sm:inline-flex sm:items-center cursor-pointer"
                 >
                   Cancelar
                 </button>
@@ -1231,7 +1303,7 @@ export function AppointmentsClient({
                   type="submit"
                   disabled={submitting}
                   id="appointment-submit-btn"
-                  className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-bold text-slate-950 shadow-lg shadow-amber-500/15 transition hover:bg-amber-400 disabled:opacity-50 sm:min-h-[42px] sm:text-xs cursor-pointer"
+                  className="inline-flex min-h-[46px] w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-zinc-950 transition hover:bg-zinc-200 disabled:opacity-50 sm:min-h-[42px] sm:w-auto sm:text-xs cursor-pointer"
                 >
                   {submitting
                     ? "Guardando..."

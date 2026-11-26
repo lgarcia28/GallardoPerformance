@@ -18,7 +18,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#080B12",
+  themeColor: "#09090B",
 };
 
 export const metadata: Metadata = {
@@ -33,7 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="es"
       className={`${plusJakarta.variable} ${jetbrainsMono.variable} dark h-full antialiased print:h-auto print:bg-white`}
     >
-      <body className="min-h-full bg-[#080B12] text-slate-50 print:min-h-0 print:bg-white print:text-slate-900">
+      <body className="min-h-full bg-[#09090B] text-zinc-50 print:min-h-0 print:bg-white print:text-slate-900">
         {children}
       </body>
     </html>

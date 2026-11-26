@@ -31,7 +31,7 @@ export function StatusPill({ urgency, label, size = "md" }: StatusPillProps) {
     },
     ok: {
       wrapper:
-        "bg-slate-500/12 text-slate-300 border-slate-700/80",
+        "bg-zinc-500/10 text-zinc-300 border-zinc-700/80",
       icon: <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-emerald-400/80" />,
     },
   };

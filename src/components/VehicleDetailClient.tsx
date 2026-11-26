@@ -20,6 +20,7 @@ import {
   Wrench,
   X,
 } from "lucide-react";
+import { BrandLogo } from "@/components/BrandLogo";
 import { PlateBadge } from "@/components/PlateBadge";
 import { StatusPill } from "@/components/StatusPill";
 import { useWorkshopUI } from "@/components/WorkshopShell";
@@ -101,6 +102,18 @@ export function VehicleDetailClient({
       // Ignore transient network errors
     }
   }, [detail.vehicle.id]);
+
+  useEffect(() => {
+    if (!editVehicleOpen && !editingRepair) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setEditVehicleOpen(false);
+        setEditingRepair(null);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [editVehicleOpen, editingRepair]);
 
   useEffect(() => {
     const handler = () => reloadDetail();
@@ -292,7 +305,7 @@ export function VehicleDetailClient({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           href="/vehiculos"
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 transition hover:text-slate-100"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-400 transition hover:text-zinc-100"
         >
           <ArrowLeft className="h-4 w-4" />
           Volver a Vehículos
@@ -302,7 +315,7 @@ export function VehicleDetailClient({
           <button
             type="button"
             onClick={openEditVehicleModal}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs font-medium text-slate-300 transition hover:border-slate-600 hover:bg-slate-800 hover:text-white cursor-pointer"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900/70 px-3 py-2 text-xs font-medium text-zinc-300 transition hover:border-zinc-600 hover:bg-zinc-800 hover:text-white cursor-pointer"
           >
             <Edit3 className="h-3.5 w-3.5" />
             Editar ficha
@@ -325,12 +338,13 @@ export function VehicleDetailClient({
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="space-y-2.5">
               <div className="flex flex-wrap items-center gap-3">
+                <BrandLogo brandName={vehicle.brand} size="md" />
                 <PlateBadge plate={vehicle.licensePlate} size="lg" />
                 <div>
-                  <h1 className="text-xl font-bold tracking-tight text-slate-50 sm:text-2xl">
+                  <h1 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
                     {vehicle.brand} {vehicle.model}
                   </h1>
-                  <p className="font-mono text-xs text-slate-400 tabular-nums">
+                  <p className="font-mono text-xs text-zinc-400 tabular-nums">
                     Año {vehicle.year}
                     {vehicle.engine ? ` · Motor ${vehicle.engine}` : ""} ·{" "}
                     {repairs.length}{" "}
@@ -342,7 +356,7 @@ export function VehicleDetailClient({
               </div>
 
               {vehicle.notes && (
-                <p className="rounded-xl border border-slate-800 bg-slate-950/60 px-3.5 py-2.5 text-xs leading-relaxed text-slate-300">
+                <p className="rounded-xl border border-zinc-800 bg-zinc-950/60 px-3.5 py-2.5 text-xs leading-relaxed text-zinc-300">
                   {vehicle.notes}
                 </p>
               )}
@@ -350,11 +364,11 @@ export function VehicleDetailClient({
           </div>
 
           {/* Metrics Row inside Vehicle Card */}
-          <div className="mt-5 grid grid-cols-1 gap-3 border-t border-slate-800/80 pt-5 sm:grid-cols-3">
+          <div className="mt-5 grid grid-cols-1 gap-3 border-t border-zinc-800/80 pt-5 sm:grid-cols-3">
             {/* Inline editable mileage */}
-            <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3.5">
+            <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-3.5">
               <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-400">
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-zinc-400">
                   <Gauge className="h-3.5 w-3.5 text-amber-400" />
                   Kilometraje actual
                 </span>
@@ -362,7 +376,7 @@ export function VehicleDetailClient({
                   <button
                     type="button"
                     onClick={() => setEditingKm(true)}
-                    className="rounded-md p-1 text-slate-400 transition hover:bg-slate-800 hover:text-amber-400 cursor-pointer"
+                    className="rounded-md p-1 text-zinc-400 transition hover:bg-zinc-800 hover:text-amber-400 cursor-pointer"
                     title="Actualizar kilometraje"
                   >
                     <Pencil className="h-3 w-3" />
@@ -381,12 +395,12 @@ export function VehicleDetailClient({
                     autoFocus
                     value={kmDraft}
                     onChange={(e) => setKmDraft(e.target.value)}
-                    className="w-full rounded-lg border border-amber-500/60 bg-slate-900 px-2.5 py-1 font-mono text-sm font-semibold text-white tabular-nums outline-none"
+                    className="w-full rounded-lg border border-amber-500/60 bg-zinc-900 px-2.5 py-1 font-mono text-sm font-semibold text-white tabular-nums outline-none"
                   />
                   <button
                     type="submit"
                     disabled={savingKm}
-                    className="rounded-lg bg-amber-500 p-1.5 text-slate-950 hover:bg-amber-400 cursor-pointer"
+                    className="rounded-lg bg-amber-500 p-1.5 text-zinc-950 hover:bg-amber-400 cursor-pointer"
                     aria-label="Guardar kilometraje"
                   >
                     <Check className="h-3.5 w-3.5" />
@@ -397,35 +411,35 @@ export function VehicleDetailClient({
                       setEditingKm(false);
                       setKmDraft(String(vehicle.currentMileage));
                     }}
-                    className="rounded-lg border border-slate-700 p-1.5 text-slate-400 hover:text-white cursor-pointer"
+                    className="rounded-lg border border-zinc-700 p-1.5 text-zinc-400 hover:text-white cursor-pointer"
                     aria-label="Cancelar"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
                 </form>
               ) : (
-                <p className="mt-1.5 font-mono text-lg font-bold text-slate-100 tabular-nums">
+                <p className="mt-1.5 font-mono text-lg font-bold text-zinc-100 tabular-nums">
                   {formatMileage(vehicle.currentMileage)}
                 </p>
               )}
             </div>
 
-            <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3.5">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-400">
-                <Calendar className="h-3.5 w-3.5 text-slate-400" />
+            <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-3.5">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-zinc-400">
+                <Calendar className="h-3.5 w-3.5 text-zinc-400" />
                 Última visita
               </span>
-              <p className="mt-1.5 font-mono text-lg font-bold text-slate-100 tabular-nums">
+              <p className="mt-1.5 font-mono text-lg font-bold text-zinc-100 tabular-nums">
                 {repairs[0] ? formatShortDate(repairs[0].serviceDate) : "—"}
               </p>
             </div>
 
-            <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3.5">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-400">
-                <Wrench className="h-3.5 w-3.5 text-slate-400" />
+            <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-3.5">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-zinc-400">
+                <Wrench className="h-3.5 w-3.5 text-zinc-400" />
                 Total invertido
               </span>
-              <p className="mt-1.5 font-mono text-lg font-bold text-slate-100 tabular-nums">
+              <p className="mt-1.5 font-mono text-lg font-bold text-zinc-100 tabular-nums">
                 {formatCurrency(totalSpent)}
               </p>
             </div>
@@ -435,13 +449,13 @@ export function VehicleDetailClient({
         {/* Owner Contact Card */}
         <section className="gp-card flex flex-col justify-between gap-5 rounded-2xl p-5 sm:p-6 lg:col-span-4">
           <div className="space-y-3">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-zinc-400">
               <User className="h-3.5 w-3.5 text-amber-400" />
               Dueño del vehículo
             </div>
 
             <div>
-              <p className="text-lg font-bold text-slate-50">
+              <p className="text-lg font-bold text-zinc-50">
                 {vehicle.ownerName}
               </p>
               <p className="mt-1 inline-flex items-center gap-1.5 font-mono text-sm text-emerald-400 tabular-nums">
@@ -456,7 +470,7 @@ export function VehicleDetailClient({
               href={directWaUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-xs font-bold text-slate-950 shadow-lg shadow-emerald-500/15 transition hover:bg-emerald-400"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-xs font-bold text-zinc-950 shadow-lg shadow-emerald-500/15 transition hover:bg-emerald-400"
             >
               <MessageCircle className="h-4 w-4 stroke-[2.3]" />
               <span>Escribir por WhatsApp</span>
@@ -469,7 +483,7 @@ export function VehicleDetailClient({
               onClick={() =>
                 openQuickEntry({ mode: "existing", vehicleId: vehicle.id })
               }
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-bold text-slate-950 transition hover:bg-amber-400 cursor-pointer"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-bold text-zinc-950 transition hover:bg-amber-400 cursor-pointer"
             >
               <Plus className="h-4 w-4 stroke-[2.5]" />
               <span>Nueva reparación</span>
@@ -488,7 +502,7 @@ export function VehicleDetailClient({
               ? "border-amber-500/35 bg-amber-500/8"
               : nextAlert.urgency === "notified"
               ? "border-emerald-500/30 bg-emerald-500/8"
-              : "border-slate-800 bg-slate-900/70"
+              : "border-zinc-800 bg-zinc-900/70"
           }`}
         >
           <div className="flex items-start gap-3.5">
@@ -505,7 +519,7 @@ export function VehicleDetailClient({
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+                <p className="text-xs font-semibold uppercase tracking-wider text-zinc-300">
                   Próxima alerta programada
                 </p>
                 <StatusPill
@@ -518,13 +532,13 @@ export function VehicleDetailClient({
                   size="sm"
                 />
               </div>
-              <p className="mt-1 text-sm font-semibold text-slate-50">
+              <p className="mt-1 text-sm font-semibold text-zinc-50">
                 {nextAlert.serviceType} · Fecha objetivo:{" "}
                 <span className="font-mono tabular-nums">
                   {formatShortDate(nextAlert.reminderDueDate)}
                 </span>
               </p>
-              <p className="mt-0.5 text-xs text-slate-400">
+              <p className="mt-0.5 text-xs text-zinc-400">
                 Último servicio realizado el{" "}
                 <span className="font-mono tabular-nums">
                   {formatShortDate(nextAlert.serviceDate)}
@@ -537,17 +551,17 @@ export function VehicleDetailClient({
           <button
             type="button"
             onClick={() => openWhatsApp(nextAlert)}
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-xs font-bold text-slate-950 shadow-md shadow-emerald-500/15 transition hover:bg-emerald-400 cursor-pointer"
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-xs font-bold text-zinc-950 shadow-md shadow-emerald-500/15 transition hover:bg-emerald-400 cursor-pointer"
           >
             <MessageCircle className="h-4 w-4 stroke-[2.3]" />
             Enviar recordatorio WhatsApp
           </button>
         </section>
       ) : (
-        <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-900/50 px-5 py-4">
+        <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/50 px-5 py-4">
           <div className="flex items-center gap-3">
-            <BellRing className="h-4 w-4 text-slate-500" />
-            <p className="text-xs text-slate-400">
+            <BellRing className="h-4 w-4 text-zinc-500" />
+            <p className="text-xs text-zinc-400">
               Este vehículo no tiene alertas de mantenimiento pendientes. Podés
               programar una al cargar la próxima reparación.
             </p>
@@ -558,21 +572,21 @@ export function VehicleDetailClient({
       {/* Chronological Repair Timeline */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-slate-100">
+          <h2 className="text-base font-bold text-zinc-100">
             Historial de Reparaciones
           </h2>
-          <span className="font-mono text-xs text-slate-400 tabular-nums">
+          <span className="font-mono text-xs text-zinc-400 tabular-nums">
             {repairs.length} {repairs.length === 1 ? "registro" : "registros"}
           </span>
         </div>
 
         {repairs.length === 0 ? (
           <div className="gp-card rounded-2xl px-6 py-14 text-center">
-            <Wrench className="mx-auto h-8 w-8 text-slate-600" />
-            <p className="mt-3 text-sm font-semibold text-slate-200">
+            <Wrench className="mx-auto h-8 w-8 text-zinc-600" />
+            <p className="mt-3 text-sm font-semibold text-zinc-200">
               Todavía no hay reparaciones cargadas
             </p>
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-xs text-zinc-400">
               Registrá el primer trabajo para comenzar el historial de este auto.
             </p>
             <button
@@ -580,14 +594,14 @@ export function VehicleDetailClient({
               onClick={() =>
                 openQuickEntry({ mode: "existing", vehicleId: vehicle.id })
               }
-              className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-amber-400 cursor-pointer"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-zinc-950 hover:bg-amber-400 cursor-pointer"
             >
               <Plus className="h-3.5 w-3.5" />
               Cargar primera reparación
             </button>
           </div>
         ) : (
-          <div className="relative space-y-4 pl-6 before:absolute before:bottom-4 before:left-[9px] before:top-4 before:w-px before:bg-slate-800">
+          <div className="relative space-y-4 pl-6 before:absolute before:bottom-4 before:left-[9px] before:top-4 before:w-px before:bg-zinc-800">
             {repairs.map((r) => {
               const urgency = getAlertUrgency(
                 r.reminderDueDate,
@@ -612,7 +626,7 @@ export function VehicleDetailClient({
                         ? "bg-amber-400"
                         : urgency === "notified"
                         ? "bg-emerald-400"
-                        : "bg-slate-500"
+                        : "bg-zinc-500"
                     }`}
                     aria-hidden="true"
                   />
@@ -623,21 +637,21 @@ export function VehicleDetailClient({
                         <span className="rounded-lg border border-amber-500/25 bg-amber-500/10 px-2.5 py-0.5 text-xs font-semibold text-amber-300">
                           {r.serviceType}
                         </span>
-                        <span className="font-mono text-xs text-slate-400 tabular-nums">
+                        <span className="font-mono text-xs text-zinc-400 tabular-nums">
                           {formatShortDate(r.serviceDate)}
                         </span>
-                        <span className="text-slate-600">·</span>
-                        <span className="font-mono text-xs text-slate-300 tabular-nums">
+                        <span className="text-zinc-600">·</span>
+                        <span className="font-mono text-xs text-zinc-300 tabular-nums">
                           {formatMileage(r.mileageAtService)}
                         </span>
                       </div>
 
-                      <p className="pt-1.5 text-sm leading-relaxed text-slate-100">
+                      <p className="pt-1.5 text-sm leading-relaxed text-zinc-100">
                         {r.description}
                       </p>
 
                       {r.mechanicNotes && (
-                        <p className="pt-1 text-xs italic text-slate-400">
+                        <p className="pt-1 text-xs italic text-zinc-400">
                           Nota del mecánico: {r.mechanicNotes}
                         </p>
                       )}
@@ -645,11 +659,11 @@ export function VehicleDetailClient({
 
                     <div className="flex shrink-0 items-center justify-between gap-3 sm:flex-col sm:items-end">
                       <div className="text-left sm:text-right font-mono tabular-nums">
-                        <p className="text-base font-bold text-slate-100">
+                        <p className="text-base font-bold text-zinc-100">
                           {formatCurrency(r.cost)}
                         </p>
                         {(r.cost != null || r.partsCost != null) && (
-                          <p className="mt-0.5 text-[11px] text-slate-400">
+                          <p className="mt-0.5 text-[11px] text-zinc-400">
                             Costo: {formatCurrency(r.partsCost ?? 0)} ·{" "}
                             <span
                               className={
@@ -671,7 +685,7 @@ export function VehicleDetailClient({
                         <button
                           type="button"
                           onClick={() => openEditRepairModal(r)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-slate-700/90 px-2.5 py-1 text-[11px] font-medium text-slate-300 transition hover:border-slate-600 hover:bg-slate-800 hover:text-white cursor-pointer"
+                          className="inline-flex items-center gap-1 rounded-lg border border-zinc-700/90 px-2.5 py-1 text-[11px] font-medium text-zinc-300 transition hover:border-zinc-600 hover:bg-zinc-800 hover:text-white cursor-pointer"
                         >
                           <Pencil className="h-3 w-3" />
                           Editar
@@ -679,7 +693,7 @@ export function VehicleDetailClient({
                         <button
                           type="button"
                           onClick={() => handleDeleteRepair(r)}
-                          className="inline-flex items-center justify-center rounded-lg border border-slate-800 p-1.5 text-slate-500 transition hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400 cursor-pointer"
+                          className="inline-flex items-center justify-center rounded-lg border border-zinc-800 p-1.5 text-zinc-500 transition hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400 cursor-pointer"
                           title="Eliminar reparación"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -690,7 +704,7 @@ export function VehicleDetailClient({
 
                   {/* Reminder footer strip if configured */}
                   {r.reminderDueDate && r.reminderStatus !== "none" && (
-                    <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-800/80 pt-3">
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-zinc-800/80 pt-3">
                       <div className="flex flex-wrap items-center gap-2">
                         <StatusPill
                           urgency={urgency}
@@ -701,7 +715,7 @@ export function VehicleDetailClient({
                           )}
                           size="sm"
                         />
-                        <span className="font-mono text-[11px] text-slate-400 tabular-nums">
+                        <span className="font-mono text-[11px] text-zinc-400 tabular-nums">
                           Recordatorio: {formatShortDate(r.reminderDueDate)}
                         </span>
                       </div>
@@ -749,18 +763,18 @@ export function VehicleDetailClient({
             if (e.target === e.currentTarget) setEditVehicleOpen(false);
           }}
         >
-          <div className="gp-card max-h-[94dvh] w-full max-w-xl overflow-y-auto overscroll-contain rounded-t-2xl border border-slate-800 shadow-2xl sm:rounded-2xl">
+          <div className="gp-card max-h-[94dvh] w-full max-w-xl overflow-y-auto overscroll-contain rounded-t-2xl border border-zinc-800 shadow-2xl sm:rounded-2xl">
             <div className="flex justify-center pt-2.5 pb-1 sm:hidden" aria-hidden="true">
-              <span className="h-1 w-10 rounded-full bg-slate-700" />
+              <span className="h-1 w-10 rounded-full bg-zinc-700" />
             </div>
-            <div className="flex items-center justify-between border-b border-slate-800 px-5 py-4 sm:px-6">
-              <h2 className="text-base font-semibold text-slate-100">
+            <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-4 sm:px-6">
+              <h2 className="text-base font-semibold text-zinc-100">
                 Editar ficha del vehículo
               </h2>
               <button
                 type="button"
                 onClick={() => setEditVehicleOpen(false)}
-                className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer"
+                className="flex h-10 w-10 items-center justify-center rounded-xl text-zinc-400 hover:bg-zinc-800 hover:text-white cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -772,7 +786,7 @@ export function VehicleDetailClient({
             >
               <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-300">
+                  <label className="mb-1 block text-xs font-medium text-zinc-300">
                     Patente
                   </label>
                   <input
@@ -781,12 +795,12 @@ export function VehicleDetailClient({
                     autoCapitalize="characters"
                     value={vPlate}
                     onChange={(e) => setVPlate(e.target.value.toUpperCase())}
-                    className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm uppercase text-slate-100 outline-none focus:border-amber-500"
+                    className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 font-mono text-sm uppercase text-zinc-100 outline-none focus:border-amber-500"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3 sm:col-span-2">
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-300">
+                    <label className="mb-1 block text-xs font-medium text-zinc-300">
                       Marca
                     </label>
                     <input
@@ -794,11 +808,11 @@ export function VehicleDetailClient({
                       required
                       value={vBrand}
                       onChange={(e) => setVBrand(e.target.value)}
-                      className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
+                      className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-500"
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-300">
+                    <label className="mb-1 block text-xs font-medium text-zinc-300">
                       Modelo
                     </label>
                     <input
@@ -806,7 +820,7 @@ export function VehicleDetailClient({
                       required
                       value={vModel}
                       onChange={(e) => setVModel(e.target.value)}
-                      className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
+                      className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-500"
                     />
                   </div>
                 </div>
@@ -814,7 +828,7 @@ export function VehicleDetailClient({
 
               <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-300">
+                  <label className="mb-1 block text-xs font-medium text-zinc-300">
                     Año
                   </label>
                   <input
@@ -823,11 +837,11 @@ export function VehicleDetailClient({
                     required
                     value={vYear}
                     onChange={(e) => setVYear(e.target.value)}
-                    className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500"
+                    className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 font-mono text-sm text-zinc-100 tabular-nums outline-none focus:border-amber-500"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-300">
+                  <label className="mb-1 block text-xs font-medium text-zinc-300">
                     Km actual
                   </label>
                   <input
@@ -837,25 +851,25 @@ export function VehicleDetailClient({
                     required
                     value={vKm}
                     onChange={(e) => setVKm(e.target.value)}
-                    className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500"
+                    className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 font-mono text-sm text-zinc-100 tabular-nums outline-none focus:border-amber-500"
                   />
                 </div>
                 <div className="col-span-2 sm:col-span-1">
-                  <label className="mb-1 block text-xs font-medium text-slate-300">
+                  <label className="mb-1 block text-xs font-medium text-zinc-300">
                     Motor
                   </label>
                   <input
                     type="text"
                     value={vEngine}
                     onChange={(e) => setVEngine(e.target.value)}
-                    className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
+                    className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-500"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-300">
+                  <label className="mb-1 block text-xs font-medium text-zinc-300">
                     Dueño
                   </label>
                   <input
@@ -863,11 +877,11 @@ export function VehicleDetailClient({
                     required
                     value={vOwnerName}
                     onChange={(e) => setVOwnerName(e.target.value)}
-                    className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
+                    className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-500"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-300">
+                  <label className="mb-1 block text-xs font-medium text-zinc-300">
                     WhatsApp
                   </label>
                   <input
@@ -876,20 +890,20 @@ export function VehicleDetailClient({
                     required
                     value={vOwnerPhone}
                     onChange={(e) => setVOwnerPhone(e.target.value)}
-                    className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500"
+                    className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 font-mono text-sm text-zinc-100 tabular-nums outline-none focus:border-amber-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-300">
+                <label className="mb-1 block text-xs font-medium text-zinc-300">
                   Observaciones
                 </label>
                 <textarea
                   rows={2}
                   value={vNotes}
                   onChange={(e) => setVNotes(e.target.value)}
-                  className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
+                  className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-500"
                 />
               </div>
 
@@ -899,18 +913,18 @@ export function VehicleDetailClient({
                 </p>
               )}
 
-              <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
+              <div className="flex items-center justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setEditVehicleOpen(false)}
-                  className="min-h-[44px] rounded-xl border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 cursor-pointer"
+                  className="hidden min-h-[42px] rounded-xl border border-white/12 px-4 py-2 text-xs font-semibold text-zinc-300 hover:bg-zinc-900 sm:inline-flex sm:items-center cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={savingVehicle}
-                  className="min-h-[46px] rounded-xl bg-amber-500 px-5 py-2 text-sm font-bold text-slate-950 hover:bg-amber-400 disabled:opacity-50 sm:min-h-[40px] sm:text-xs cursor-pointer"
+                  className="min-h-[46px] w-full rounded-xl bg-white px-5 py-2 text-sm font-bold text-zinc-950 hover:bg-zinc-200 disabled:opacity-50 sm:min-h-[40px] sm:w-auto sm:text-xs cursor-pointer"
                 >
                   {savingVehicle ? "Guardando..." : "Guardar cambios"}
                 </button>
@@ -930,18 +944,18 @@ export function VehicleDetailClient({
             if (e.target === e.currentTarget) setEditingRepair(null);
           }}
         >
-          <div className="gp-card max-h-[94dvh] w-full max-w-xl overflow-y-auto overscroll-contain rounded-t-2xl border border-slate-800 shadow-2xl sm:rounded-2xl">
+          <div className="gp-card max-h-[94dvh] w-full max-w-xl overflow-y-auto overscroll-contain rounded-t-2xl border border-zinc-800 shadow-2xl sm:rounded-2xl">
             <div className="flex justify-center pt-2.5 pb-1 sm:hidden" aria-hidden="true">
-              <span className="h-1 w-10 rounded-full bg-slate-700" />
+              <span className="h-1 w-10 rounded-full bg-zinc-700" />
             </div>
-            <div className="flex items-center justify-between border-b border-slate-800 px-5 py-4 sm:px-6">
-              <h2 className="text-base font-semibold text-slate-100">
+            <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-4 sm:px-6">
+              <h2 className="text-base font-semibold text-zinc-100">
                 Editar reparación
               </h2>
               <button
                 type="button"
                 onClick={() => setEditingRepair(null)}
-                className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer"
+                className="flex h-10 w-10 items-center justify-center rounded-xl text-zinc-400 hover:bg-zinc-800 hover:text-white cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -953,7 +967,7 @@ export function VehicleDetailClient({
             >
               <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-300">
+                  <label className="mb-1 block text-xs font-medium text-zinc-300">
                     Fecha
                   </label>
                   <input
@@ -961,11 +975,11 @@ export function VehicleDetailClient({
                     required
                     value={rDate}
                     onChange={(e) => setRDate(e.target.value)}
-                    className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500"
+                    className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 font-mono text-sm text-zinc-100 tabular-nums outline-none focus:border-amber-500"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-300">
+                  <label className="mb-1 block text-xs font-medium text-zinc-300">
                     Km en service
                   </label>
                   <input
@@ -975,15 +989,15 @@ export function VehicleDetailClient({
                     required
                     value={rKm}
                     onChange={(e) => setRKm(e.target.value)}
-                    className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500"
+                    className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 font-mono text-sm text-zinc-100 tabular-nums outline-none focus:border-amber-500"
                   />
                 </div>
               </div>
 
-              <div className="space-y-2 rounded-xl border border-slate-800 bg-slate-950/60 p-3.5">
+              <div className="space-y-2 rounded-xl border border-zinc-800 bg-zinc-950/60 p-3.5">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-300">
+                    <label className="mb-1 block text-xs font-medium text-zinc-300">
                       Cobrado (ARS)
                     </label>
                     <input
@@ -992,11 +1006,11 @@ export function VehicleDetailClient({
                       min={0}
                       value={rCost}
                       onChange={(e) => setRCost(e.target.value)}
-                      className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500"
+                      className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 font-mono text-sm text-zinc-100 tabular-nums outline-none focus:border-amber-500"
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-300">
+                    <label className="mb-1 block text-xs font-medium text-zinc-300">
                       Costo repuestos
                     </label>
                     <input
@@ -1005,7 +1019,7 @@ export function VehicleDetailClient({
                       min={0}
                       value={rPartsCost}
                       onChange={(e) => setRPartsCost(e.target.value)}
-                      className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500"
+                      className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 font-mono text-sm text-zinc-100 tabular-nums outline-none focus:border-amber-500"
                     />
                   </div>
                 </div>
@@ -1014,8 +1028,8 @@ export function VehicleDetailClient({
                   const exp = Number(rPartsCost || 0);
                   const profit = rev - exp;
                   return (
-                    <div className="flex items-center justify-between border-t border-slate-800/80 pt-2 text-xs">
-                      <span className="text-slate-400">Ganancia neta:</span>
+                    <div className="flex items-center justify-between border-t border-zinc-800/80 pt-2 text-xs">
+                      <span className="text-zinc-400">Ganancia neta:</span>
                       <span
                         className={`font-mono font-bold tabular-nums ${
                           profit >= 0 ? "text-emerald-400" : "text-red-400"
@@ -1029,16 +1043,16 @@ export function VehicleDetailClient({
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-300">
+                <label className="mb-1 block text-xs font-medium text-zinc-300">
                   Tipo de trabajo
                 </label>
                 <select
                   value={rType}
                   onChange={(e) => setRType(e.target.value)}
-                  className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
+                  className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-500"
                 >
                   {SERVICE_TYPES.map((t) => (
-                    <option key={t} value={t} className="bg-slate-900">
+                    <option key={t} value={t} className="bg-zinc-900">
                       {t}
                     </option>
                   ))}
@@ -1046,7 +1060,7 @@ export function VehicleDetailClient({
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-300">
+                <label className="mb-1 block text-xs font-medium text-zinc-300">
                   Descripción y repuestos
                 </label>
                 <textarea
@@ -1054,25 +1068,25 @@ export function VehicleDetailClient({
                   required
                   value={rDesc}
                   onChange={(e) => setRDesc(e.target.value)}
-                  className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
+                  className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-500"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-300">
+                <label className="mb-1 block text-xs font-medium text-zinc-300">
                   Notas del mecánico
                 </label>
                 <input
                   type="text"
                   value={rNotes}
                   onChange={(e) => setRNotes(e.target.value)}
-                  className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
+                  className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-500"
                 />
               </div>
 
-              <div className="space-y-2.5 rounded-xl border border-slate-800 bg-slate-950/60 p-3.5">
+              <div className="space-y-2.5 rounded-xl border border-zinc-800 bg-zinc-950/60 p-3.5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-xs font-semibold text-slate-200">
+                  <span className="text-xs font-semibold text-zinc-200">
                     Recordatorio de mantenimiento
                   </span>
                   {editRepairDuePreview && (
@@ -1090,7 +1104,7 @@ export function VehicleDetailClient({
                       className={`min-h-[36px] rounded-lg border px-2.5 py-1 text-xs font-medium transition cursor-pointer ${
                         rPreset === preset.value
                           ? "border-amber-500 bg-amber-500/15 text-amber-300"
-                          : "border-slate-700 bg-slate-900 text-slate-400 hover:text-slate-200"
+                          : "border-zinc-700 bg-zinc-900 text-zinc-400 hover:text-zinc-200"
                       }`}
                     >
                       {preset.shortLabel}
@@ -1103,7 +1117,7 @@ export function VehicleDetailClient({
                     required
                     value={rCustomDate}
                     onChange={(e) => setRCustomDate(e.target.value)}
-                    className="min-h-[44px] w-full max-w-xs rounded-xl border border-slate-700 bg-slate-950 px-3 py-1.5 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500"
+                    className="min-h-[44px] w-full max-w-xs rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-1.5 font-mono text-sm text-zinc-100 tabular-nums outline-none focus:border-amber-500"
                   />
                 )}
               </div>
@@ -1114,18 +1128,18 @@ export function VehicleDetailClient({
                 </p>
               )}
 
-              <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
+              <div className="flex items-center justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setEditingRepair(null)}
-                  className="min-h-[44px] rounded-xl border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 cursor-pointer"
+                  className="hidden min-h-[42px] rounded-xl border border-white/12 px-4 py-2 text-xs font-semibold text-zinc-300 hover:bg-zinc-900 sm:inline-flex sm:items-center cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={savingRepair}
-                  className="min-h-[46px] rounded-xl bg-amber-500 px-5 py-2 text-sm font-bold text-slate-950 hover:bg-amber-400 disabled:opacity-50 sm:min-h-[40px] sm:text-xs cursor-pointer"
+                  className="min-h-[46px] w-full rounded-xl bg-white px-5 py-2 text-sm font-bold text-zinc-950 hover:bg-zinc-200 disabled:opacity-50 sm:min-h-[40px] sm:w-auto sm:text-xs cursor-pointer"
                 >
                   {savingRepair ? "Guardando..." : "Guardar cambios"}
                 </button>

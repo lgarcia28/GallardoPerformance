@@ -479,17 +479,19 @@ export function QuotesClient({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Unified Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-400/90">
+          <p className="flex items-center gap-2 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-red-600" />
             Cotizaciones PDF & WhatsApp
           </p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-50 sm:text-3xl">
+          <h1 className="mt-1.5 text-2xl font-bold tracking-tight text-white sm:text-3xl">
             Presupuestos
           </h1>
-          <p className="mt-1 text-sm text-slate-400">
-            Generá presupuestos con el logo de GallardoPerformance y la marca del auto listos para PDF y WhatsApp.
+          <p className="mt-1 text-sm text-zinc-400">
+            Generá presupuestos con logo de GallardoPerformance listos para PDF y
+            WhatsApp.
           </p>
         </div>
 
@@ -497,7 +499,7 @@ export function QuotesClient({
           type="button"
           id="quotes-new-btn"
           onClick={openCreateModal}
-          className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-bold text-slate-950 shadow-lg shadow-amber-500/15 transition hover:bg-amber-400 cursor-pointer"
+          className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl bg-white px-4 py-2 text-xs font-bold text-zinc-950 shadow-sm transition hover:bg-zinc-200 cursor-pointer"
         >
           <Plus className="h-4 w-4 stroke-[2.5]" />
           Nuevo presupuesto
@@ -507,13 +509,13 @@ export function QuotesClient({
       {/* KPI Strip */}
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
         <div className="gp-card rounded-2xl p-4 sm:p-5">
-          <p className="text-xs font-medium text-slate-400">
+          <p className="text-xs font-medium text-zinc-400">
             Presupuestos del mes
           </p>
-          <p className="mt-2 font-mono text-3xl font-bold text-slate-50 tabular-nums">
+          <p className="mt-2 font-mono text-3xl font-bold text-zinc-50 tabular-nums">
             {data.summary.monthCount}
           </p>
-          <p className="mt-0.5 text-[11px] text-slate-500">
+          <p className="mt-0.5 text-[11px] text-zinc-500">
             Emitidos este mes
           </p>
         </div>
@@ -523,13 +525,13 @@ export function QuotesClient({
           onClick={() => setStatusFilter("sent")}
           className="gp-card gp-card-interactive rounded-2xl p-4 text-left sm:p-5 cursor-pointer"
         >
-          <p className="text-xs font-medium text-slate-400">
+          <p className="text-xs font-medium text-zinc-400">
             Enviados pendientes
           </p>
           <p className="mt-2 font-mono text-3xl font-bold text-sky-400 tabular-nums">
             {data.summary.sentPendingCount}
           </p>
-          <p className="mt-0.5 text-[11px] text-slate-500">
+          <p className="mt-0.5 text-[11px] text-zinc-500">
             Esperando confirmación del cliente
           </p>
         </button>
@@ -539,13 +541,13 @@ export function QuotesClient({
           onClick={() => setStatusFilter("approved")}
           className="gp-card gp-card-interactive rounded-2xl p-4 text-left sm:p-5 cursor-pointer"
         >
-          <p className="text-xs font-medium text-slate-400">
+          <p className="text-xs font-medium text-zinc-400">
             Aprobados ({data.summary.approvedCount})
           </p>
           <p className="mt-2 font-mono text-2xl font-bold text-emerald-400 tabular-nums sm:text-3xl">
             {formatCurrency(data.summary.approvedTotalAmount)}
           </p>
-          <p className="mt-0.5 text-[11px] text-slate-500">
+          <p className="mt-0.5 text-[11px] text-zinc-500">
             Total confirmado por clientes
           </p>
         </button>
@@ -555,20 +557,20 @@ export function QuotesClient({
       <div className="gp-card rounded-2xl p-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
             <input
               type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar por patente o cliente (ej. AD 482 KL, Martín)..."
-              className="min-h-[44px] w-full rounded-xl border border-slate-700/80 bg-slate-950/90 py-2.5 pl-10 pr-10 text-sm text-slate-100 placeholder-slate-500 outline-none transition focus:border-amber-500/70"
+              className="min-h-[44px] w-full rounded-xl border border-zinc-700/80 bg-zinc-950/90 py-2.5 pl-10 pr-10 text-sm text-zinc-100 placeholder-zinc-500 outline-none transition focus:border-amber-500/70"
             />
             {search && (
               <button
                 type="button"
                 onClick={() => setSearch("")}
                 aria-label="Limpiar búsqueda"
-                className="absolute right-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-800 hover:text-white cursor-pointer"
+                className="absolute right-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-zinc-400 transition hover:bg-zinc-800 hover:text-white cursor-pointer"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -591,8 +593,8 @@ export function QuotesClient({
                 onClick={() => setStatusFilter(tab.key)}
                 className={`min-h-[38px] shrink-0 rounded-xl border px-3.5 py-2 text-xs font-medium transition cursor-pointer ${
                   statusFilter === tab.key
-                    ? "border-slate-600 bg-slate-800 text-white"
-                    : "border-slate-800 bg-slate-950/60 text-slate-400 hover:border-slate-700 hover:text-slate-200"
+                    ? "border-zinc-600 bg-zinc-800 text-white"
+                    : "border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
                 }`}
               >
                 {tab.label}
@@ -605,11 +607,11 @@ export function QuotesClient({
       {/* Quotes List View */}
       {filteredQuotes.length === 0 ? (
         <div className="gp-card rounded-2xl px-6 py-16 text-center">
-          <FileText className="mx-auto h-9 w-9 text-slate-600" />
-          <p className="mt-3 text-sm font-semibold text-slate-200">
+          <FileText className="mx-auto h-9 w-9 text-zinc-600" />
+          <p className="mt-3 text-sm font-semibold text-zinc-200">
             No encontramos presupuestos
           </p>
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-xs text-zinc-400">
             {search
               ? `No hay coincidencias para "${search.trim()}". Probá con otra patente o nombre de cliente.`
               : "Creá un nuevo presupuesto para generar su PDF y enviarlo por WhatsApp."}
@@ -618,7 +620,7 @@ export function QuotesClient({
             <button
               type="button"
               onClick={() => setSearch("")}
-              className="mt-4 inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800 cursor-pointer"
+              className="mt-4 inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2 text-xs font-semibold text-zinc-200 hover:bg-zinc-800 cursor-pointer"
             >
               Limpiar búsqueda
             </button>
@@ -626,7 +628,7 @@ export function QuotesClient({
             <button
               type="button"
               onClick={openCreateModal}
-              className="mt-4 inline-flex min-h-[42px] items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-amber-400 cursor-pointer"
+              className="mt-4 inline-flex min-h-[42px] items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-zinc-950 hover:bg-amber-400 cursor-pointer"
             >
               <Plus className="h-4 w-4" />
               Nuevo presupuesto
@@ -636,16 +638,16 @@ export function QuotesClient({
       ) : (
         <div className="gp-card overflow-hidden rounded-2xl">
           {/* List Count Bar */}
-          <div className="flex items-center justify-between border-b border-slate-800/80 bg-slate-950/40 px-4 py-2.5 text-[11px] text-slate-400 sm:px-5">
+          <div className="flex items-center justify-between border-b border-zinc-800/80 bg-zinc-950/40 px-4 py-2.5 text-[11px] text-zinc-400 sm:px-5">
             <span>
               Mostrando{" "}
-              <strong className="font-semibold text-slate-200">
+              <strong className="font-semibold text-zinc-200">
                 {filteredQuotes.length}
               </strong>{" "}
               {filteredQuotes.length === 1 ? "presupuesto" : "presupuestos"}
               {search.trim() ? ` para "${search.trim()}"` : ""}
             </span>
-            <span className="hidden font-mono text-[10px] uppercase tracking-wider text-slate-500 lg:inline">
+            <span className="hidden font-mono text-[10px] uppercase tracking-wider text-zinc-500 lg:inline">
               Ordenado por más recientes
             </span>
           </div>
@@ -654,7 +656,7 @@ export function QuotesClient({
           <div className="hidden overflow-x-auto lg:block">
             <table className="w-full border-collapse text-left">
               <thead>
-                <tr className="border-b border-slate-800/80 bg-slate-950/60 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                <tr className="border-b border-zinc-800/80 bg-zinc-950/60 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
                   <th className="py-3 pl-5 pr-3">N° / Fecha</th>
                   <th className="px-3 py-3">Cliente</th>
                   <th className="px-3 py-3">Patente / Vehículo</th>
@@ -664,7 +666,7 @@ export function QuotesClient({
                   <th className="py-3 pl-3 pr-5 text-right">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/70">
+              <tbody className="divide-y divide-zinc-800/70">
                 {filteredQuotes.map((quote) => {
                   const items = parseQuoteItems(quote.itemsJson);
                   const stKey = (
@@ -676,7 +678,7 @@ export function QuotesClient({
                   return (
                     <tr
                       key={quote.id}
-                      className="transition hover:bg-slate-800/35"
+                      className="transition hover:bg-zinc-800/35"
                     >
                       {/* Number & Date */}
                       <td className="whitespace-nowrap py-3.5 pl-5 pr-3 align-middle">
@@ -686,18 +688,18 @@ export function QuotesClient({
                         >
                           {quote.quoteNumber}
                         </Link>
-                        <p className="mt-0.5 font-mono text-[11px] text-slate-500 tabular-nums">
+                        <p className="mt-0.5 font-mono text-[11px] text-zinc-500 tabular-nums">
                           {formatShortDate(quote.createdAt.slice(0, 10))}
                         </p>
                       </td>
 
                       {/* Client */}
                       <td className="max-w-[180px] px-3 py-3.5 align-middle">
-                        <p className="truncate text-sm font-semibold text-slate-100">
+                        <p className="truncate text-sm font-semibold text-zinc-100">
                           {quote.customerName}
                         </p>
-                        <p className="mt-0.5 flex items-center gap-1 truncate font-mono text-[11px] text-slate-400 tabular-nums">
-                          <Phone className="h-3 w-3 shrink-0 text-slate-500" />
+                        <p className="mt-0.5 flex items-center gap-1 truncate font-mono text-[11px] text-zinc-400 tabular-nums">
+                          <Phone className="h-3 w-3 shrink-0 text-zinc-500" />
                           {quote.customerPhone}
                         </p>
                       </td>
@@ -713,19 +715,19 @@ export function QuotesClient({
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
                               {quote.licensePlate ? (
-                                <span className="inline-flex shrink-0 items-center rounded border border-slate-700 bg-slate-900 px-1.5 py-0.5 font-mono text-[11px] font-bold tracking-wider text-slate-100">
+                                <span className="inline-flex shrink-0 items-center rounded border border-zinc-700 bg-zinc-900 px-1.5 py-0.5 font-mono text-[11px] font-bold tracking-wider text-zinc-100">
                                   {quote.licensePlate}
                                 </span>
                               ) : (
-                                <span className="text-[11px] text-slate-500">
+                                <span className="text-[11px] text-zinc-500">
                                   Sin patente
                                 </span>
                               )}
-                              <span className="truncate text-xs font-semibold text-slate-200">
+                              <span className="truncate text-xs font-semibold text-zinc-200">
                                 {quote.brandName} {quote.model}
                               </span>
                             </div>
-                            <p className="mt-0.5 font-mono text-[11px] text-slate-500 tabular-nums">
+                            <p className="mt-0.5 font-mono text-[11px] text-zinc-500 tabular-nums">
                               {formatMileage(quote.mileage)}
                             </p>
                           </div>
@@ -734,11 +736,11 @@ export function QuotesClient({
 
                       {/* Items Summary */}
                       <td className="max-w-[220px] px-3 py-3.5 align-middle">
-                        <p className="truncate text-xs text-slate-300">
+                        <p className="truncate text-xs text-zinc-300">
                           {firstItemDesc}
                         </p>
                         {items.length > 1 && (
-                          <p className="mt-0.5 text-[11px] text-slate-500">
+                          <p className="mt-0.5 text-[11px] text-zinc-500">
                             + {items.length - 1}{" "}
                             {items.length - 1 === 1 ? "ítem más" : "ítems más"}
                           </p>
@@ -759,10 +761,10 @@ export function QuotesClient({
 
                       {/* Total */}
                       <td className="whitespace-nowrap px-3 py-3.5 text-right align-middle">
-                        <p className="font-mono text-sm font-extrabold text-slate-50 tabular-nums">
+                        <p className="font-mono text-sm font-extrabold text-zinc-50 tabular-nums">
                           {formatCurrency(quote.totalAmount)}
                         </p>
-                        <p className="mt-0.5 text-[10px] text-slate-500">
+                        <p className="mt-0.5 text-[10px] text-zinc-500">
                           Validez {quote.validityDays}d
                         </p>
                       </td>
@@ -773,7 +775,7 @@ export function QuotesClient({
                           <Link
                             href={`/presupuestos/${quote.id}`}
                             title="Ver / Descargar PDF"
-                            className="inline-flex h-8 items-center gap-1 rounded-lg bg-amber-500 px-2.5 text-[11px] font-bold text-slate-950 transition hover:bg-amber-400"
+                            className="inline-flex h-8 items-center gap-1 rounded-lg bg-amber-500 px-2.5 text-[11px] font-bold text-zinc-950 transition hover:bg-amber-400"
                           >
                             <Printer className="h-3.5 w-3.5" />
                             <span>PDF</span>
@@ -790,8 +792,20 @@ export function QuotesClient({
 
                           {stKey === "approved" ? (
                             <Link
-                              href="/turnos"
-                              title="Agendar turno"
+                              href={`/turnos?new=1&name=${encodeURIComponent(
+                                quote.customerName
+                              )}&phone=${encodeURIComponent(
+                                quote.customerPhone
+                              )}&plate=${encodeURIComponent(
+                                quote.licensePlate ?? ""
+                              )}&vehicle=${encodeURIComponent(
+                                `${quote.brandName} ${quote.model}`
+                              )}${
+                                quote.vehicleId
+                                  ? `&vehicleId=${quote.vehicleId}`
+                                  : ""
+                              }`}
+                              title="Agendar turno con los datos de este presupuesto"
                               className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-sky-500/35 bg-sky-500/12 text-sky-300 transition hover:bg-sky-500/20"
                             >
                               <CalendarDays className="h-3.5 w-3.5" />
@@ -813,7 +827,7 @@ export function QuotesClient({
                             type="button"
                             onClick={() => openEditModal(quote)}
                             title="Editar presupuesto"
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-800 text-slate-400 transition hover:border-slate-600 hover:bg-slate-800 hover:text-white cursor-pointer"
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-800 text-zinc-400 transition hover:border-zinc-600 hover:bg-zinc-800 hover:text-white cursor-pointer"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </button>
@@ -822,7 +836,7 @@ export function QuotesClient({
                             type="button"
                             onClick={() => handleDeleteQuote(quote)}
                             title="Eliminar presupuesto"
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-800 text-slate-500 transition hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400 cursor-pointer"
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-800 text-zinc-500 transition hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400 cursor-pointer"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
@@ -836,7 +850,7 @@ export function QuotesClient({
           </div>
 
           {/* Mobile / Tablet Compact Hairline List */}
-          <div className="divide-y divide-slate-800/80 lg:hidden">
+          <div className="divide-y divide-zinc-800/80 lg:hidden">
             {filteredQuotes.map((quote) => {
               const items = parseQuoteItems(quote.itemsJson);
               const stKey = (
@@ -860,21 +874,21 @@ export function QuotesClient({
                           <span className="font-mono text-[11px] font-bold text-amber-400 tabular-nums">
                             {quote.quoteNumber}
                           </span>
-                          <span className="text-slate-600">·</span>
-                          <span className="truncate text-sm font-bold text-slate-100">
+                          <span className="text-zinc-600">·</span>
+                          <span className="truncate text-sm font-bold text-zinc-100">
                             {quote.customerName}
                           </span>
                         </div>
-                        <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-400">
+                        <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-zinc-400">
                           {quote.licensePlate && (
-                            <span className="rounded border border-slate-700 bg-slate-900 px-1.5 py-0.5 font-mono text-[10px] font-bold tracking-wider text-slate-100">
+                            <span className="rounded border border-zinc-700 bg-zinc-900 px-1.5 py-0.5 font-mono text-[10px] font-bold tracking-wider text-zinc-100">
                               {quote.licensePlate}
                             </span>
                           )}
-                          <span className="truncate text-slate-300">
+                          <span className="truncate text-zinc-300">
                             {quote.brandName} {quote.model}
                           </span>
-                          <span className="font-mono text-[11px] text-slate-500">
+                          <span className="font-mono text-[11px] text-zinc-500">
                             · {formatShortDate(quote.createdAt.slice(0, 10))}
                           </span>
                         </div>
@@ -882,7 +896,7 @@ export function QuotesClient({
                     </div>
 
                     <div className="shrink-0 text-right">
-                      <p className="font-mono text-sm font-extrabold text-slate-50 tabular-nums">
+                      <p className="font-mono text-sm font-extrabold text-zinc-50 tabular-nums">
                         {formatCurrency(quote.totalAmount)}
                       </p>
                       <span
@@ -897,7 +911,7 @@ export function QuotesClient({
                   </div>
 
                   {/* Compact work summary */}
-                  <p className="truncate text-xs text-slate-400">
+                  <p className="truncate text-xs text-zinc-400">
                     {firstItemDesc}
                     {items.length > 1 ? ` (+${items.length - 1} más)` : ""}
                   </p>
@@ -906,7 +920,7 @@ export function QuotesClient({
                   <div className="flex items-center gap-1.5 pt-0.5">
                     <Link
                       href={`/presupuestos/${quote.id}`}
-                      className="inline-flex min-h-[36px] flex-1 items-center justify-center gap-1.5 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 transition hover:bg-amber-400"
+                      className="inline-flex min-h-[36px] flex-1 items-center justify-center gap-1.5 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-zinc-950 transition hover:bg-amber-400"
                     >
                       <Printer className="h-3.5 w-3.5" />
                       Ver / PDF
@@ -923,8 +937,18 @@ export function QuotesClient({
 
                     {stKey === "approved" ? (
                       <Link
-                        href="/turnos"
-                        title="Agendar turno"
+                        href={`/turnos?new=1&name=${encodeURIComponent(
+                          quote.customerName
+                        )}&phone=${encodeURIComponent(
+                          quote.customerPhone
+                        )}&plate=${encodeURIComponent(
+                          quote.licensePlate ?? ""
+                        )}&vehicle=${encodeURIComponent(
+                          `${quote.brandName} ${quote.model}`
+                        )}${
+                          quote.vehicleId ? `&vehicleId=${quote.vehicleId}` : ""
+                        }`}
+                        title="Agendar turno con los datos de este presupuesto"
                         className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-sky-500/35 bg-sky-500/12 text-sky-300"
                       >
                         <CalendarDays className="h-3.5 w-3.5" />
@@ -944,7 +968,7 @@ export function QuotesClient({
                       type="button"
                       onClick={() => openEditModal(quote)}
                       title="Editar"
-                      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-800 text-slate-400 cursor-pointer"
+                      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-zinc-800 text-zinc-400 cursor-pointer"
                     >
                       <Pencil className="h-3.5 w-3.5" />
                     </button>
@@ -953,7 +977,7 @@ export function QuotesClient({
                       type="button"
                       onClick={() => handleDeleteQuote(quote)}
                       title="Eliminar"
-                      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-800 text-slate-500 cursor-pointer"
+                      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-zinc-800 text-zinc-500 cursor-pointer"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -976,16 +1000,16 @@ export function QuotesClient({
             if (e.target === e.currentTarget) setModalOpen(false);
           }}
         >
-          <div className="gp-card flex max-h-[95dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border border-slate-800 shadow-2xl sm:max-h-[92vh] sm:rounded-2xl">
+          <div className="gp-card flex max-h-[95dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border border-zinc-800 shadow-2xl sm:max-h-[92vh] sm:rounded-2xl">
             <div
               className="flex justify-center pt-2.5 pb-1 sm:hidden"
               aria-hidden="true"
             >
-              <span className="h-1 w-10 rounded-full bg-slate-700" />
+              <span className="h-1 w-10 rounded-full bg-zinc-700" />
             </div>
 
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3.5 sm:px-6 sm:py-4">
+            <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3.5 sm:px-6 sm:py-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-500/25 bg-amber-500/12 text-amber-400">
                   <FileText className="h-5 w-5" />
@@ -993,13 +1017,13 @@ export function QuotesClient({
                 <div>
                   <h2
                     id="quote-modal-title"
-                    className="text-base font-semibold text-slate-100"
+                    className="text-base font-semibold text-zinc-100"
                   >
                     {editingQuote
                       ? `Editar presupuesto ${editingQuote.quoteNumber}`
                       : "Generar presupuesto"}
                   </h2>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-zinc-400">
                     Elegí la marca, cargá las reparaciones y descargá el PDF
                   </p>
                 </div>
@@ -1007,7 +1031,7 @@ export function QuotesClient({
               <button
                 type="button"
                 onClick={() => setModalOpen(false)}
-                className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer"
+                className="flex h-10 w-10 items-center justify-center rounded-xl text-zinc-400 hover:bg-zinc-800 hover:text-white cursor-pointer"
                 aria-label="Cerrar"
               >
                 <X className="h-5 w-5" />
@@ -1022,7 +1046,7 @@ export function QuotesClient({
                   <button
                     type="button"
                     onClick={() => setShowVehiclePicker((v) => !v)}
-                    className="inline-flex min-h-[38px] items-center gap-2 rounded-xl border border-slate-700/80 bg-slate-900/70 px-3.5 py-1.5 text-xs font-semibold text-slate-300 transition hover:border-amber-500/50 hover:text-amber-300 cursor-pointer"
+                    className="inline-flex min-h-[38px] items-center gap-2 rounded-xl border border-zinc-700/80 bg-zinc-900/70 px-3.5 py-1.5 text-xs font-semibold text-zinc-300 transition hover:border-amber-500/50 hover:text-amber-300 cursor-pointer"
                   >
                     <CarFront className="h-3.5 w-3.5 text-amber-400" />
                     {showVehiclePicker
@@ -1031,13 +1055,13 @@ export function QuotesClient({
                   </button>
 
                   {showVehiclePicker && (
-                    <div className="space-y-2 rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                    <div className="space-y-2 rounded-xl border border-zinc-800 bg-zinc-950/70 p-3">
                       <input
                         type="search"
                         value={vehicleQuery}
                         onChange={(e) => setVehicleQuery(e.target.value)}
                         placeholder="Buscar patente, modelo o dueño..."
-                        className="min-h-[42px] w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500/70"
+                        className="min-h-[42px] w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-500/70"
                       />
                       <div className="grid max-h-36 grid-cols-1 gap-1.5 overflow-y-auto sm:grid-cols-2">
                         {filteredVehicles.map((v) => (
@@ -1045,15 +1069,15 @@ export function QuotesClient({
                             key={v.id}
                             type="button"
                             onClick={() => handleAutofillVehicle(v)}
-                            className="flex min-h-[46px] flex-col justify-center rounded-lg border border-slate-800 bg-slate-900/70 px-3 py-1.5 text-left transition hover:border-amber-500/60 cursor-pointer"
+                            className="flex min-h-[46px] flex-col justify-center rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-1.5 text-left transition hover:border-amber-500/60 cursor-pointer"
                           >
-                            <span className="truncate text-xs font-semibold text-slate-100">
+                            <span className="truncate text-xs font-semibold text-zinc-100">
                               <span className="font-mono font-bold">
                                 {v.licensePlate}
                               </span>{" "}
                               · {v.brand} {v.model}
                             </span>
-                            <span className="truncate text-[11px] text-slate-400">
+                            <span className="truncate text-[11px] text-zinc-400">
                               {v.ownerName} · {formatMileage(v.currentMileage)}
                             </span>
                           </button>
@@ -1066,12 +1090,12 @@ export function QuotesClient({
 
               {/* 1. Client Details */}
               <div className="space-y-3">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
                   1. Datos del cliente
                 </p>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-300">
+                    <label className="mb-1 block text-xs font-medium text-zinc-300">
                       Nombre del cliente *
                     </label>
                     <input
@@ -1080,11 +1104,11 @@ export function QuotesClient({
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
                       placeholder="Ej. Marcos Pérez"
-                      className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-amber-500/70"
+                      className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-amber-500/70"
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-300">
+                    <label className="mb-1 block text-xs font-medium text-zinc-300">
                       WhatsApp *
                     </label>
                     <input
@@ -1094,11 +1118,11 @@ export function QuotesClient({
                       value={customerPhone}
                       onChange={(e) => setCustomerPhone(e.target.value)}
                       placeholder="+54 9 341 555-1234"
-                      className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums placeholder-slate-600 outline-none focus:border-amber-500/70"
+                      className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950 px-3 py-2 font-mono text-sm text-zinc-100 tabular-nums placeholder-zinc-600 outline-none focus:border-amber-500/70"
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-300">
+                    <label className="mb-1 block text-xs font-medium text-zinc-300">
                       Patente (opcional)
                     </label>
                     <input
@@ -1109,16 +1133,16 @@ export function QuotesClient({
                         setLicensePlate(e.target.value.toUpperCase())
                       }
                       placeholder="AB 123 CD"
-                      className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950 px-3 py-2 font-mono text-sm font-semibold uppercase tracking-wider text-slate-100 placeholder-slate-600 outline-none focus:border-amber-500/70"
+                      className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950 px-3 py-2 font-mono text-sm font-semibold uppercase tracking-wider text-zinc-100 placeholder-zinc-600 outline-none focus:border-amber-500/70"
                     />
                   </div>
                 </div>
               </div>
 
               {/* 2. Vehicle: Brand (preset + add new) + Model (manual) + KM */}
-              <div className="space-y-3 border-t border-slate-800/80 pt-4">
+              <div className="space-y-3 border-t border-zinc-800/80 pt-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
                     2. Marca, modelo y kilometraje
                   </p>
                   <button
@@ -1151,13 +1175,13 @@ export function QuotesClient({
                         }
                       }}
                       placeholder="Nombre de la nueva marca (ej. Subaru, Volvo...)"
-                      className="min-h-[42px] flex-1 rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
+                      className="min-h-[42px] flex-1 rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-500"
                     />
                     <button
                       type="button"
                       disabled={savingBrand || newBrandInput.trim().length < 2}
                       onClick={handleCreateNewBrand}
-                      className="min-h-[42px] shrink-0 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-amber-400 disabled:opacity-50 cursor-pointer"
+                      className="min-h-[42px] shrink-0 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-zinc-950 hover:bg-amber-400 disabled:opacity-50 cursor-pointer"
                     >
                       {savingBrand ? "Guardando..." : "Guardar"}
                     </button>
@@ -1166,7 +1190,7 @@ export function QuotesClient({
 
                 {/* Brand Selector Trigger (opens full-height picker sheet) */}
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-300">
+                  <label className="mb-1 block text-xs font-medium text-zinc-300">
                     Marca del vehículo *
                   </label>
                   <button
@@ -1178,7 +1202,7 @@ export function QuotesClient({
                       setAddingBrand(false);
                       setBrandDropdownOpen(true);
                     }}
-                    className="flex min-h-[50px] w-full items-center justify-between gap-3 rounded-xl border border-slate-700/90 bg-slate-950 px-3 py-2 text-left transition hover:border-amber-500/60 active:scale-[0.995] cursor-pointer"
+                    className="flex min-h-[50px] w-full items-center justify-between gap-3 rounded-xl border border-zinc-700/90 bg-zinc-950 px-3 py-2 text-left transition hover:border-amber-500/60 active:scale-[0.995] cursor-pointer"
                   >
                     <div className="flex min-w-0 items-center gap-2.5">
                       <BrandLogo
@@ -1186,15 +1210,15 @@ export function QuotesClient({
                         brandSlug={brandSlug}
                         size="sm"
                       />
-                      <span className="truncate text-sm font-semibold text-slate-100">
+                      <span className="truncate text-sm font-semibold text-zinc-100">
                         {brandName}
                       </span>
                     </div>
-                    <div className="flex shrink-0 items-center gap-1.5 text-slate-400">
+                    <div className="flex shrink-0 items-center gap-1.5 text-zinc-400">
                       <span className="text-[11px] font-medium text-amber-400/90">
                         Cambiar
                       </span>
-                      <ChevronDown className="h-4 w-4 text-slate-400" />
+                      <ChevronDown className="h-4 w-4 text-zinc-400" />
                     </div>
                   </button>
                 </div>
@@ -1202,7 +1226,7 @@ export function QuotesClient({
                 {/* Manual Model + Mileage */}
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-300">
+                    <label className="mb-1 block text-xs font-medium text-zinc-300">
                       Modelo (manual) *
                     </label>
                     <input
@@ -1211,11 +1235,11 @@ export function QuotesClient({
                       value={model}
                       onChange={(e) => setModel(e.target.value)}
                       placeholder="Ej. Golf GTI 2.0 TSI / 208 Feline"
-                      className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-amber-500/70"
+                      className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-amber-500/70"
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-300">
+                    <label className="mb-1 block text-xs font-medium text-zinc-300">
                       Kilometraje del auto *
                     </label>
                     <input
@@ -1226,16 +1250,16 @@ export function QuotesClient({
                       value={mileage}
                       onChange={(e) => setMileage(e.target.value)}
                       placeholder="Ej. 85000"
-                      className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums placeholder-slate-600 outline-none focus:border-amber-500/70"
+                      className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950 px-3 py-2 font-mono text-sm text-zinc-100 tabular-nums placeholder-zinc-600 outline-none focus:border-amber-500/70"
                     />
                   </div>
                 </div>
               </div>
 
               {/* 3. Manual Repairs & Pricing Items */}
-              <div className="space-y-3 border-t border-slate-800/80 pt-4">
+              <div className="space-y-3 border-t border-zinc-800/80 pt-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
                     3. Reparaciones y costos
                   </p>
                   <button
@@ -1256,21 +1280,21 @@ export function QuotesClient({
                     return (
                       <div
                         key={row.id}
-                        className="space-y-2 rounded-xl border border-slate-800 bg-slate-950/70 p-3"
+                        className="space-y-2 rounded-xl border border-zinc-800 bg-zinc-950/70 p-3"
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <span className="font-mono text-[11px] font-bold text-slate-500">
+                          <span className="font-mono text-[11px] font-bold text-zinc-500">
                             Ítem #{idx + 1}
                           </span>
                           <div className="flex items-center gap-2">
-                            <span className="font-mono text-xs font-semibold text-slate-300 tabular-nums">
+                            <span className="font-mono text-xs font-semibold text-zinc-300 tabular-nums">
                               Subtotal: {formatCurrency(rowSubtotal)}
                             </span>
                             {rows.length > 1 && (
                               <button
                                 type="button"
                                 onClick={() => removeRow(row.id)}
-                                className="rounded-lg p-1 text-slate-500 hover:bg-red-500/10 hover:text-red-400 cursor-pointer"
+                                className="rounded-lg p-1 text-zinc-500 hover:bg-red-500/10 hover:text-red-400 cursor-pointer"
                                 aria-label="Quitar ítem"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
@@ -1286,12 +1310,12 @@ export function QuotesClient({
                             updateRow(row.id, "description", e.target.value)
                           }
                           placeholder="Ej. Kit de distribución INA + mano de obra"
-                          className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-amber-500/70"
+                          className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-amber-500/70"
                         />
 
                         <div className="grid grid-cols-3 gap-2.5">
                           <div>
-                            <label className="mb-1 block text-[11px] text-slate-400">
+                            <label className="mb-1 block text-[11px] text-zinc-400">
                               Cantidad
                             </label>
                             <input
@@ -1302,11 +1326,11 @@ export function QuotesClient({
                               onChange={(e) =>
                                 updateRow(row.id, "quantity", e.target.value)
                               }
-                              className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums outline-none focus:border-amber-500/70"
+                              className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950 px-3 py-2 font-mono text-sm text-zinc-100 tabular-nums outline-none focus:border-amber-500/70"
                             />
                           </div>
                           <div className="col-span-2">
-                            <label className="mb-1 block text-[11px] text-slate-400">
+                            <label className="mb-1 block text-[11px] text-zinc-400">
                               Precio unitario (ARS) *
                             </label>
                             <input
@@ -1319,7 +1343,7 @@ export function QuotesClient({
                                 updateRow(row.id, "unitPrice", e.target.value)
                               }
                               placeholder="Ej. 185000"
-                              className="min-h-[44px] w-full rounded-xl border border-slate-700/90 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100 tabular-nums placeholder-slate-600 outline-none focus:border-amber-500/70"
+                              className="min-h-[44px] w-full rounded-xl border border-zinc-700/90 bg-zinc-950 px-3 py-2 font-mono text-sm text-zinc-100 tabular-nums placeholder-zinc-600 outline-none focus:border-amber-500/70"
                             />
                           </div>
                         </div>
@@ -1340,9 +1364,9 @@ export function QuotesClient({
               </div>
 
               {/* 4. Validity & Notes */}
-              <div className="space-y-3 border-t border-slate-800/80 pt-4">
+              <div className="space-y-3 border-t border-zinc-800/80 pt-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-xs font-medium text-slate-300">
+                  <span className="text-xs font-medium text-zinc-300">
                     Validez del presupuesto
                   </span>
                   <div className="flex gap-1.5">
@@ -1354,7 +1378,7 @@ export function QuotesClient({
                         className={`min-h-[34px] rounded-lg border px-3 py-1 text-xs font-semibold transition cursor-pointer ${
                           validityDays === d
                             ? "border-amber-500 bg-amber-500/18 text-amber-300"
-                            : "border-slate-800 bg-slate-950/70 text-slate-400"
+                            : "border-zinc-800 bg-zinc-950/70 text-zinc-400"
                         }`}
                       >
                         {d} días
@@ -1364,7 +1388,7 @@ export function QuotesClient({
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-300">
+                  <label className="mb-1 block text-xs font-medium text-zinc-300">
                     Observaciones / aclaraciones (aparecen en el PDF)
                   </label>
                   <textarea
@@ -1372,7 +1396,7 @@ export function QuotesClient({
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Ej. Presupuesto sujeto a revisión al desarmar..."
-                    className="w-full rounded-xl border border-slate-700/90 bg-slate-950 px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-amber-500/70"
+                    className="w-full rounded-xl border border-zinc-700/90 bg-zinc-950 px-3.5 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-amber-500/70"
                   />
                 </div>
               </div>
@@ -1385,11 +1409,11 @@ export function QuotesClient({
             </div>
 
             {/* Footer (compact single-row on mobile so form has maximum vertical room) */}
-            <div className="flex items-center gap-2 border-t border-slate-800 bg-slate-950/95 px-4 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:justify-end sm:px-6 sm:py-3.5">
+            <div className="flex items-center gap-2 border-t border-zinc-800 bg-zinc-950/95 px-4 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:justify-end sm:px-6 sm:py-3.5">
               <button
                 type="button"
                 onClick={() => setModalOpen(false)}
-                className="hidden min-h-[42px] rounded-xl border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 sm:inline-flex sm:items-center cursor-pointer"
+                className="hidden min-h-[42px] rounded-xl border border-zinc-700 px-4 py-2 text-xs font-semibold text-zinc-300 hover:bg-zinc-800 sm:inline-flex sm:items-center cursor-pointer"
               >
                 Cancelar
               </button>
@@ -1406,7 +1430,7 @@ export function QuotesClient({
                 disabled={submitting}
                 id="quote-save-and-pdf-btn"
                 onClick={() => handleSaveQuote(true)}
-                className="inline-flex min-h-[46px] flex-1 items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-slate-950 shadow-lg shadow-amber-500/15 hover:bg-amber-400 disabled:opacity-50 sm:min-h-[42px] sm:flex-none sm:px-5 sm:text-xs cursor-pointer"
+                className="inline-flex min-h-[46px] flex-1 items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-zinc-950 shadow-lg shadow-amber-500/15 hover:bg-amber-400 disabled:opacity-50 sm:min-h-[42px] sm:flex-none sm:px-5 sm:text-xs cursor-pointer"
               >
                 <Printer className="h-4 w-4" />
                 {submitting ? "Generando..." : "Guardar y ver PDF"}
@@ -1427,28 +1451,28 @@ export function QuotesClient({
             if (e.target === e.currentTarget) setBrandDropdownOpen(false);
           }}
         >
-          <div className="gp-card flex h-[88dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border border-slate-700/90 shadow-2xl sm:h-auto sm:max-h-[82vh] sm:rounded-2xl">
+          <div className="gp-card flex h-[88dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border border-zinc-700/90 shadow-2xl sm:h-auto sm:max-h-[82vh] sm:rounded-2xl">
             <div
               className="flex justify-center pt-2.5 pb-1 sm:hidden"
               aria-hidden="true"
             >
-              <span className="h-1 w-10 rounded-full bg-slate-700" />
+              <span className="h-1 w-10 rounded-full bg-zinc-700" />
             </div>
 
             {/* Picker Header */}
-            <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3 sm:px-5">
+            <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3 sm:px-5">
               <div className="flex items-center gap-2.5">
-                <h3 className="text-base font-bold text-slate-100">
+                <h3 className="text-base font-bold text-zinc-100">
                   Elegir marca
                 </h3>
-                <span className="rounded-full border border-slate-700 bg-slate-900 px-2 py-0.5 font-mono text-[11px] font-semibold text-slate-400">
+                <span className="rounded-full border border-zinc-700 bg-zinc-900 px-2 py-0.5 font-mono text-[11px] font-semibold text-zinc-400">
                   {filteredBrands.length}
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => setBrandDropdownOpen(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer"
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-zinc-400 hover:bg-zinc-800 hover:text-white cursor-pointer"
                 aria-label="Cerrar selector de marcas"
               >
                 <X className="h-5 w-5" />
@@ -1456,22 +1480,22 @@ export function QuotesClient({
             </div>
 
             {/* Sticky Search Bar */}
-            <div className="border-b border-slate-800/80 bg-slate-950/50 px-4 py-2.5 sm:px-5">
+            <div className="border-b border-zinc-800/80 bg-zinc-950/50 px-4 py-2.5 sm:px-5">
               <div className="relative">
-                <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-zinc-500" />
                 <input
                   type="search"
                   value={brandSearch}
                   onChange={(e) => setBrandSearch(e.target.value)}
                   placeholder="Buscar marca (ej. Volkswagen, Ford, Fiat...)"
-                  className="min-h-[42px] w-full rounded-xl border border-slate-700/80 bg-slate-950 py-2 pr-9 pl-10 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-amber-500/70"
+                  className="min-h-[42px] w-full rounded-xl border border-zinc-700/80 bg-zinc-950 py-2 pr-9 pl-10 text-sm text-zinc-100 placeholder-zinc-500 outline-none focus:border-amber-500/70"
                 />
                 {brandSearch && (
                   <button
                     type="button"
                     onClick={() => setBrandSearch("")}
                     aria-label="Limpiar búsqueda"
-                    className="absolute top-1/2 right-2.5 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer"
+                    className="absolute top-1/2 right-2.5 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-800 hover:text-white cursor-pointer"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
@@ -1496,11 +1520,11 @@ export function QuotesClient({
                         className={`relative flex flex-col items-center justify-center gap-1.5 rounded-xl border px-2 py-2.5 text-center transition active:scale-[0.97] cursor-pointer ${
                           active
                             ? "border-amber-500 bg-amber-500/15 text-amber-200 ring-1 ring-amber-500/40"
-                            : "border-slate-800 bg-slate-900/75 text-slate-200 hover:border-slate-600 hover:bg-slate-800/80 hover:text-white"
+                            : "border-zinc-800 bg-zinc-900/75 text-zinc-200 hover:border-zinc-600 hover:bg-zinc-800/80 hover:text-white"
                         }`}
                       >
                         {active && (
-                          <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-slate-950">
+                          <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-zinc-950">
                             <Check className="h-2.5 w-2.5 stroke-[3]" />
                           </span>
                         )}
@@ -1517,11 +1541,11 @@ export function QuotesClient({
                   })}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-800 bg-slate-950/50 px-4 py-10 text-center">
-                  <p className="text-sm font-medium text-slate-300">
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-800 bg-zinc-950/50 px-4 py-10 text-center">
+                  <p className="text-sm font-medium text-zinc-300">
                     No encontramos &ldquo;{brandSearch.trim()}&rdquo;
                   </p>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-zinc-500">
                     Podés agregarla ahora y queda guardada para próximos
                     presupuestos.
                   </p>
@@ -1531,7 +1555,7 @@ export function QuotesClient({
                       setNewBrandInput(brandSearch.trim());
                       setAddingBrand(true);
                     }}
-                    className="mt-4 inline-flex min-h-[42px] items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-amber-400 cursor-pointer"
+                    className="mt-4 inline-flex min-h-[42px] items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-zinc-950 hover:bg-amber-400 cursor-pointer"
                   >
                     <Plus className="h-4 w-4" />
                     Agregar &ldquo;{brandSearch.trim()}&rdquo;
@@ -1541,7 +1565,7 @@ export function QuotesClient({
             </div>
 
             {/* Picker Footer: Inline Add New Brand */}
-            <div className="border-t border-slate-800 bg-slate-950/95 px-4 pt-2.5 pb-[max(0.85rem,env(safe-area-inset-bottom))] sm:px-5 sm:py-3">
+            <div className="border-t border-zinc-800 bg-zinc-950/95 px-4 pt-2.5 pb-[max(0.85rem,env(safe-area-inset-bottom))] sm:px-5 sm:py-3">
               {addingBrand ? (
                 <div className="flex gap-2">
                   <input
@@ -1558,13 +1582,13 @@ export function QuotesClient({
                       }
                     }}
                     placeholder="Nueva marca (ej. Subaru, Volvo...)"
-                    className="min-h-[44px] flex-1 rounded-xl border border-amber-500/60 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-amber-500"
+                    className="min-h-[44px] flex-1 rounded-xl border border-amber-500/60 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-500"
                   />
                   <button
                     type="button"
                     disabled={savingBrand || newBrandInput.trim().length < 2}
                     onClick={handleCreateNewBrand}
-                    className="min-h-[44px] shrink-0 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-amber-400 disabled:opacity-50 cursor-pointer"
+                    className="min-h-[44px] shrink-0 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-zinc-950 hover:bg-amber-400 disabled:opacity-50 cursor-pointer"
                   >
                     {savingBrand ? "..." : "Guardar"}
                   </button>
@@ -1572,7 +1596,7 @@ export function QuotesClient({
                     type="button"
                     onClick={() => setAddingBrand(false)}
                     aria-label="Cancelar"
-                    className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-xl border border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer"
+                    className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-xl border border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white cursor-pointer"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -1607,23 +1631,23 @@ export function QuotesClient({
             if (e.target === e.currentTarget) setWaModalQuote(null);
           }}
         >
-          <div className="gp-card flex max-h-[92dvh] w-full max-w-xl flex-col overflow-hidden rounded-t-2xl border border-slate-800 shadow-2xl sm:rounded-2xl">
+          <div className="gp-card flex max-h-[92dvh] w-full max-w-xl flex-col overflow-hidden rounded-t-2xl border border-zinc-800 shadow-2xl sm:rounded-2xl">
             <div
               className="flex justify-center pt-2.5 pb-1 sm:hidden"
               aria-hidden="true"
             >
-              <span className="h-1 w-10 rounded-full bg-slate-700" />
+              <span className="h-1 w-10 rounded-full bg-zinc-700" />
             </div>
-            <div className="flex items-center justify-between border-b border-slate-800 px-5 py-4">
+            <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-500/25 bg-emerald-500/15 text-emerald-400">
                   <MessageCircle className="h-5 w-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-semibold text-slate-100">
+                  <h2 className="text-base font-semibold text-zinc-100">
                     Enviar presupuesto {waModalQuote.quoteNumber}
                   </h2>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-zinc-400">
                     {waModalQuote.customerName} · {waModalQuote.customerPhone}
                   </p>
                 </div>
@@ -1631,7 +1655,7 @@ export function QuotesClient({
               <button
                 type="button"
                 onClick={() => setWaModalQuote(null)}
-                className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white cursor-pointer"
+                className="flex h-10 w-10 items-center justify-center rounded-xl text-zinc-400 hover:bg-zinc-800 hover:text-white cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1642,15 +1666,15 @@ export function QuotesClient({
                 rows={10}
                 value={waMessageText}
                 onChange={(e) => setWaMessageText(e.target.value)}
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 p-3.5 text-sm leading-relaxed text-slate-100 outline-none focus:border-emerald-500/70"
+                className="w-full rounded-xl border border-zinc-700 bg-zinc-950 p-3.5 text-sm leading-relaxed text-zinc-100 outline-none focus:border-emerald-500/70"
               />
             </div>
 
-            <div className="flex flex-col-reverse gap-2 border-t border-slate-800 bg-slate-950/90 px-5 pt-3 pb-[max(0.9rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end sm:py-4">
+            <div className="flex items-center justify-end gap-2 border-t border-white/[0.08] bg-zinc-950/95 px-5 pt-2.5 pb-[max(0.85rem,env(safe-area-inset-bottom))] sm:py-3.5">
               <button
                 type="button"
                 onClick={() => setWaModalQuote(null)}
-                className="min-h-[44px] rounded-xl border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 cursor-pointer"
+                className="hidden min-h-[42px] rounded-xl border border-white/12 px-4 py-2 text-xs font-semibold text-zinc-300 hover:bg-zinc-900 sm:inline-flex sm:items-center cursor-pointer"
               >
                 Cancelar
               </button>
@@ -1658,7 +1682,7 @@ export function QuotesClient({
                 type="button"
                 disabled={sendingWa || !waMessageText.trim()}
                 onClick={handleConfirmSendWa}
-                className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-2 text-sm font-bold text-slate-950 hover:bg-emerald-400 sm:min-h-[42px] sm:text-xs cursor-pointer"
+                className="inline-flex min-h-[46px] w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-2 text-sm font-bold text-zinc-950 hover:bg-emerald-400 sm:min-h-[42px] sm:w-auto sm:text-xs cursor-pointer"
               >
                 <MessageCircle className="h-4 w-4" />
                 Abrir WhatsApp y marcar enviado

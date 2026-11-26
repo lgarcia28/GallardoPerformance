@@ -234,6 +234,36 @@ export function normalizeLicensePlate(plate: string): string {
   return plate.trim().toUpperCase().replace(/\s+/g, " ");
 }
 
+export function matchesWorkshopQuery(
+  query: string,
+  fields: Array<string | number | null | undefined>,
+  options?: { plate?: string | null; phone?: string | null }
+): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+
+  const haystack = fields
+    .filter((f) => f !== null && f !== undefined)
+    .map((f) => String(f))
+    .join(" ")
+    .toLowerCase();
+  if (haystack.includes(q)) return true;
+
+  const compactQ = q.replace(/[^a-z0-9]/g, "");
+  if (compactQ.length >= 2 && options?.plate) {
+    const compactPlate = options.plate.toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (compactPlate.includes(compactQ)) return true;
+  }
+
+  const qDigits = q.replace(/\D/g, "");
+  if (qDigits.length >= 3 && options?.phone) {
+    const phoneDigits = options.phone.replace(/\D/g, "");
+    if (phoneDigits.includes(qDigits)) return true;
+  }
+
+  return false;
+}
+
 export function normalizeWhatsAppDigits(phone: string): string {
   const digits = phone.replace(/\D/g, "");
   // If user entered a 10-digit Argentine local mobile without country code (e.g. 1154328810), prepend 549

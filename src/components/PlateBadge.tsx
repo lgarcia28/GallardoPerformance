@@ -13,10 +13,8 @@ export function PlateBadge({ plate, size = "md" }: PlateBadgeProps) {
   }[size];
 
   return (
-    <span
-      className={`inline-flex flex-col overflow-hidden rounded-md border border-slate-600/80 bg-slate-950 font-mono font-bold uppercase text-slate-100 shadow-sm tabular-nums select-all`}
-    >
-      <span className="h-[3px] w-full bg-sky-600/90" aria-hidden="true" />
+    <span className="inline-flex flex-col overflow-hidden rounded-md border border-zinc-700/90 bg-zinc-950 font-mono font-bold uppercase text-zinc-100 shadow-sm tabular-nums select-all">
+      <span className="h-[3px] w-full bg-[#164299]" aria-hidden="true" />
       <span className={`${sizeClasses} leading-none`}>{plate}</span>
     </span>
   );

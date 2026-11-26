@@ -56,7 +56,7 @@ export function AdminLoginClient({
   }
 
   return (
-    <div className="flex min-h-dvh flex-col justify-between bg-[#0A0A0A] px-5 py-6 text-neutral-100">
+    <div className="flex min-h-dvh flex-col justify-between bg-[#09090B] px-5 py-6 text-zinc-100">
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between">
         <Link
           href="/"

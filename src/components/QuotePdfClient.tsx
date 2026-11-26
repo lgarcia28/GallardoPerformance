@@ -119,7 +119,7 @@ export function QuotePdfClient({ initialQuote }: QuotePdfClientProps) {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Link
             href="/presupuestos"
-            className="inline-flex min-h-[38px] items-center gap-1.5 text-xs font-medium text-slate-400 transition hover:text-slate-100"
+            className="inline-flex min-h-[38px] items-center gap-1.5 text-xs font-medium text-zinc-400 transition hover:text-white"
           >
             <ArrowLeft className="h-4 w-4" />
             Volver a Presupuestos
@@ -129,7 +129,7 @@ export function QuotePdfClient({ initialQuote }: QuotePdfClientProps) {
             <button
               type="button"
               onClick={handleSendWhatsApp}
-              className="inline-flex min-h-[42px] items-center gap-1.5 rounded-xl bg-emerald-500 px-3.5 py-2 text-xs font-bold text-slate-950 shadow-md shadow-emerald-500/15 transition hover:bg-emerald-400 cursor-pointer"
+              className="inline-flex min-h-[42px] items-center gap-1.5 rounded-xl bg-emerald-500 px-3.5 py-2 text-xs font-bold text-zinc-950 transition hover:bg-emerald-400 cursor-pointer"
             >
               <MessageCircle className="h-4 w-4" />
               Enviar WhatsApp
@@ -140,17 +140,25 @@ export function QuotePdfClient({ initialQuote }: QuotePdfClientProps) {
               type="button"
               id="quote-print-pdf-btn"
               onClick={handlePrintPdf}
-              className="inline-flex min-h-[42px] items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950 shadow-md shadow-amber-500/15 transition hover:bg-amber-400 cursor-pointer"
+              className="inline-flex min-h-[42px] items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-xs font-bold text-zinc-950 shadow-sm transition hover:bg-zinc-200 cursor-pointer"
             >
               <Printer className="h-4 w-4" />
               Descargar PDF / Imprimir (A4)
             </button>
 
             <Link
-              href="/turnos"
-              className="inline-flex min-h-[42px] items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900/80 px-3.5 py-2 text-xs font-semibold text-slate-200 transition hover:border-slate-600 hover:bg-slate-800"
+              href={`/turnos?new=1&name=${encodeURIComponent(
+                quote.customerName
+              )}&phone=${encodeURIComponent(
+                quote.customerPhone
+              )}&plate=${encodeURIComponent(
+                quote.licensePlate ?? ""
+              )}&vehicle=${encodeURIComponent(
+                `${quote.brandName} ${quote.model}`
+              )}${quote.vehicleId ? `&vehicleId=${quote.vehicleId}` : ""}`}
+              className="inline-flex min-h-[42px] items-center gap-1.5 rounded-xl border border-white/12 bg-zinc-900 px-3.5 py-2 text-xs font-semibold text-zinc-200 transition hover:border-white/25 hover:text-white"
             >
-              <CalendarDays className="h-4 w-4 text-amber-400" />
+              <CalendarDays className="h-4 w-4 text-red-500" />
               Agendar turno
             </Link>
 
@@ -168,7 +176,7 @@ export function QuotePdfClient({ initialQuote }: QuotePdfClientProps) {
         {/* Status Quick Bar */}
         <div className="gp-card flex flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-slate-400">Estado:</span>
+            <span className="text-xs font-medium text-zinc-400">Estado:</span>
             <span
               className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${statusMeta.badgeClass}`}
             >

@@ -185,24 +185,26 @@ export function FinancesClient({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Unified Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-400/90">
+          <p className="flex items-center gap-2 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-red-600" />
             Control Económico
           </p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-50 sm:text-3xl">
+          <h1 className="mt-1.5 text-2xl font-bold tracking-tight text-white sm:text-3xl">
             Finanzas del Taller
           </h1>
-          <p className="mt-1 text-sm text-slate-400">
-            Autos reparados, facturación, costos de repuestos y ganancia neta por fecha.
+          <p className="mt-1 text-sm text-zinc-400">
+            Autos reparados, facturación, costos de repuestos y ganancia neta
+            por fecha.
           </p>
         </div>
 
         <button
           type="button"
           onClick={() => openQuickEntry({ mode: "existing" })}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-bold text-slate-950 shadow-lg shadow-amber-500/15 transition hover:bg-amber-400 cursor-pointer"
+          className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl bg-white px-4 py-2 text-xs font-bold text-zinc-950 shadow-sm transition hover:bg-zinc-200 cursor-pointer"
         >
           <Plus className="h-4 w-4 stroke-[2.5]" />
           Cargar reparación
@@ -224,7 +226,7 @@ export function FinancesClient({
                   className={`min-h-[38px] shrink-0 rounded-xl border px-3.5 py-2 text-xs font-semibold transition cursor-pointer ${
                     active
                       ? "border-amber-500 bg-amber-500/15 text-amber-300"
-                      : "border-slate-800 bg-slate-950/60 text-slate-400 hover:border-slate-700 hover:text-slate-200"
+                      : "border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
                   }`}
                 >
                   {btn.label}
@@ -235,12 +237,12 @@ export function FinancesClient({
 
           {/* Custom Date Range Pickers */}
           <div className="grid grid-cols-2 gap-2.5 sm:flex sm:flex-wrap sm:items-center">
-            <div className="flex min-h-[44px] flex-col justify-center rounded-xl border border-slate-800 bg-slate-950/80 px-3 py-1.5 sm:min-h-[38px] sm:flex-row sm:items-center sm:gap-2">
+            <div className="flex min-h-[44px] flex-col justify-center rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-1.5 sm:min-h-[38px] sm:flex-row sm:items-center sm:gap-2">
               <label
                 htmlFor="finances-from-date"
-                className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-slate-400 sm:text-[11px] sm:normal-case sm:tracking-normal"
+                className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-zinc-400 sm:text-[11px] sm:normal-case sm:tracking-normal"
               >
-                <Calendar className="h-3 w-3 text-slate-500 sm:h-3.5 sm:w-3.5" />
+                <Calendar className="h-3 w-3 text-zinc-500 sm:h-3.5 sm:w-3.5" />
                 Desde
               </label>
               <input
@@ -248,16 +250,16 @@ export function FinancesClient({
                 type="date"
                 value={fromDate}
                 onChange={(e) => handleFromChange(e.target.value)}
-                className="w-full bg-transparent font-mono text-xs text-slate-100 tabular-nums outline-none sm:w-auto"
+                className="w-full bg-transparent font-mono text-xs text-zinc-100 tabular-nums outline-none sm:w-auto"
               />
             </div>
 
-            <div className="flex min-h-[44px] flex-col justify-center rounded-xl border border-slate-800 bg-slate-950/80 px-3 py-1.5 sm:min-h-[38px] sm:flex-row sm:items-center sm:gap-2">
+            <div className="flex min-h-[44px] flex-col justify-center rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-1.5 sm:min-h-[38px] sm:flex-row sm:items-center sm:gap-2">
               <label
                 htmlFor="finances-to-date"
-                className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-slate-400 sm:text-[11px] sm:normal-case sm:tracking-normal"
+                className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-zinc-400 sm:text-[11px] sm:normal-case sm:tracking-normal"
               >
-                <Calendar className="h-3 w-3 text-slate-500 sm:h-3.5 sm:w-3.5" />
+                <Calendar className="h-3 w-3 text-zinc-500 sm:h-3.5 sm:w-3.5" />
                 Hasta
               </label>
               <input
@@ -265,7 +267,7 @@ export function FinancesClient({
                 type="date"
                 value={toDate}
                 onChange={(e) => handleToChange(e.target.value)}
-                className="w-full bg-transparent font-mono text-xs text-slate-100 tabular-nums outline-none sm:w-auto"
+                className="w-full bg-transparent font-mono text-xs text-zinc-100 tabular-nums outline-none sm:w-auto"
               />
             </div>
           </div>
@@ -281,17 +283,17 @@ export function FinancesClient({
       >
         <div className="gp-card rounded-2xl p-5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-400">
+            <span className="text-xs font-medium text-zinc-400">
               Autos reparados
             </span>
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-800/90 text-slate-300">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-800/90 text-zinc-300">
               <CarFront className="h-4 w-4" />
             </span>
           </div>
-          <p className="mt-3 font-mono text-3xl font-bold tracking-tight text-slate-50 tabular-nums">
+          <p className="mt-3 font-mono text-3xl font-bold tracking-tight text-zinc-50 tabular-nums">
             {data.summary.uniqueVehiclesCount}
           </p>
-          <p className="mt-1 font-mono text-[11px] text-slate-400 tabular-nums">
+          <p className="mt-1 font-mono text-[11px] text-zinc-400 tabular-nums">
             {data.summary.repairsCount}{" "}
             {data.summary.repairsCount === 1
               ? "trabajo realizado"
@@ -301,41 +303,41 @@ export function FinancesClient({
 
         <div className="gp-card rounded-2xl p-5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-400">
+            <span className="text-xs font-medium text-zinc-400">
               Total cobrado
             </span>
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/12 text-amber-400">
               <CircleDollarSign className="h-4 w-4" />
             </span>
           </div>
-          <p className="mt-3 font-mono text-2xl font-bold tracking-tight text-slate-50 tabular-nums sm:text-3xl">
+          <p className="mt-3 font-mono text-2xl font-bold tracking-tight text-zinc-50 tabular-nums sm:text-3xl">
             {formatCurrency(data.summary.totalRevenue)}
           </p>
-          <p className="mt-1 font-mono text-[11px] text-slate-400 tabular-nums">
+          <p className="mt-1 font-mono text-[11px] text-zinc-400 tabular-nums">
             Ticket promedio: {formatCurrency(data.summary.averageTicket)}
           </p>
         </div>
 
         <div className="gp-card rounded-2xl p-5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-400">
+            <span className="text-xs font-medium text-zinc-400">
               Costo de reparaciones
             </span>
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-500/12 text-red-400">
               <Receipt className="h-4 w-4" />
             </span>
           </div>
-          <p className="mt-3 font-mono text-2xl font-bold tracking-tight text-slate-200 tabular-nums sm:text-3xl">
+          <p className="mt-3 font-mono text-2xl font-bold tracking-tight text-zinc-200 tabular-nums sm:text-3xl">
             {formatCurrency(data.summary.totalPartsCost)}
           </p>
-          <p className="mt-1 text-[11px] text-slate-500">
+          <p className="mt-1 text-[11px] text-zinc-500">
             Repuestos e insumos del período
           </p>
         </div>
 
         <div className="gp-card rounded-2xl p-5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-400">
+            <span className="text-xs font-medium text-zinc-400">
               Ganancia neta
             </span>
             <span
@@ -357,7 +359,7 @@ export function FinancesClient({
           >
             {formatCurrency(data.summary.totalProfit)}
           </p>
-          <p className="mt-1 font-mono text-[11px] text-slate-400 tabular-nums">
+          <p className="mt-1 font-mono text-[11px] text-zinc-400 tabular-nums">
             {data.summary.profitMarginPct !== null
               ? `Margen neto: ${data.summary.profitMarginPct}%`
               : "Sin facturación en el período"}
@@ -368,14 +370,14 @@ export function FinancesClient({
       {/* Breakdown by Service Type */}
       {data.byServiceType.length > 0 && (
         <section className="gp-card rounded-2xl p-5 sm:p-6">
-          <div className="flex items-center justify-between gap-2 pb-4 border-b border-slate-800/80">
+          <div className="flex items-center justify-between gap-2 pb-4 border-b border-zinc-800/80">
             <div className="flex items-center gap-2.5">
               <Wallet className="h-4 w-4 text-amber-400" />
-              <h2 className="text-sm font-semibold text-slate-100">
+              <h2 className="text-sm font-semibold text-zinc-100">
                 Rentabilidad por tipo de trabajo
               </h2>
             </div>
-            <span className="text-[11px] text-slate-400">
+            <span className="text-[11px] text-zinc-400">
               Cobrado vs. Ganancia neta
             </span>
           </div>
@@ -398,19 +400,19 @@ export function FinancesClient({
                 <div key={group.serviceType} className="space-y-1.5">
                   <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-slate-200">
+                      <span className="font-semibold text-zinc-200">
                         {group.serviceType}
                       </span>
-                      <span className="rounded-md bg-slate-800/90 px-1.5 py-0.5 font-mono text-[10px] text-slate-400 tabular-nums">
+                      <span className="rounded-md bg-zinc-800/90 px-1.5 py-0.5 font-mono text-[10px] text-zinc-400 tabular-nums">
                         {group.count} {group.count === 1 ? "vez" : "veces"}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-3 font-mono text-xs tabular-nums">
-                      <span className="text-slate-400">
+                      <span className="text-zinc-400">
                         Cobrado: {formatCurrency(group.revenue)}
                       </span>
-                      <span className="text-slate-500">
+                      <span className="text-zinc-500">
                         Costo: {formatCurrency(group.partsCost)}
                       </span>
                       <span
@@ -426,9 +428,9 @@ export function FinancesClient({
                   </div>
 
                   {/* Bar showing total revenue with emerald profit fill */}
-                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-900">
+                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-zinc-900">
                     <div
-                      className="flex h-full overflow-hidden rounded-full bg-slate-700/80 transition-all duration-300"
+                      className="flex h-full overflow-hidden rounded-full bg-zinc-700/80 transition-all duration-300"
                       style={{ width: `${revenueWidth}%` }}
                     >
                       <div
@@ -446,16 +448,16 @@ export function FinancesClient({
 
       {/* Detailed Repairs Financial Table */}
       <section className="gp-card overflow-hidden rounded-2xl">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/90 px-5 py-4 sm:px-6">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800/90 px-5 py-4 sm:px-6">
           <div>
-            <h2 className="text-base font-semibold text-slate-100">
+            <h2 className="text-base font-semibold text-zinc-100">
               Detalle de reparaciones del período
             </h2>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-zinc-400">
               Tocá el ícono de lápiz en cualquier fila para cargar o ajustar lo cobrado y el costo.
             </p>
           </div>
-          <span className="font-mono text-xs text-slate-400 tabular-nums">
+          <span className="font-mono text-xs text-zinc-400 tabular-nums">
             {data.repairs.length}{" "}
             {data.repairs.length === 1 ? "reparación" : "reparaciones"}
           </span>
@@ -463,11 +465,11 @@ export function FinancesClient({
 
         {data.repairs.length === 0 ? (
           <div className="px-6 py-14 text-center">
-            <Wallet className="mx-auto h-8 w-8 text-slate-600" />
-            <p className="mt-3 text-sm font-semibold text-slate-200">
+            <Wallet className="mx-auto h-8 w-8 text-zinc-600" />
+            <p className="mt-3 text-sm font-semibold text-zinc-200">
               No hay reparaciones en las fechas seleccionadas
             </p>
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-xs text-zinc-400">
               Probá ampliando el rango de fechas o cargá un nuevo trabajo.
             </p>
           </div>
@@ -477,7 +479,7 @@ export function FinancesClient({
             <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-800/90 bg-slate-950/50 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                  <tr className="border-b border-zinc-800/90 bg-zinc-950/50 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
                     <th className="px-5 py-3.5">Fecha</th>
                     <th className="px-4 py-3.5">Vehículo</th>
                     <th className="px-4 py-3.5">Trabajo</th>
@@ -487,7 +489,7 @@ export function FinancesClient({
                     <th className="px-5 py-3.5 text-right">Acciones</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/75 text-sm">
+                <tbody className="divide-y divide-zinc-800/75 text-sm">
                   {data.repairs.map((row) => {
                     const isEditing = editingId === row.id;
                     const liveRev = Number(draftRevenue || 0);
@@ -497,9 +499,9 @@ export function FinancesClient({
                     return (
                       <tr
                         key={row.id}
-                        className="transition hover:bg-slate-800/25"
+                        className="transition hover:bg-zinc-800/25"
                       >
-                        <td className="px-5 py-4 font-mono text-xs text-slate-400 tabular-nums whitespace-nowrap">
+                        <td className="px-5 py-4 font-mono text-xs text-zinc-400 tabular-nums whitespace-nowrap">
                           {formatShortDate(row.serviceDate)}
                         </td>
 
@@ -510,10 +512,10 @@ export function FinancesClient({
                           >
                             <PlateBadge plate={row.licensePlate} size="sm" />
                             <div>
-                              <p className="text-xs font-semibold text-slate-100 transition group-hover:text-amber-400">
+                              <p className="text-xs font-semibold text-zinc-100 transition group-hover:text-amber-400">
                                 {row.brand} {row.model}
                               </p>
-                              <p className="text-[11px] text-slate-500">
+                              <p className="text-[11px] text-zinc-500">
                                 {row.ownerName}
                               </p>
                             </div>
@@ -521,15 +523,15 @@ export function FinancesClient({
                         </td>
 
                         <td className="px-4 py-4 max-w-xs">
-                          <p className="text-xs font-semibold text-slate-200">
+                          <p className="text-xs font-semibold text-zinc-200">
                             {row.serviceType}
                           </p>
-                          <p className="truncate text-[11px] text-slate-500">
+                          <p className="truncate text-[11px] text-zinc-500">
                             {row.description}
                           </p>
                         </td>
 
-                        <td className="px-4 py-4 text-right font-mono text-xs font-semibold text-slate-100 tabular-nums">
+                        <td className="px-4 py-4 text-right font-mono text-xs font-semibold text-zinc-100 tabular-nums">
                           {isEditing ? (
                             <input
                               type="number"
@@ -537,16 +539,16 @@ export function FinancesClient({
                               value={draftRevenue}
                               onChange={(e) => setDraftRevenue(e.target.value)}
                               placeholder="Cobrado"
-                              className="w-28 rounded-lg border border-amber-500/60 bg-slate-950 px-2.5 py-1 text-right font-mono text-xs text-white tabular-nums outline-none"
+                              className="w-28 rounded-lg border border-amber-500/60 bg-zinc-950 px-2.5 py-1 text-right font-mono text-xs text-white tabular-nums outline-none"
                             />
                           ) : row.hasCostEntered ? (
                             formatCurrency(row.revenue)
                           ) : (
-                            <span className="text-slate-600">—</span>
+                            <span className="text-zinc-600">—</span>
                           )}
                         </td>
 
-                        <td className="px-4 py-4 text-right font-mono text-xs text-slate-300 tabular-nums">
+                        <td className="px-4 py-4 text-right font-mono text-xs text-zinc-300 tabular-nums">
                           {isEditing ? (
                             <input
                               type="number"
@@ -556,12 +558,12 @@ export function FinancesClient({
                                 setDraftPartsCost(e.target.value)
                               }
                               placeholder="Costo"
-                              className="w-28 rounded-lg border border-amber-500/60 bg-slate-950 px-2.5 py-1 text-right font-mono text-xs text-white tabular-nums outline-none"
+                              className="w-28 rounded-lg border border-amber-500/60 bg-zinc-950 px-2.5 py-1 text-right font-mono text-xs text-white tabular-nums outline-none"
                             />
                           ) : row.hasPartsCostEntered ? (
                             formatCurrency(row.partsCost)
                           ) : (
-                            <span className="text-slate-600">$0</span>
+                            <span className="text-zinc-600">$0</span>
                           )}
                         </td>
 
@@ -588,7 +590,7 @@ export function FinancesClient({
                                 {formatCurrency(row.profit)}
                               </span>
                               {row.marginPct !== null && (
-                                <p className="text-[10px] font-medium text-slate-500">
+                                <p className="text-[10px] font-medium text-zinc-500">
                                   {row.marginPct}% margen
                                 </p>
                               )}
@@ -603,7 +605,7 @@ export function FinancesClient({
                                 type="button"
                                 disabled={savingRow}
                                 onClick={() => saveInlineEdit(row.id)}
-                                className="rounded-lg bg-emerald-500 p-1.5 text-slate-950 hover:bg-emerald-400 disabled:opacity-50 cursor-pointer"
+                                className="rounded-lg bg-emerald-500 p-1.5 text-zinc-950 hover:bg-emerald-400 disabled:opacity-50 cursor-pointer"
                                 title="Guardar"
                               >
                                 <Check className="h-3.5 w-3.5" />
@@ -611,7 +613,7 @@ export function FinancesClient({
                               <button
                                 type="button"
                                 onClick={() => setEditingId(null)}
-                                className="rounded-lg border border-slate-700 p-1.5 text-slate-400 hover:text-white cursor-pointer"
+                                className="rounded-lg border border-zinc-700 p-1.5 text-zinc-400 hover:text-white cursor-pointer"
                                 title="Cancelar"
                               >
                                 <X className="h-3.5 w-3.5" />
@@ -622,14 +624,14 @@ export function FinancesClient({
                               <button
                                 type="button"
                                 onClick={() => startInlineEdit(row)}
-                                className="rounded-lg border border-slate-700/90 p-1.5 text-slate-400 transition hover:border-amber-500/50 hover:bg-slate-800 hover:text-amber-300 cursor-pointer"
+                                className="rounded-lg border border-zinc-700/90 p-1.5 text-zinc-400 transition hover:border-amber-500/50 hover:bg-zinc-800 hover:text-amber-300 cursor-pointer"
                                 title="Editar cobrado y costo"
                               >
                                 <Pencil className="h-3.5 w-3.5" />
                               </button>
                               <Link
                                 href={`/vehiculos/${row.vehicleId}`}
-                                className="inline-flex items-center gap-1 rounded-lg border border-slate-800 px-2.5 py-1.5 text-[11px] font-medium text-slate-300 transition hover:border-slate-600 hover:bg-slate-800"
+                                className="inline-flex items-center gap-1 rounded-lg border border-zinc-800 px-2.5 py-1.5 text-[11px] font-medium text-zinc-300 transition hover:border-zinc-600 hover:bg-zinc-800"
                               >
                                 Ficha
                                 <ArrowRight className="h-3 w-3" />
@@ -645,7 +647,7 @@ export function FinancesClient({
             </div>
 
             {/* Mobile Cards */}
-            <div className="divide-y divide-slate-800/80 md:hidden">
+            <div className="divide-y divide-zinc-800/80 md:hidden">
               {data.repairs.map((row) => {
                 const isEditing = editingId === row.id;
                 return (
@@ -657,10 +659,10 @@ export function FinancesClient({
                       >
                         <PlateBadge plate={row.licensePlate} size="sm" />
                         <div>
-                          <p className="text-xs font-semibold text-slate-100">
+                          <p className="text-xs font-semibold text-zinc-100">
                             {row.brand} {row.model}
                           </p>
-                          <p className="font-mono text-[11px] text-slate-400 tabular-nums">
+                          <p className="font-mono text-[11px] text-zinc-400 tabular-nums">
                             {formatShortDate(row.serviceDate)} · {row.serviceType}
                           </p>
                         </div>
@@ -670,7 +672,7 @@ export function FinancesClient({
                         <button
                           type="button"
                           onClick={() => startInlineEdit(row)}
-                          className="rounded-lg border border-slate-700 p-1.5 text-slate-400 cursor-pointer"
+                          className="rounded-lg border border-zinc-700 p-1.5 text-zinc-400 cursor-pointer"
                           aria-label="Editar montos"
                         >
                           <Pencil className="h-3.5 w-3.5" />
@@ -679,10 +681,10 @@ export function FinancesClient({
                     </div>
 
                     {isEditing ? (
-                      <div className="space-y-3 rounded-xl border border-slate-800 bg-slate-950/80 p-3">
+                      <div className="space-y-3 rounded-xl border border-zinc-800 bg-zinc-950/80 p-3">
                         <div className="grid grid-cols-2 gap-2.5">
                           <div>
-                            <label className="mb-1 block text-[11px] font-medium text-slate-400">
+                            <label className="mb-1 block text-[11px] font-medium text-zinc-400">
                               Cobrado (ARS)
                             </label>
                             <input
@@ -691,11 +693,11 @@ export function FinancesClient({
                               min={0}
                               value={draftRevenue}
                               onChange={(e) => setDraftRevenue(e.target.value)}
-                              className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 font-mono text-sm text-white tabular-nums outline-none focus:border-amber-500"
+                              className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 font-mono text-sm text-white tabular-nums outline-none focus:border-amber-500"
                             />
                           </div>
                           <div>
-                            <label className="mb-1 block text-[11px] font-medium text-slate-400">
+                            <label className="mb-1 block text-[11px] font-medium text-zinc-400">
                               Costo (ARS)
                             </label>
                             <input
@@ -706,7 +708,7 @@ export function FinancesClient({
                               onChange={(e) =>
                                 setDraftPartsCost(e.target.value)
                               }
-                              className="min-h-[44px] w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 font-mono text-sm text-white tabular-nums outline-none focus:border-amber-500"
+                              className="min-h-[44px] w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 font-mono text-sm text-white tabular-nums outline-none focus:border-amber-500"
                             />
                           </div>
                         </div>
@@ -714,7 +716,7 @@ export function FinancesClient({
                           <button
                             type="button"
                             onClick={() => setEditingId(null)}
-                            className="min-h-[44px] rounded-xl border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-300 cursor-pointer"
+                            className="min-h-[44px] rounded-xl border border-zinc-700 px-3 py-2 text-xs font-semibold text-zinc-300 cursor-pointer"
                           >
                             Cancelar
                           </button>
@@ -722,28 +724,28 @@ export function FinancesClient({
                             type="button"
                             disabled={savingRow}
                             onClick={() => saveInlineEdit(row.id)}
-                            className="min-h-[44px] rounded-xl bg-emerald-500 px-3 py-2 text-xs font-bold text-slate-950 cursor-pointer"
+                            className="min-h-[44px] rounded-xl bg-emerald-500 px-3 py-2 text-xs font-bold text-zinc-950 cursor-pointer"
                           >
                             Guardar
                           </button>
                         </div>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-3 gap-2 rounded-xl border border-slate-800/80 bg-slate-950/60 p-2.5 font-mono text-xs tabular-nums">
+                      <div className="grid grid-cols-3 gap-2 rounded-xl border border-zinc-800/80 bg-zinc-950/60 p-2.5 font-mono text-xs tabular-nums">
                         <div>
-                          <p className="text-[10px] text-slate-500">Cobrado</p>
-                          <p className="font-semibold text-slate-100">
+                          <p className="text-[10px] text-zinc-500">Cobrado</p>
+                          <p className="font-semibold text-zinc-100">
                             {formatCurrency(row.revenue)}
                           </p>
                         </div>
                         <div>
-                          <p className="text-[10px] text-slate-500">Costo</p>
-                          <p className="text-slate-300">
+                          <p className="text-[10px] text-zinc-500">Costo</p>
+                          <p className="text-zinc-300">
                             {formatCurrency(row.partsCost)}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-[10px] text-slate-500">Ganancia</p>
+                          <p className="text-[10px] text-zinc-500">Ganancia</p>
                           <p
                             className={`font-bold ${
                               row.profit >= 0
