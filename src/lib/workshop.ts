@@ -7,6 +7,10 @@ export const WORKSHOP_INFO = {
   shortAddress: "Humberto Primo 820, Rosario",
   instagramHandle: "@gallardoperformance",
   instagramUrl: "https://www.instagram.com/gallardoperformance/?hl=es",
+  whatsappNumber: "5493412122472",
+  whatsappDisplay: "+54 9 341 212-2472",
+  whatsappUrl:
+    "https://wa.me/5493412122472?text=Hola%20GallardoPerformance!%20Quisiera%20hacer%20una%20consulta.",
   defaultPhonePrefix: "+54 9 341 ",
 } as const;
 

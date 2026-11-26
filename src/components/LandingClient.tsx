@@ -521,20 +521,28 @@ export function LandingClient() {
 
             <div>
               <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
-                Instagram
+                WhatsApp y redes
               </p>
               <a
-                href={WORKSHOP_INFO.instagramUrl}
+                href={WORKSHOP_INFO.whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-2.5 inline-flex items-center gap-1 text-sm font-semibold text-white transition hover:text-zinc-300"
+                className="mt-2.5 inline-flex items-center gap-1.5 text-sm font-semibold text-white transition hover:text-[#25D366]"
               >
-                <span>{WORKSHOP_INFO.instagramHandle}</span>
+                <span>{WORKSHOP_INFO.whatsappDisplay}</span>
                 <ArrowUpRight className="h-3.5 w-3.5 text-zinc-500" />
               </a>
-              <p className="mt-1 text-xs text-zinc-500">
-                Trabajos diarios y consultas
-              </p>
+              <div className="mt-1.5">
+                <a
+                  href={WORKSHOP_INFO.instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-medium text-zinc-400 transition hover:text-white"
+                >
+                  <span>{WORKSHOP_INFO.instagramHandle}</span>
+                  <ArrowUpRight className="h-3 w-3 text-zinc-500" />
+                </a>
+              </div>
             </div>
 
             <div>
@@ -556,12 +564,34 @@ export function LandingClient() {
         </div>
       </section>
 
-      <footer className="border-t border-white/[0.06]">
+      <footer className="border-t border-white/[0.06] pb-20 sm:pb-0">
         <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-2 px-5 py-6 text-[11px] text-zinc-500 sm:flex-row sm:items-center sm:px-8">
           <span>© {new Date().getFullYear()} GallardoPerformance</span>
           <span>Humberto Primo 820 · Rosario, Santa Fe</span>
         </div>
       </footer>
+
+      {/* Floating WhatsApp Inquiries Button */}
+      <a
+        href={WORKSHOP_INFO.whatsappUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        id="floating-whatsapp-btn"
+        aria-label="Consultas por WhatsApp al 341 212-2472"
+        title="Consultas por WhatsApp"
+        className="group fixed right-4 bottom-[max(1.25rem,env(safe-area-inset-bottom))] z-50 inline-flex h-14 items-center justify-center gap-2.5 rounded-full bg-[#25D366] px-4 text-white shadow-2xl shadow-black/60 ring-1 ring-white/20 transition hover:scale-[1.03] hover:bg-[#22c35e] active:scale-95 sm:right-6 sm:bottom-6 sm:px-5"
+      >
+        <svg
+          viewBox="0 0 32 32"
+          className="h-6 w-6 shrink-0 fill-current"
+          aria-hidden="true"
+        >
+          <path d="M16.004 3C8.833 3 3 8.832 3 16.002c0 2.29.598 4.525 1.734 6.494L3 29l6.678-1.751A12.94 12.94 0 0 0 16.004 29C23.173 29 29 23.17 29 16.002 29 8.832 23.173 3 16.004 3zm0 23.62c-2.01 0-3.982-.54-5.702-1.56l-.409-.243-3.963 1.039 1.058-3.864-.266-.424a10.56 10.56 0 0 1-1.622-5.566c0-5.847 4.757-10.604 10.605-10.604 2.833 0 5.495 1.104 7.498 3.108a10.535 10.535 0 0 1 3.106 7.496c0 5.848-4.758 10.618-10.305 10.618zm5.816-7.953c-.319-.16-1.886-.931-2.179-1.037-.292-.106-.505-.16-.718.16-.212.319-.824 1.037-1.01 1.25-.186.213-.372.24-.691.08-.319-.16-1.347-.497-2.565-1.583-.948-.846-1.589-1.89-1.775-2.21-.186-.319-.02-.491.14-.65.143-.143.319-.372.479-.558.16-.186.212-.319.319-.532.106-.212.053-.398-.027-.558-.08-.16-.718-1.729-.984-2.367-.259-.622-.522-.538-.718-.548l-.611-.011c-.213 0-.558.08-.851.399-.292.319-1.117 1.091-1.117 2.661s1.144 3.086 1.303 3.299c.16.213 2.25 3.437 5.452 4.82.762.329 1.356.526 1.82.673.765.243 1.461.209 2.011.127.614-.092 1.886-.771 2.152-1.516.266-.745.266-1.383.186-1.516-.08-.133-.292-.213-.611-.372z" />
+        </svg>
+        <span className="hidden text-xs font-bold tracking-tight sm:inline">
+          Consultas
+        </span>
+      </a>
     </div>
   );
 }
