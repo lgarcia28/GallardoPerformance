@@ -1,3 +1,4 @@
+import { requireAdminApi } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { getWorkshopRepository } from "@/db";
 import { getAppointmentsData } from "@/lib/queries";
@@ -15,6 +16,9 @@ const VALID_STATUSES: AppointmentStatus[] = [
 ];
 
 export async function GET(request: Request) {
+  const auth = await requireAdminApi();
+  if (auth.response) return auth.response;
+
   try {
     const { searchParams } = new URL(request.url);
     const from = searchParams.get("from") ?? undefined;
@@ -31,6 +35,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireAdminApi();
+  if (auth.response) return auth.response;
+
   try {
     const body = await request.json();
 

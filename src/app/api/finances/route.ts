@@ -1,7 +1,11 @@
+import { requireAdminApi } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { getFinancesData } from "@/lib/queries";
 
 export async function GET(request: Request) {
+  const auth = await requireAdminApi();
+  if (auth.response) return auth.response;
+
   try {
     const { searchParams } = new URL(request.url);
     const from = searchParams.get("from") ?? undefined;

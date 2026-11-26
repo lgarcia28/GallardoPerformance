@@ -2,24 +2,8 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import {
-  ArrowRight,
-  CalendarClock,
-  CheckCircle2,
-  ClipboardCheck,
-  Cpu,
-  Disc,
-  ExternalLink,
-  Gauge,
-  Lock,
-  MapPin,
-  MessageCircle,
-  Search,
-  ShieldCheck,
-  Wrench,
-} from "lucide-react";
+import { ArrowUpRight, Search } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
-import { PlateBadge } from "@/components/PlateBadge";
 import {
   formatMileage,
   formatShortDate,
@@ -52,7 +36,7 @@ interface PublicHistoryResponse {
   nextMaintenance?: {
     serviceType: string;
     dueDate: string;
-    severity: "overdue" | "upcoming" | "scheduled" | "none";
+    severity: "overdue" | "upcoming" | "ok" | "notified";
   } | null;
   repairs?: PublicRepair[];
   error?: string;
@@ -60,40 +44,34 @@ interface PublicHistoryResponse {
 
 const SERVICES = [
   {
-    icon: Wrench,
-    title: "Service completo y mantenimiento",
-    description:
-      "Cambio de aceite sintético, filtros originales, control de fluidos y chequeo multipunto registrado en el historial digital de tu auto.",
+    num: "01",
+    title: "Service y mantenimiento",
+    detail:
+      "Cambio de aceite, filtros, fluidos y revisión general con registro por patente y kilometraje.",
   },
   {
-    icon: Cpu,
+    num: "02",
     title: "Diagnóstico computarizado",
-    description:
-      "Escaneo de inyección, fallas electrónicas, sensores y módulos con equipamiento actualizado para detectar problemas con precisión.",
+    detail:
+      "Escaneo de inyección, electrónica y sensores para encontrar el origen exacto de cada falla.",
   },
   {
-    icon: Gauge,
+    num: "03",
     title: "Distribución y mecánica integral",
-    description:
-      "Kits de distribución, bomba de agua, embrague, correas y reparaciones de motor con repuestos de primera línea.",
+    detail:
+      "Kits de distribución, bomba de agua, embrague y trabajos de motor con repuestos de primera línea.",
   },
   {
-    icon: Disc,
+    num: "04",
     title: "Frenos, suspensión y tren delantero",
-    description:
-      "Pastillas, discos, rectificado, amortiguadores, bujes y alineado de componentes para un manejo firme y seguro.",
+    detail:
+      "Pastillas, discos, amortiguadores, bujes y puesta a punto general para un manejo firme y seguro.",
   },
   {
-    icon: ShieldCheck,
-    title: "Performance y puesta a punto",
-    description:
-      "Mejoras mecánicas, puesta a punto y optimización general para que tu vehículo entregue siempre su mejor rendimiento.",
-  },
-  {
-    icon: ClipboardCheck,
-    title: "Libro de Service Digital",
-    description:
-      "Cada trabajo queda guardado por patente con fecha y kilometraje. Consultalo cuando quieras y sumá valor real al momento de vender tu auto.",
+    num: "05",
+    title: "Performance y mejoras",
+    detail:
+      "Optimización mecánica y puesta a punto para que tu auto entregue siempre su mejor rendimiento.",
   },
 ];
 
@@ -112,7 +90,7 @@ export function LandingClient() {
     e.preventDefault();
     const clean = plateInput.trim();
     if (!clean) {
-      setError("Ingresá una patente para consultar (ej. AA 123 BB o ABC 123).");
+      setError("Escribí una patente para buscar (ej. AD 482 KL).");
       return;
     }
 
@@ -125,15 +103,15 @@ export function LandingClient() {
       );
       const data: PublicHistoryResponse = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "No pudimos realizar la consulta.");
+        throw new Error(data.error || "No se pudo consultar la patente.");
       }
       setResult(data);
       setTimeout(() => {
         resultRef.current?.scrollIntoView({
           behavior: "smooth",
-          block: "start",
+          block: "nearest",
         });
-      }, 60);
+      }, 50);
     } catch (err) {
       setResult(null);
       setError(
@@ -146,572 +124,368 @@ export function LandingClient() {
     }
   }
 
-  function handleResetLookup() {
+  function handleReset() {
     setResult(null);
     setError(null);
     setPlateInput("");
     inputRef.current?.focus();
   }
 
-  const generalInstagramUrl = WORKSHOP_INFO.instagramUrl;
-
   return (
-    <div className="min-h-screen bg-[#080B12] text-slate-100">
-      {/* Top Navigation */}
-      <header className="sticky top-0 z-40 border-b border-white/[0.07] bg-[#080B12]/90 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#0A0A0A] text-neutral-100 selection:bg-red-600 selection:text-white">
+      {/* Minimal Header */}
+      <header className="sticky top-0 z-40 border-b border-neutral-900 bg-[#0A0A0A]/90 backdrop-blur-md">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
           <Link href="/" className="flex items-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo-gallardo.png"
               alt={WORKSHOP_INFO.name}
-              width={200}
-              height={38}
-              className="h-7 w-auto object-contain sm:h-8"
+              width={185}
+              height={35}
+              className="h-6 w-auto object-contain sm:h-7"
             />
           </Link>
 
           <nav
-            className="hidden items-center gap-7 text-xs font-semibold text-slate-300 md:flex"
-            aria-label="Navegación pública"
+            className="flex items-center gap-5 text-xs font-medium text-neutral-400 sm:gap-7"
+            aria-label="Navegación"
           >
-            <a href="#historial" className="transition hover:text-white">
-              Consultar historial
+            <a
+              href="#historial"
+              className="transition hover:text-white"
+            >
+              Historial
             </a>
-            <a href="#servicios" className="transition hover:text-white">
+            <a
+              href="#servicios"
+              className="hidden transition hover:text-white sm:inline"
+            >
               Servicios
             </a>
-            <a href="#ubicacion" className="transition hover:text-white">
-              Ubicación
-            </a>
-          </nav>
-
-          <div className="flex items-center gap-2">
             <a
-              href={generalInstagramUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden min-h-[38px] items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:bg-white/[0.08] sm:inline-flex"
+              href="#contacto"
+              className="hidden transition hover:text-white sm:inline"
             >
-              <span>Instagram</span>
-              <ExternalLink className="h-3.5 w-3.5 text-slate-400" />
+              Ubicación
             </a>
             <Link
               href="/admin"
-              className="inline-flex min-h-[38px] items-center gap-1.5 rounded-lg border border-slate-700/90 bg-slate-900/90 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:border-amber-500/50 hover:text-amber-300"
+              className="border-l border-neutral-800 pl-5 text-neutral-300 transition hover:text-white sm:pl-7"
             >
-              <Lock className="h-3.5 w-3.5 text-amber-400" />
-              <span>Acceso taller</span>
+              Admin
             </Link>
-          </div>
+          </nav>
         </div>
       </header>
 
-      {/* Editorial Hero + License Plate Lookup */}
-      <section className="relative overflow-hidden border-b border-white/[0.06]">
-        {/* Full-bleed bespoke workshop photography with directional obsidian scrim */}
-        <div className="absolute inset-0" aria-hidden="true">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/hero-workshop.jpg"
-            alt=""
-            className="h-full w-full object-cover object-center opacity-55"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#080B12] via-[#080B12]/88 to-[#080B12]/55" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#080B12] via-transparent to-[#080B12]/40" />
-        </div>
-
-        <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-12 lg:gap-12 lg:px-8 lg:py-24">
-          {/* Left: Brand Story & Primary Copy */}
-          <div className="space-y-6 lg:col-span-7">
-            <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-red-400">
-              <MapPin className="h-3.5 w-3.5" />
-              {WORKSHOP_INFO.address}
+      <main className="mx-auto max-w-5xl px-5 sm:px-8">
+        {/* Editorial Hero */}
+        <section className="pt-14 pb-12 sm:pt-20 sm:pb-16">
+          <div className="max-w-2xl">
+            <p className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-neutral-400">
+              <span className="inline-block h-1.5 w-1.5 bg-red-600" />
+              Humberto Primo 820 · Rosario
             </p>
 
-            <h1 className="text-3xl font-extrabold leading-[1.1] tracking-tight text-white sm:text-5xl">
-              Mantenimiento, diagnóstico y mejoras para que tu auto rinda al
-              máximo.
+            <h1 className="mt-5 text-4xl font-bold leading-[1.06] tracking-[-0.03em] text-white sm:text-6xl">
+              Mecánica, diagnóstico y performance.
             </h1>
 
-            <p className="max-w-xl text-sm leading-relaxed text-slate-300 sm:text-base">
-              {WORKSHOP_INFO.description} Cada servicio realizado en nuestro
-              taller queda registrado en el historial digital de tu vehículo
-              para que lo consultes en cualquier momento con tu patente.
+            <p className="mt-5 max-w-xl text-sm leading-relaxed text-neutral-400 sm:text-base">
+              {WORKSHOP_INFO.description}
             </p>
-
-            <div className="flex flex-wrap items-center gap-3 pt-1">
-              <a
-                href="#historial"
-                className="inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-bold text-slate-950 shadow-lg shadow-amber-500/15 transition hover:bg-amber-400"
-              >
-                <Search className="h-4 w-4" />
-                Consultar mi patente
-              </a>
-              <a
-                href={MAPS_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.06] px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/[0.12]"
-              >
-                <MapPin className="h-4 w-4 text-red-400" />
-                Cómo llegar
-              </a>
-            </div>
-
-            <div className="grid max-w-lg grid-cols-3 gap-4 border-t border-white/10 pt-6">
-              <div>
-                <p className="text-lg font-extrabold text-white sm:text-xl">
-                  100%
-                </p>
-                <p className="text-[11px] leading-snug text-slate-400">
-                  Historial digital por patente
-                </p>
-              </div>
-              <div>
-                <p className="text-lg font-extrabold text-white sm:text-xl">
-                  A medida
-                </p>
-                <p className="text-[11px] leading-snug text-slate-400">
-                  Diagnóstico y service integral
-                </p>
-              </div>
-              <div>
-                <p className="text-lg font-extrabold text-white sm:text-xl">
-                  Rosario
-                </p>
-                <p className="text-[11px] leading-snug text-slate-400">
-                  Humberto Primo 820
-                </p>
-              </div>
-            </div>
           </div>
 
-          {/* Right: Interactive License Plate History Lookup Card */}
-          <div id="historial" className="scroll-mt-24 lg:col-span-5">
-            <div className="rounded-2xl border border-white/12 bg-[#0D1322]/92 p-5 shadow-2xl shadow-black/70 backdrop-blur-md sm:p-6">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-amber-400">
-                    Libro de Service Digital
-                  </p>
-                  <h2 className="mt-1 text-xl font-bold tracking-tight text-white">
-                    Consultá el historial de tu auto
-                  </h2>
-                </div>
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-500/25 bg-amber-500/12 text-amber-400">
-                  <ClipboardCheck className="h-5 w-5" />
-                </div>
-              </div>
+          {/* Direct, Minimal Patente Lookup */}
+          <div id="historial" className="mt-10 max-w-xl scroll-mt-24">
+            <label
+              htmlFor="public-plate-input"
+              className="block font-mono text-[11px] uppercase tracking-[0.16em] text-neutral-400"
+            >
+              Consultá el historial de reparaciones de tu auto
+            </label>
 
-              <p className="mt-2 text-xs leading-relaxed text-slate-400">
-                Ingresá tu patente para ver todas las reparaciones, fechas,
-                kilometrajes y el próximo mantenimiento recomendado en{" "}
-                <strong className="text-slate-200">GallardoPerformance</strong>.
+            <form
+              onSubmit={handleLookup}
+              className="mt-3 flex flex-col gap-2.5 sm:flex-row"
+            >
+              <div className="relative flex-1">
+                <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+                <input
+                  ref={inputRef}
+                  id="public-plate-input"
+                  type="text"
+                  autoCapitalize="characters"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  value={plateInput}
+                  onChange={(e) => setPlateInput(e.target.value.toUpperCase())}
+                  placeholder="Ingresá tu patente (ej. AD 482 KL)"
+                  className="min-h-[48px] w-full rounded-lg border border-neutral-800 bg-[#121212] py-2.5 pr-4 pl-10 font-mono text-sm font-semibold uppercase tracking-[0.12em] text-white placeholder-neutral-500 outline-none transition focus:border-neutral-500"
+                />
+              </div>
+              <button
+                type="submit"
+                id="public-plate-submit"
+                disabled={loading}
+                className="inline-flex min-h-[48px] shrink-0 items-center justify-center rounded-lg bg-white px-6 py-2.5 text-sm font-semibold text-neutral-950 transition hover:bg-neutral-200 active:scale-[0.99] disabled:opacity-60 cursor-pointer"
+              >
+                {loading ? "Buscando..." : "Ver historial"}
+              </button>
+            </form>
+
+            {error && (
+              <p role="alert" className="mt-2.5 text-xs text-red-400">
+                {error}
               </p>
-
-              <form onSubmit={handleLookup} className="mt-5 space-y-3.5">
-                {/* Authentic Mercosur-inspired License Plate Input */}
-                <div className="overflow-hidden rounded-xl border border-slate-700 bg-slate-950 transition focus-within:border-amber-500/80">
-                  <div className="flex items-center justify-between bg-[#153E90] px-3 py-1">
-                    <span className="text-[9px] font-bold tracking-[0.22em] text-blue-100">
-                      REPÚBLICA ARGENTINA
-                    </span>
-                    <span className="text-[9px] font-semibold tracking-widest text-blue-200/90">
-                      PATENTE
-                    </span>
-                  </div>
-                  <div className="flex items-center px-3 py-1.5">
-                    <input
-                      ref={inputRef}
-                      id="public-plate-input"
-                      type="text"
-                      autoCapitalize="characters"
-                      autoCorrect="off"
-                      spellCheck={false}
-                      value={plateInput}
-                      onChange={(e) =>
-                        setPlateInput(e.target.value.toUpperCase())
-                      }
-                      placeholder="AA 123 BB"
-                      aria-label="Ingresá la patente del vehículo"
-                      className="min-h-[48px] w-full bg-transparent text-center font-mono text-2xl font-extrabold uppercase tracking-[0.2em] text-white placeholder-slate-600 outline-none"
-                    />
-                  </div>
-                </div>
-
-                {error && (
-                  <p
-                    role="alert"
-                    className="rounded-xl border border-red-500/35 bg-red-500/10 px-3.5 py-2.5 text-xs font-medium text-red-300"
-                  >
-                    {error}
-                  </p>
-                )}
-
-                <button
-                  type="submit"
-                  id="public-plate-submit"
-                  disabled={loading}
-                  className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-5 py-3 text-sm font-bold text-slate-950 shadow-lg shadow-amber-500/15 transition hover:bg-amber-400 active:scale-[0.99] disabled:opacity-60 cursor-pointer"
-                >
-                  <Search className="h-4 w-4" />
-                  {loading
-                    ? "Buscando historial..."
-                    : "Ver historial de reparaciones"}
-                </button>
-
-                <p className="text-center text-[11px] text-slate-500">
-                  Podés escribirla con o sin espacios (ej.{" "}
-                  <span className="font-mono text-slate-400">AD 482 KL</span> o{" "}
-                  <span className="font-mono text-slate-400">AD482KL</span>).
-                </p>
-              </form>
-            </div>
+            )}
           </div>
-        </div>
-      </section>
 
-      {/* Public History Result Panel (appears immediately when user queries a plate) */}
-      {result && (
-        <section
-          ref={resultRef}
-          aria-live="polite"
-          className="scroll-mt-20 border-b border-white/[0.06] bg-[#0B101C] py-10 sm:py-14"
-        >
-          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-            {result.found && result.vehicle ? (
-              <div className="space-y-6">
-                {/* Vehicle Summary Card */}
-                <div className="rounded-2xl border border-slate-800 bg-[#0F1627] p-5 shadow-xl sm:p-6">
-                  <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-4">
+          {/* Lookup Result Ledger */}
+          {result && (
+            <div
+              ref={resultRef}
+              aria-live="polite"
+              className="mt-8 border border-neutral-800 bg-[#111111] p-5 sm:p-7 rounded-lg"
+            >
+              {result.found && result.vehicle ? (
+                <div>
+                  {/* Vehicle Header */}
+                  <div className="flex flex-col justify-between gap-4 border-b border-neutral-800 pb-5 sm:flex-row sm:items-center">
+                    <div className="flex items-center gap-3.5">
                       <BrandLogo
                         brandName={result.vehicle.brand}
                         brandSlug={result.vehicle.brandSlug}
-                        size="lg"
+                        size="md"
                       />
                       <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <PlateBadge plate={result.vehicle.licensePlate} />
-                          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-300">
-                            <CheckCircle2 className="h-3 w-3" />
-                            Historial verificado
+                        <div className="flex flex-wrap items-center gap-2.5">
+                          <h2 className="text-lg font-bold tracking-tight text-white sm:text-xl">
+                            {result.vehicle.brand} {result.vehicle.model}{" "}
+                            <span className="font-normal text-neutral-400">
+                              {result.vehicle.year}
+                            </span>
+                          </h2>
+                          <span className="rounded border border-neutral-700 bg-neutral-900 px-2 py-0.5 font-mono text-xs font-semibold tracking-wider text-neutral-200">
+                            {result.vehicle.licensePlate}
                           </span>
                         </div>
-                        <h3 className="mt-2 text-xl font-extrabold tracking-tight text-white sm:text-2xl">
-                          {result.vehicle.brand} {result.vehicle.model}{" "}
-                          <span className="font-normal text-slate-400">
-                            ({result.vehicle.year})
-                          </span>
-                        </h3>
-                        <p className="mt-0.5 text-xs text-slate-400">
+                        <p className="mt-1 text-xs text-neutral-400">
                           {result.vehicle.engine
-                            ? `Motor ${result.vehicle.engine} · `
+                            ? `${result.vehicle.engine} · `
                             : ""}
-                          Último kilometraje registrado:{" "}
-                          <strong className="font-mono text-slate-200">
+                          Último registro:{" "}
+                          <span className="font-mono text-neutral-200">
                             {formatMileage(result.vehicle.currentMileage)}
-                          </strong>
+                          </span>
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2 sm:flex-col sm:items-end">
-                      <span className="rounded-xl border border-slate-800 bg-slate-950/70 px-3.5 py-2 font-mono text-xs font-bold text-amber-300">
-                        {result.repairs?.length ?? 0}{" "}
-                        {(result.repairs?.length ?? 0) === 1
-                          ? "servicio registrado"
-                          : "servicios registrados"}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={handleResetLookup}
-                        className="text-xs font-semibold text-slate-400 underline underline-offset-4 transition hover:text-white cursor-pointer"
-                      >
-                        Consultar otra patente
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Next Recommended Maintenance Banner */}
-                  {result.nextMaintenance && (
-                    <div
-                      className={`mt-5 flex flex-col gap-3 rounded-xl border px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between ${
-                        result.nextMaintenance.severity === "overdue"
-                          ? "border-red-500/30 bg-red-500/10"
-                          : "border-amber-500/30 bg-amber-500/10"
-                      }`}
+                    <button
+                      type="button"
+                      onClick={handleReset}
+                      className="self-start text-xs text-neutral-400 underline underline-offset-4 transition hover:text-white sm:self-auto cursor-pointer"
                     >
-                      <div className="flex items-start gap-3">
-                        <CalendarClock
-                          className={`mt-0.5 h-5 w-5 shrink-0 ${
-                            result.nextMaintenance.severity === "overdue"
-                              ? "text-red-400"
-                              : "text-amber-400"
-                          }`}
-                        />
-                        <div>
-                          <p className="text-xs font-bold uppercase tracking-wider text-slate-200">
-                            Próximo mantenimiento recomendado
-                          </p>
-                          <p className="mt-0.5 text-sm text-slate-300">
-                            <strong>
-                              {result.nextMaintenance.serviceType}
-                            </strong>{" "}
-                            · Fecha estimada:{" "}
-                            <span className="font-mono font-semibold text-white">
-                              {formatShortDate(result.nextMaintenance.dueDate)}
-                            </span>
-                          </p>
-                        </div>
-                      </div>
-                      <a
-                        href={generalInstagramUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex min-h-[38px] shrink-0 items-center justify-center gap-1.5 rounded-lg bg-white/10 px-3.5 py-1.5 text-xs font-bold text-white transition hover:bg-white/20"
-                      >
-                        Coordinar turno
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      </a>
-                    </div>
-                  )}
-                </div>
-
-                {/* Chronological Repair History */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-bold uppercase tracking-wider text-slate-400">
-                      Historial de reparaciones y servicios
-                    </h4>
-                    <span className="text-xs text-slate-500">
-                      Del más reciente al más antiguo
-                    </span>
+                      Buscar otra patente
+                    </button>
                   </div>
 
-                  {result.repairs && result.repairs.length > 0 ? (
-                    <div className="space-y-3">
-                      {result.repairs.map((repair) => (
-                        <article
-                          key={repair.id}
-                          className="rounded-2xl border border-slate-800/90 bg-[#0F1627]/85 p-4 transition hover:border-slate-700 sm:p-5"
-                        >
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/25 bg-amber-500/10 px-2.5 py-1 text-xs font-bold text-amber-300">
-                              <Wrench className="h-3.5 w-3.5" />
-                              {repair.serviceType}
-                            </span>
-
-                            <div className="flex items-center gap-3 font-mono text-xs text-slate-400">
-                              <span>{formatShortDate(repair.serviceDate)}</span>
-                              <span className="text-slate-600">•</span>
-                              <span className="font-semibold text-slate-200">
-                                {formatMileage(repair.mileageAtService)}
-                              </span>
-                            </div>
-                          </div>
-
-                          <p className="mt-3 text-sm leading-relaxed text-slate-200">
-                            {repair.description}
-                          </p>
-
-                          {repair.reminderDueDate && (
-                            <p className="mt-3 border-t border-slate-800/80 pt-2.5 text-[11px] text-slate-400">
-                              Próximo control sugerido:{" "}
-                              <span className="font-mono font-semibold text-slate-200">
-                                {formatShortDate(repair.reminderDueDate)}
-                              </span>
-                            </p>
-                          )}
-                        </article>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="rounded-2xl border border-dashed border-slate-800 bg-slate-950/50 p-8 text-center">
-                      <p className="text-sm font-medium text-slate-300">
-                        Este vehículo está registrado, pero todavía no tiene
-                        servicios cargados.
-                      </p>
+                  {/* Next Maintenance Note */}
+                  {result.nextMaintenance && (
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-800 py-3.5 text-xs">
+                      <span className="text-neutral-400">
+                        Próximo mantenimiento sugerido:{" "}
+                        <strong className="font-semibold text-white">
+                          {result.nextMaintenance.serviceType}
+                        </strong>
+                      </span>
+                      <span
+                        className={`font-mono font-semibold ${
+                          result.nextMaintenance.severity === "overdue"
+                            ? "text-red-400"
+                            : "text-neutral-200"
+                        }`}
+                      >
+                        {formatShortDate(result.nextMaintenance.dueDate)}
+                      </span>
                     </div>
                   )}
+
+                  {/* Service Ledger Rows */}
+                  <div className="divide-y divide-neutral-800/80">
+                    {result.repairs && result.repairs.length > 0 ? (
+                      result.repairs.map((repair) => (
+                        <div
+                          key={repair.id}
+                          className="grid grid-cols-1 gap-1.5 py-4 sm:grid-cols-12 sm:gap-4"
+                        >
+                          <div className="flex items-center gap-2 font-mono text-xs text-neutral-400 sm:col-span-3 sm:flex-col sm:items-start sm:gap-0.5">
+                            <span className="text-neutral-200">
+                              {formatShortDate(repair.serviceDate)}
+                            </span>
+                            <span>{formatMileage(repair.mileageAtService)}</span>
+                          </div>
+                          <div className="sm:col-span-9">
+                            <p className="text-sm font-semibold text-white">
+                              {repair.serviceType}
+                            </p>
+                            <p className="mt-1 text-xs leading-relaxed text-neutral-400">
+                              {repair.description}
+                            </p>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="py-6 text-xs text-neutral-400">
+                        El vehículo está registrado pero todavía no tiene
+                        trabajos cargados.
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ) : (
-              /* Plate Not Found State */
-              <div className="rounded-2xl border border-slate-800 bg-[#0F1627] p-7 text-center shadow-xl sm:p-10">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-700 bg-slate-900 text-amber-400">
-                  <Search className="h-5 w-5" />
-                </div>
-                <h3 className="mt-4 text-lg font-bold text-white">
-                  No encontramos registros para la patente{" "}
-                  <span className="font-mono text-amber-300">
-                    {result.searchedPlate || plateInput}
-                  </span>
-                </h3>
-                <p className="mx-auto mt-2 max-w-md text-xs leading-relaxed text-slate-400">
-                  Verificá que esté bien escrita. Si todavía no atendiste tu
-                  auto en GallardoPerformance, podés escribirnos para coordinar
-                  tu primer service y empezar tu historial digital.
-                </p>
-                <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              ) : (
+                <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                  <div>
+                    <p className="text-sm font-semibold text-white">
+                      No encontramos registros para{" "}
+                      <span className="font-mono text-neutral-300">
+                        {result.searchedPlate || plateInput}
+                      </span>
+                    </p>
+                    <p className="mt-1 text-xs text-neutral-400">
+                      Revisá que la patente esté bien escrita o consultanos si
+                      es tu primera visita al taller.
+                    </p>
+                  </div>
                   <button
                     type="button"
-                    onClick={handleResetLookup}
-                    className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:bg-slate-800 cursor-pointer"
+                    onClick={handleReset}
+                    className="self-start rounded-lg border border-neutral-700 px-3.5 py-2 text-xs font-medium text-neutral-200 transition hover:border-neutral-500 hover:text-white sm:self-auto cursor-pointer"
                   >
-                    Probar otra patente
+                    Intentar de nuevo
                   </button>
-                  <a
-                    href={generalInstagramUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950 transition hover:bg-amber-400"
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                    Contactar a GallardoPerformance
-                  </a>
                 </div>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* Services Section */}
-      <section id="servicios" className="scroll-mt-20 py-16 sm:py-20">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="max-w-2xl">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-400">
-              Qué hacemos
-            </p>
-            <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
-              Servicios especializados con criterio técnico y transparencia
-            </h2>
-            <p className="mt-3 text-sm leading-relaxed text-slate-400">
-              Trabajamos todas las marcas con seguimiento real de cada
-              intervención, presupuestos detallados y aviso oportuno para tu
-              próximo mantenimiento.
-            </p>
-          </div>
-
-          <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {SERVICES.map((service) => {
-              const Icon = service.icon;
-              return (
-                <div
-                  key={service.title}
-                  className="rounded-2xl border border-slate-800/90 bg-[#0D1322] p-6 transition hover:border-slate-700"
-                >
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-700/80 bg-slate-950 text-amber-400">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <h3 className="mt-4 text-base font-bold text-white">
-                    {service.title}
-                  </h3>
-                  <p className="mt-2 text-xs leading-relaxed text-slate-400">
-                    {service.description}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Location & Contact Section */}
-      <section
-        id="ubicacion"
-        className="scroll-mt-20 border-t border-white/[0.06] bg-[#0B101C] py-16 sm:py-20"
-      >
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 items-center gap-8 rounded-2xl border border-slate-800 bg-[#0F1627] p-6 sm:p-10 lg:grid-cols-12">
-            <div className="space-y-4 lg:col-span-7">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-red-400">
-                Visitanos en Rosario
-              </p>
-              <h2 className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
-                {WORKSHOP_INFO.address}
-              </h2>
-              <p className="max-w-xl text-sm leading-relaxed text-slate-300">
-                Traé tu auto para diagnóstico, service programado o presupuesto
-                sin cargo. Seguinos en Instagram para ver nuestros trabajos
-                diarios en el taller.
-              </p>
-              <div className="flex flex-wrap gap-3 pt-2">
-                <a
-                  href={MAPS_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-xs font-bold text-slate-950 transition hover:bg-amber-400"
-                >
-                  <MapPin className="h-4 w-4" />
-                  Abrir en Google Maps
-                </a>
-                <a
-                  href={generalInstagramUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-5 py-2.5 text-xs font-semibold text-slate-200 transition hover:bg-slate-800 hover:text-white"
-                >
-                  <span>{WORKSHOP_INFO.instagramHandle}</span>
-                  <ExternalLink className="h-3.5 w-3.5" />
-                </a>
-              </div>
+              )}
             </div>
+          )}
 
-            <div className="space-y-3 rounded-2xl border border-slate-800 bg-slate-950/70 p-5 lg:col-span-5">
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                ¿Sos cliente del taller?
-              </p>
-              <p className="text-sm leading-relaxed text-slate-300">
-                Guardá esta página en tu celular: con solo escribir la patente
-                de tu vehículo accedés al instante a todo el historial de
-                reparaciones realizado en{" "}
-                <strong className="text-white">GallardoPerformance</strong>.
-              </p>
-              <a
-                href="#historial"
-                className="inline-flex items-center gap-1.5 pt-1 text-xs font-bold text-amber-400 transition hover:text-amber-300"
-              >
-                <span>Ir al buscador de patente</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t border-white/[0.06] bg-[#080B12] py-8">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 text-center sm:flex-row sm:px-6 sm:text-left lg:px-8">
-          <div className="flex flex-col items-center gap-1.5 sm:items-start">
+          {/* Clean Framed Workshop Photo */}
+          <div className="mt-12 overflow-hidden rounded-lg border border-neutral-900 bg-[#111111]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/logo-gallardo.png"
-              alt={WORKSHOP_INFO.name}
-              width={160}
-              height={30}
-              className="h-6 w-auto object-contain opacity-90"
+              src="/hero-workshop.jpg"
+              alt="Taller mecánico GallardoPerformance en Rosario"
+              className="aspect-[16/9] w-full object-cover object-center sm:aspect-[21/9]"
             />
-            <p className="text-xs text-slate-500">
-              {WORKSHOP_INFO.address} · {WORKSHOP_INFO.instagramHandle}
-            </p>
           </div>
+        </section>
 
-          <div className="flex items-center gap-4 text-xs text-slate-500">
-            <a href="#historial" className="transition hover:text-slate-300">
-              Historial por patente
-            </a>
-            <span>·</span>
-            <Link
-              href="/admin"
-              className="inline-flex items-center gap-1 font-semibold text-slate-400 transition hover:text-amber-400"
-            >
-              <Lock className="h-3 w-3" />
-              Panel de administración
-            </Link>
+        {/* Minimal Numbered Services List */}
+        <section
+          id="servicios"
+          className="scroll-mt-20 border-t border-neutral-900 py-14 sm:py-20"
+        >
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
+            <div className="lg:col-span-4">
+              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-neutral-500">
+                Servicios
+              </p>
+              <h2 className="mt-3 text-2xl font-bold tracking-tight text-white">
+                Trabajo prolijo y seguimiento real de cada auto.
+              </h2>
+            </div>
+
+            <div className="divide-y divide-neutral-900 lg:col-span-8">
+              {SERVICES.map((item) => (
+                <div
+                  key={item.num}
+                  className="grid grid-cols-1 gap-2 py-5 first:pt-0 sm:grid-cols-12 sm:gap-4"
+                >
+                  <span className="font-mono text-xs text-red-500 sm:col-span-2">
+                    {item.num}
+                  </span>
+                  <div className="sm:col-span-10">
+                    <h3 className="text-sm font-semibold text-white">
+                      {item.title}
+                    </h3>
+                    <p className="mt-1 text-xs leading-relaxed text-neutral-400">
+                      {item.detail}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
+        </section>
+
+        {/* Minimal Contact & Location */}
+        <section
+          id="contacto"
+          className="scroll-mt-20 border-t border-neutral-900 py-14 sm:py-16"
+        >
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
+            <div>
+              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-neutral-500">
+                Dirección
+              </p>
+              <p className="mt-2.5 text-sm font-medium text-white">
+                {WORKSHOP_INFO.address}
+              </p>
+              <a
+                href={MAPS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1.5 inline-flex items-center gap-1 text-xs text-neutral-400 transition hover:text-white"
+              >
+                <span>Ver en Google Maps</span>
+                <ArrowUpRight className="h-3.5 w-3.5" />
+              </a>
+            </div>
+
+            <div>
+              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-neutral-500">
+                Instagram
+              </p>
+              <a
+                href={WORKSHOP_INFO.instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2.5 inline-flex items-center gap-1 text-sm font-medium text-white transition hover:text-neutral-300"
+              >
+                <span>{WORKSHOP_INFO.instagramHandle}</span>
+                <ArrowUpRight className="h-3.5 w-3.5 text-neutral-500" />
+              </a>
+              <p className="mt-1 text-xs text-neutral-500">
+                Trabajos diarios y consultas
+              </p>
+            </div>
+
+            <div>
+              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-neutral-500">
+                Taller
+              </p>
+              <Link
+                href="/admin"
+                className="mt-2.5 inline-flex items-center gap-1 text-sm font-medium text-neutral-300 transition hover:text-white"
+              >
+                <span>Ingresar al panel</span>
+                <ArrowUpRight className="h-3.5 w-3.5 text-neutral-500" />
+              </Link>
+              <p className="mt-1 text-xs text-neutral-500">
+                Acceso exclusivo personal
+              </p>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* Quiet Footer */}
+      <footer className="border-t border-neutral-900">
+        <div className="mx-auto flex max-w-5xl flex-col items-start justify-between gap-2 px-5 py-6 text-[11px] text-neutral-500 sm:flex-row sm:items-center sm:px-8">
+          <span>© {new Date().getFullYear()} GallardoPerformance</span>
+          <span>Rosario, Santa Fe</span>
         </div>
       </footer>
     </div>

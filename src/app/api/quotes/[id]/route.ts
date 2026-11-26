@@ -1,3 +1,4 @@
+import { requireAdminApi } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { getWorkshopRepository } from "@/db";
 import type { NewQuote } from "@/db/schema";
@@ -40,6 +41,9 @@ function sanitizeItems(raw: unknown): QuoteItem[] {
 }
 
 export async function GET(_request: Request, context: RouteContext) {
+  const auth = await requireAdminApi();
+  if (auth.response) return auth.response;
+
   try {
     const { id } = await context.params;
     const quoteId = Number(id);
@@ -70,6 +74,9 @@ export async function GET(_request: Request, context: RouteContext) {
 }
 
 export async function PATCH(request: Request, context: RouteContext) {
+  const auth = await requireAdminApi();
+  if (auth.response) return auth.response;
+
   try {
     const { id } = await context.params;
     const quoteId = Number(id);
@@ -165,6 +172,9 @@ export async function PATCH(request: Request, context: RouteContext) {
 }
 
 export async function DELETE(_request: Request, context: RouteContext) {
+  const auth = await requireAdminApi();
+  if (auth.response) return auth.response;
+
   try {
     const { id } = await context.params;
     const quoteId = Number(id);

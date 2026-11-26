@@ -1,3 +1,4 @@
+import { requireAdminApi } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { getWorkshopRepository } from "@/db";
 import type { NewVehicle } from "@/db/schema";
@@ -9,6 +10,9 @@ interface RouteContext {
 }
 
 export async function GET(_request: Request, context: RouteContext) {
+  const auth = await requireAdminApi();
+  if (auth.response) return auth.response;
+
   try {
     const { id } = await context.params;
     const vehicleId = Number(id);
@@ -38,6 +42,9 @@ export async function GET(_request: Request, context: RouteContext) {
 }
 
 export async function PATCH(request: Request, context: RouteContext) {
+  const auth = await requireAdminApi();
+  if (auth.response) return auth.response;
+
   try {
     const { id } = await context.params;
     const vehicleId = Number(id);
@@ -127,6 +134,9 @@ export async function PATCH(request: Request, context: RouteContext) {
 }
 
 export async function DELETE(_request: Request, context: RouteContext) {
+  const auth = await requireAdminApi();
+  if (auth.response) return auth.response;
+
   try {
     const { id } = await context.params;
     const vehicleId = Number(id);

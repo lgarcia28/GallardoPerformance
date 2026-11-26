@@ -1,3 +1,4 @@
+import { requireAdminApi } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { getWorkshopRepository } from "@/db";
 import { getQuotesData } from "@/lib/queries";
@@ -36,6 +37,9 @@ function sanitizeItems(raw: unknown): QuoteItem[] {
 }
 
 export async function GET() {
+  const auth = await requireAdminApi();
+  if (auth.response) return auth.response;
+
   try {
     const data = await getQuotesData();
     return NextResponse.json(data);
@@ -49,6 +53,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireAdminApi();
+  if (auth.response) return auth.response;
+
   try {
     const body = await request.json();
 

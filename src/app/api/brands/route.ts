@@ -1,7 +1,11 @@
+import { requireAdminApi } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { getWorkshopRepository } from "@/db";
 
 export async function GET() {
+  const auth = await requireAdminApi();
+  if (auth.response) return auth.response;
+
   try {
     const repo = await getWorkshopRepository();
     const brands = await repo.listBrands();
@@ -16,6 +20,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireAdminApi();
+  if (auth.response) return auth.response;
+
   try {
     const body = await request.json();
     const rawName = String(body.name ?? "").trim();
