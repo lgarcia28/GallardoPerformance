@@ -152,12 +152,20 @@ export function QuotesClient({
 
   const filteredQuotes = useMemo(() => {
     const q = search.trim().toLowerCase();
+    const compactQ = q.replace(/[^a-z0-9]/g, "");
     return data.quotes.filter((item) => {
       if (statusFilter !== "all" && item.status !== statusFilter) return false;
       if (!q) return true;
-      return `${item.quoteNumber} ${item.customerName} ${item.customerPhone} ${item.brandName} ${item.model} ${item.licensePlate ?? ""}`
-        .toLowerCase()
-        .includes(q);
+      const haystack =
+        `${item.customerName} ${item.licensePlate ?? ""} ${item.quoteNumber} ${item.customerPhone} ${item.brandName} ${item.model}`.toLowerCase();
+      if (haystack.includes(q)) return true;
+      if (compactQ.length >= 2 && item.licensePlate) {
+        const compactPlate = item.licensePlate
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "");
+        if (compactPlate.includes(compactQ)) return true;
+      }
+      return false;
     });
   }, [data.quotes, search, statusFilter]);
 
@@ -552,9 +560,19 @@ export function QuotesClient({
               type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por número (GP-0001), cliente, marca, modelo o patente..."
-              className="min-h-[44px] w-full rounded-xl border border-slate-700/80 bg-slate-950/90 py-2.5 pl-10 pr-4 text-sm text-slate-100 placeholder-slate-500 outline-none transition focus:border-amber-500/70"
+              placeholder="Buscar por patente o cliente (ej. AD 482 KL, Martín)..."
+              className="min-h-[44px] w-full rounded-xl border border-slate-700/80 bg-slate-950/90 py-2.5 pl-10 pr-10 text-sm text-slate-100 placeholder-slate-500 outline-none transition focus:border-amber-500/70"
             />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                aria-label="Limpiar búsqueda"
+                className="absolute right-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-800 hover:text-white cursor-pointer"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
 
           <div className="-mx-1 flex flex-nowrap gap-2 overflow-x-auto px-1 pb-1 no-scrollbar sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
@@ -584,7 +602,7 @@ export function QuotesClient({
         </div>
       </div>
 
-      {/* Quotes List */}
+      {/* Quotes List View */}
       {filteredQuotes.length === 0 ? (
         <div className="gp-card rounded-2xl px-6 py-16 text-center">
           <FileText className="mx-auto h-9 w-9 text-slate-600" />
@@ -592,120 +610,303 @@ export function QuotesClient({
             No encontramos presupuestos
           </p>
           <p className="mt-1 text-xs text-slate-400">
-            Creá un nuevo presupuesto para generar su PDF y enviarlo por WhatsApp.
+            {search
+              ? `No hay coincidencias para "${search.trim()}". Probá con otra patente o nombre de cliente.`
+              : "Creá un nuevo presupuesto para generar su PDF y enviarlo por WhatsApp."}
           </p>
-          <button
-            type="button"
-            onClick={openCreateModal}
-            className="mt-4 inline-flex min-h-[42px] items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-amber-400 cursor-pointer"
-          >
-            <Plus className="h-4 w-4" />
-            Nuevo presupuesto
-          </button>
+          {search ? (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              className="mt-4 inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800 cursor-pointer"
+            >
+              Limpiar búsqueda
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={openCreateModal}
+              className="mt-4 inline-flex min-h-[42px] items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-amber-400 cursor-pointer"
+            >
+              <Plus className="h-4 w-4" />
+              Nuevo presupuesto
+            </button>
+          )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {filteredQuotes.map((quote) => {
-            const items = parseQuoteItems(quote.itemsJson);
-            const stKey = (
-              quote.status in QUOTE_STATUS_META ? quote.status : "draft"
-            ) as QuoteStatus;
-            const stMeta = QUOTE_STATUS_META[stKey];
+        <div className="gp-card overflow-hidden rounded-2xl">
+          {/* List Count Bar */}
+          <div className="flex items-center justify-between border-b border-slate-800/80 bg-slate-950/40 px-4 py-2.5 text-[11px] text-slate-400 sm:px-5">
+            <span>
+              Mostrando{" "}
+              <strong className="font-semibold text-slate-200">
+                {filteredQuotes.length}
+              </strong>{" "}
+              {filteredQuotes.length === 1 ? "presupuesto" : "presupuestos"}
+              {search.trim() ? ` para "${search.trim()}"` : ""}
+            </span>
+            <span className="hidden font-mono text-[10px] uppercase tracking-wider text-slate-500 lg:inline">
+              Ordenado por más recientes
+            </span>
+          </div>
 
-            return (
-              <article
-                key={quote.id}
-                className="gp-card flex flex-col justify-between gap-4 rounded-2xl p-5"
-              >
-                <div className="space-y-3.5">
-                  {/* Top Header */}
+          {/* Desktop Structured List / Table */}
+          <div className="hidden overflow-x-auto lg:block">
+            <table className="w-full border-collapse text-left">
+              <thead>
+                <tr className="border-b border-slate-800/80 bg-slate-950/60 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                  <th className="py-3 pl-5 pr-3">N° / Fecha</th>
+                  <th className="px-3 py-3">Cliente</th>
+                  <th className="px-3 py-3">Patente / Vehículo</th>
+                  <th className="px-3 py-3">Trabajos</th>
+                  <th className="px-3 py-3">Estado</th>
+                  <th className="px-3 py-3 text-right">Total</th>
+                  <th className="py-3 pl-3 pr-5 text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/70">
+                {filteredQuotes.map((quote) => {
+                  const items = parseQuoteItems(quote.itemsJson);
+                  const stKey = (
+                    quote.status in QUOTE_STATUS_META ? quote.status : "draft"
+                  ) as QuoteStatus;
+                  const stMeta = QUOTE_STATUS_META[stKey];
+                  const firstItemDesc = items[0]?.description ?? "Sin ítems";
+
+                  return (
+                    <tr
+                      key={quote.id}
+                      className="transition hover:bg-slate-800/35"
+                    >
+                      {/* Number & Date */}
+                      <td className="whitespace-nowrap py-3.5 pl-5 pr-3 align-middle">
+                        <Link
+                          href={`/presupuestos/${quote.id}`}
+                          className="font-mono text-xs font-bold text-amber-400 hover:underline tabular-nums"
+                        >
+                          {quote.quoteNumber}
+                        </Link>
+                        <p className="mt-0.5 font-mono text-[11px] text-slate-500 tabular-nums">
+                          {formatShortDate(quote.createdAt.slice(0, 10))}
+                        </p>
+                      </td>
+
+                      {/* Client */}
+                      <td className="max-w-[180px] px-3 py-3.5 align-middle">
+                        <p className="truncate text-sm font-semibold text-slate-100">
+                          {quote.customerName}
+                        </p>
+                        <p className="mt-0.5 flex items-center gap-1 truncate font-mono text-[11px] text-slate-400 tabular-nums">
+                          <Phone className="h-3 w-3 shrink-0 text-slate-500" />
+                          {quote.customerPhone}
+                        </p>
+                      </td>
+
+                      {/* Plate & Vehicle */}
+                      <td className="px-3 py-3.5 align-middle">
+                        <div className="flex items-center gap-2.5">
+                          <BrandLogo
+                            brandName={quote.brandName}
+                            brandSlug={quote.brandSlug}
+                            size="sm"
+                          />
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              {quote.licensePlate ? (
+                                <span className="inline-flex shrink-0 items-center rounded border border-slate-700 bg-slate-900 px-1.5 py-0.5 font-mono text-[11px] font-bold tracking-wider text-slate-100">
+                                  {quote.licensePlate}
+                                </span>
+                              ) : (
+                                <span className="text-[11px] text-slate-500">
+                                  Sin patente
+                                </span>
+                              )}
+                              <span className="truncate text-xs font-semibold text-slate-200">
+                                {quote.brandName} {quote.model}
+                              </span>
+                            </div>
+                            <p className="mt-0.5 font-mono text-[11px] text-slate-500 tabular-nums">
+                              {formatMileage(quote.mileage)}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Items Summary */}
+                      <td className="max-w-[220px] px-3 py-3.5 align-middle">
+                        <p className="truncate text-xs text-slate-300">
+                          {firstItemDesc}
+                        </p>
+                        {items.length > 1 && (
+                          <p className="mt-0.5 text-[11px] text-slate-500">
+                            + {items.length - 1}{" "}
+                            {items.length - 1 === 1 ? "ítem más" : "ítems más"}
+                          </p>
+                        )}
+                      </td>
+
+                      {/* Status */}
+                      <td className="whitespace-nowrap px-3 py-3.5 align-middle">
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${stMeta.badgeClass}`}
+                        >
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full ${stMeta.dotClass}`}
+                          />
+                          {stMeta.label}
+                        </span>
+                      </td>
+
+                      {/* Total */}
+                      <td className="whitespace-nowrap px-3 py-3.5 text-right align-middle">
+                        <p className="font-mono text-sm font-extrabold text-slate-50 tabular-nums">
+                          {formatCurrency(quote.totalAmount)}
+                        </p>
+                        <p className="mt-0.5 text-[10px] text-slate-500">
+                          Validez {quote.validityDays}d
+                        </p>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="whitespace-nowrap py-3.5 pl-3 pr-5 text-right align-middle">
+                        <div className="inline-flex items-center justify-end gap-1.5">
+                          <Link
+                            href={`/presupuestos/${quote.id}`}
+                            title="Ver / Descargar PDF"
+                            className="inline-flex h-8 items-center gap-1 rounded-lg bg-amber-500 px-2.5 text-[11px] font-bold text-slate-950 transition hover:bg-amber-400"
+                          >
+                            <Printer className="h-3.5 w-3.5" />
+                            <span>PDF</span>
+                          </Link>
+
+                          <button
+                            type="button"
+                            onClick={() => openWhatsAppPreview(quote)}
+                            title="Enviar por WhatsApp"
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-emerald-500/35 bg-emerald-500/12 text-emerald-300 transition hover:bg-emerald-500/25 cursor-pointer"
+                          >
+                            <MessageCircle className="h-3.5 w-3.5" />
+                          </button>
+
+                          {stKey === "approved" ? (
+                            <Link
+                              href="/turnos"
+                              title="Agendar turno"
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-sky-500/35 bg-sky-500/12 text-sky-300 transition hover:bg-sky-500/20"
+                            >
+                              <CalendarDays className="h-3.5 w-3.5" />
+                            </Link>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleQuickStatus(quote, "approved")
+                              }
+                              title="Marcar aprobado"
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 transition hover:bg-emerald-500/20 cursor-pointer"
+                            >
+                              <Check className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => openEditModal(quote)}
+                            title="Editar presupuesto"
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-800 text-slate-400 transition hover:border-slate-600 hover:bg-slate-800 hover:text-white cursor-pointer"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteQuote(quote)}
+                            title="Eliminar presupuesto"
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-800 text-slate-500 transition hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400 cursor-pointer"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile / Tablet Compact Hairline List */}
+          <div className="divide-y divide-slate-800/80 lg:hidden">
+            {filteredQuotes.map((quote) => {
+              const items = parseQuoteItems(quote.itemsJson);
+              const stKey = (
+                quote.status in QUOTE_STATUS_META ? quote.status : "draft"
+              ) as QuoteStatus;
+              const stMeta = QUOTE_STATUS_META[stKey];
+              const firstItemDesc = items[0]?.description ?? "Sin ítems";
+
+              return (
+                <div key={quote.id} className="space-y-2.5 px-4 py-3.5">
+                  {/* Top row: Client + Plate + Total */}
                   <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex min-w-0 items-center gap-2.5">
                       <BrandLogo
                         brandName={quote.brandName}
                         brandSlug={quote.brandSlug}
-                        size="md"
+                        size="sm"
                       />
                       <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-mono text-xs font-bold text-amber-400 tabular-nums">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="font-mono text-[11px] font-bold text-amber-400 tabular-nums">
                             {quote.quoteNumber}
                           </span>
                           <span className="text-slate-600">·</span>
-                          <span className="font-mono text-[11px] text-slate-400 tabular-nums">
-                            {formatShortDate(quote.createdAt.slice(0, 10))}
+                          <span className="truncate text-sm font-bold text-slate-100">
+                            {quote.customerName}
                           </span>
                         </div>
-                        <h2 className="truncate text-sm font-bold text-slate-50">
-                          {quote.brandName} {quote.model}
-                        </h2>
-                        <p className="font-mono text-[11px] text-slate-400 tabular-nums">
-                          {formatMileage(quote.mileage)}
-                          {quote.licensePlate ? ` · ${quote.licensePlate}` : ""}
-                        </p>
+                        <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-400">
+                          {quote.licensePlate && (
+                            <span className="rounded border border-slate-700 bg-slate-900 px-1.5 py-0.5 font-mono text-[10px] font-bold tracking-wider text-slate-100">
+                              {quote.licensePlate}
+                            </span>
+                          )}
+                          <span className="truncate text-slate-300">
+                            {quote.brandName} {quote.model}
+                          </span>
+                          <span className="font-mono text-[11px] text-slate-500">
+                            · {formatShortDate(quote.createdAt.slice(0, 10))}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
-                    <span
-                      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${stMeta.badgeClass}`}
-                    >
-                      <span
-                        className={`h-1.5 w-1.5 rounded-full ${stMeta.dotClass}`}
-                      />
-                      {stMeta.label}
-                    </span>
-                  </div>
-
-                  {/* Client */}
-                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-800/80 bg-slate-950/60 px-3.5 py-2.5 text-xs">
-                    <span className="font-semibold text-slate-200">
-                      {quote.customerName}
-                    </span>
-                    <span className="inline-flex items-center gap-1 font-mono text-slate-400 tabular-nums">
-                      <Phone className="h-3 w-3 text-slate-500" />
-                      {quote.customerPhone}
-                    </span>
-                  </div>
-
-                  {/* Items Preview */}
-                  <div className="space-y-1.5">
-                    {items.slice(0, 3).map((item, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-baseline justify-between gap-3 text-xs"
-                      >
-                        <span className="truncate text-slate-300">
-                          {item.quantity > 1 ? `${item.quantity}x ` : ""}
-                          {item.description}
-                        </span>
-                        <span className="shrink-0 font-mono text-slate-400 tabular-nums">
-                          {formatCurrency(item.quantity * item.unitPrice)}
-                        </span>
-                      </div>
-                    ))}
-                    {items.length > 3 && (
-                      <p className="text-[11px] text-slate-500">
-                        + {items.length - 3} ítems más...
+                    <div className="shrink-0 text-right">
+                      <p className="font-mono text-sm font-extrabold text-slate-50 tabular-nums">
+                        {formatCurrency(quote.totalAmount)}
                       </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Footer Total + Actions */}
-                <div className="space-y-3 border-t border-slate-800/80 pt-3.5">
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-xs text-slate-400">
-                      Validez {quote.validityDays} días
-                    </span>
-                    <span className="font-mono text-lg font-extrabold text-slate-50 tabular-nums">
-                      {formatCurrency(quote.totalAmount)}
-                    </span>
+                      <span
+                        className={`mt-1 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${stMeta.badgeClass}`}
+                      >
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${stMeta.dotClass}`}
+                        />
+                        {stMeta.label}
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2">
+                  {/* Compact work summary */}
+                  <p className="truncate text-xs text-slate-400">
+                    {firstItemDesc}
+                    {items.length > 1 ? ` (+${items.length - 1} más)` : ""}
+                  </p>
+
+                  {/* Compact inline actions */}
+                  <div className="flex items-center gap-1.5 pt-0.5">
                     <Link
                       href={`/presupuestos/${quote.id}`}
-                      className="flex-1 sm:flex-none inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-bold text-slate-950 transition hover:bg-amber-400"
+                      className="inline-flex min-h-[36px] flex-1 items-center justify-center gap-1.5 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 transition hover:bg-amber-400"
                     >
                       <Printer className="h-3.5 w-3.5" />
                       Ver / PDF
@@ -714,55 +915,53 @@ export function QuotesClient({
                     <button
                       type="button"
                       onClick={() => openWhatsAppPreview(quote)}
-                      className="flex-1 sm:flex-none inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/35 px-3.5 py-2 text-xs font-bold text-emerald-300 transition hover:bg-emerald-500/25 cursor-pointer"
+                      className="inline-flex min-h-[36px] flex-1 items-center justify-center gap-1.5 rounded-lg border border-emerald-500/35 bg-emerald-500/12 px-3 py-1.5 text-xs font-bold text-emerald-300 transition hover:bg-emerald-500/25 cursor-pointer"
                     >
                       <MessageCircle className="h-3.5 w-3.5" />
                       WhatsApp
                     </button>
 
-                    {stKey === "approved" && (
+                    {stKey === "approved" ? (
                       <Link
                         href="/turnos"
-                        className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-sky-500/35 bg-sky-500/12 px-3 py-2 text-xs font-semibold text-sky-300 transition hover:bg-sky-500/20"
+                        title="Agendar turno"
+                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-sky-500/35 bg-sky-500/12 text-sky-300"
                       >
                         <CalendarDays className="h-3.5 w-3.5" />
-                        Agendar turno
                       </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleQuickStatus(quote, "approved")}
+                        title="Marcar aprobado"
+                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 cursor-pointer"
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                      </button>
                     )}
 
-                    <div className="ml-auto flex items-center gap-1.5">
-                      {stKey !== "approved" && (
-                        <button
-                          type="button"
-                          onClick={() => handleQuickStatus(quote, "approved")}
-                          title="Marcar aprobado"
-                          className="inline-flex min-h-[38px] min-w-[38px] items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 transition hover:bg-emerald-500/20 cursor-pointer"
-                        >
-                          <Check className="h-3.5 w-3.5" />
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => openEditModal(quote)}
-                        title="Editar presupuesto"
-                        className="inline-flex min-h-[38px] min-w-[38px] items-center justify-center rounded-xl border border-slate-800 text-slate-400 transition hover:border-slate-600 hover:bg-slate-800 hover:text-white cursor-pointer"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteQuote(quote)}
-                        title="Eliminar presupuesto"
-                        className="inline-flex min-h-[38px] min-w-[38px] items-center justify-center rounded-xl border border-slate-800 text-slate-500 transition hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400 cursor-pointer"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => openEditModal(quote)}
+                      title="Editar"
+                      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-800 text-slate-400 cursor-pointer"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteQuote(quote)}
+                      title="Eliminar"
+                      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-800 text-slate-500 cursor-pointer"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 </div>
-              </article>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       )}
 
